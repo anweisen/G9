@@ -1,9 +1,9 @@
-import 'package:abi_app/logic/choice.dart';
-import 'package:abi_app/provider/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
+import '../logic/choice.dart';
+import '../provider/settings.dart';
 import '../provider/grades.dart';
 import '../logic/grades.dart';
 import '../logic/types.dart';

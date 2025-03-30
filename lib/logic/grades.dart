@@ -1,7 +1,7 @@
-import 'package:abi_app/logic/choice.dart';
-import 'package:abi_app/provider/grades.dart';
 import 'package:hive/hive.dart';
 
+import '../provider/grades.dart';
+import 'choice.dart';
 import 'types.dart';
 
 part "grades.g.dart";

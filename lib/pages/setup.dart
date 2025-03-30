@@ -1,9 +1,7 @@
-import 'dart:math';
-
-import 'package:abi_app/provider/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../provider/settings.dart';
 import '../logic/choice.dart';
 import '../logic/types.dart';
 

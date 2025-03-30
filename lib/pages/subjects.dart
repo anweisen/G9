@@ -1,14 +1,12 @@
-import 'package:abi_app/logic/results.dart';
-
-import '../logic/grades.dart';
-import '../provider/grades.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
+import '../logic/grades.dart';
+import '../logic/results.dart';
+import '../provider/grades.dart';
 import '../provider/settings.dart';
+import '../widgets/skeleton.dart';
 import '../logic/types.dart';
-import '../widgets/nav.dart';
 import '../widgets/subpage.dart';
 import 'subject.dart';
 
@@ -17,7 +15,6 @@ class SubjectsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const double leftOffset = 36;
     final ThemeData theme = Theme.of(context);
     final settings = Provider.of<SettingsDataProvider>(context);
     final grades = Provider.of<GradesDataProvider>(context).getGradesForSemester(settings.choice!);
@@ -26,55 +23,32 @@ class SubjectsPage extends StatelessWidget {
 
     print("Building subjects page with choice: ${settings.choice}");
 
-    return SubpageController(
-      child: Scaffold(
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 860, maxHeight: 1200),
-            child: Column(
-              children: [
-                const SizedBox(height: 40),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 25, horizontal: leftOffset),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Fächer", style: theme.textTheme.headlineMedium),
-                      Row(
-                          verticalDirection: VerticalDirection.down,
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300, fontSize: 22)),
-                          const SizedBox(width: 8),
-                          Text(GradeHelper.formatNumber(avg), style: theme.textTheme.headlineMedium),
-                          const SizedBox(width: 8),
-                          Text("(${GradeHelper.formatNumber(SemesterResult.convertAverage(avg))})", style: theme.textTheme.bodySmall),
-                        ]
-                      )
-                    ],
-                  ),
-                ),
-
-
-                if (Provider.of<SettingsDataProvider>(context).choice != null)
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 60),
-                      itemCount: Provider.of<SettingsDataProvider>(context).choice!.subjects.length,
-                      itemBuilder: (context, index) => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: leftOffset, vertical: 10),
-                        child: SubjectWidget(subject: Provider.of<SettingsDataProvider>(context).choice!.subjects[index]),
-                      ),
-                    ),
-                  )
-              ],
-            ),
-          ),
+    return PageSkeleton(
+        title: PageTitle(
+            title: "Fächer",
+            info: Row(
+                verticalDirection: VerticalDirection.down,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300, fontSize: 22)),
+                  const SizedBox(width: 8),
+                  Text(GradeHelper.formatNumber(avg, decimals: 2), style: theme.textTheme.headlineMedium),
+                  const SizedBox(width: 8),
+                  Text("(${GradeHelper.formatNumber(SemesterResult.convertAverage(avg))})", style: theme.textTheme.bodySmall),
+                ]
+              )
         ),
-        bottomNavigationBar: const Nav(),
-        extendBody: true,
-      ),
+        children: [
+          if (Provider.of<SettingsDataProvider>(context).choice != null)
+            for (int index = 0; index < Provider.of<SettingsDataProvider>(context).choice!.subjects.length; index++)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: SubjectWidget(subject: Provider.of<SettingsDataProvider>(context).choice!.subjects[index]),
+              )
+
+
+        ]
     );
   }
 }

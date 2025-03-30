@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../widgets/skeleton.dart';
 import '../logic/choice.dart';
 import '../logic/types.dart';
 import '../logic/results.dart';
 import '../provider/grades.dart';
 import '../provider/settings.dart';
-import '../widgets/nav.dart';
-import '../widgets/subpage.dart';
 
 class ResultsPage extends StatelessWidget {
   const ResultsPage({super.key});
@@ -15,7 +14,6 @@ class ResultsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    const double leftOffset = 36;
 
     var settings = Provider.of<SettingsDataProvider>(context);
     var grades = Provider.of<GradesDataProvider>(context);
@@ -23,96 +21,57 @@ class ResultsPage extends StatelessWidget {
     var results = SemesterResult.calculateResultsWithPredictions(settings.choice!, grades);
     var flags = SemesterResult.applyUseFlags(settings.choice!, results);
 
-    return SubpageController(
-      child: Scaffold(
-        // appBar: AppBar(title: const Text("Fächer"), actions: [Text("asd")]),
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 860, maxHeight: 1200),
-            child: Column(
-              children: [
-                const SizedBox(height: 40),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 25, horizontal: leftOffset),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Einbringungen", style: theme.textTheme.headlineMedium),
-                    ],
-                  ),
-                ),
-
-                if (settings.choice != null && !flags.isEmpty)
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 80),
-                      children: [
-                        ...results.entries.map((entry) => Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: leftOffset, vertical: 12),
-                            child: SubjectCard(subject: entry.key, results: entry.value, choice: settings.choice!,))
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        _buildLegendText(leftOffset, theme, "Einbringung: Pflicht", Icons.check_circle),
-                        _buildLegendText(leftOffset, theme, "Einbringung: Frei", Icons.check_circle_outline),
-                        _buildLegendText(leftOffset, theme, "Optionsregel: Gestrichen", Icons.close_rounded),
-                        _buildLegendText(leftOffset, theme, "Optionsregel: Einbringung", Icons.join_full_rounded),
-
-                        const SizedBox(height: 40),
-
-                        ...?settings.choice?.abiSubjects.map((subject) => Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: leftOffset, vertical: 10),
-                          child: AbiSubjectCard(subject: subject, result: results[subject]![Semester.abi]!),
-                        )),
-
-                        const SizedBox(height: 40),
-
-                        _buildText(leftOffset, theme, "Pflicht Einbringungen", "${flags.forcedSemesters}"),
-                        const SizedBox(height: 8),
-                        _buildText(leftOffset, theme, "Punkte Q Phase", "${flags.pointsQ}"),
-                        _buildText(leftOffset, theme, "Punkte Abitur", "${flags.pointsAbi}"),
-                        const SizedBox(height: 8),
-                        _buildText(leftOffset, theme, "insgesamt Punkte", "${flags.pointsQ + flags.pointsAbi}"),
-                        _buildText(leftOffset, theme, "erreichter Schnitt", SemesterResult.pointsToAbiGrade(flags.pointsQ + flags.pointsAbi)),
-
-                      ],
-
-                    ),
-                  ),
-              ],
-            ),
+    return PageSkeleton(
+        title: const PageTitle(title: "Ergebnisse"),
+        children: [
+          ...results.entries.map((entry) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: SubjectCard(subject: entry.key, results: entry.value, choice: settings.choice!,))
           ),
-        ),
-        bottomNavigationBar: const Nav(),
-        extendBody: true,
-      ),
+
+          const SizedBox(height: 20),
+
+          _buildLegendText(theme, "Einbringung: Pflicht", Icons.check_circle),
+          _buildLegendText(theme, "Einbringung: Frei", Icons.check_circle_outline),
+          _buildLegendText(theme, "Optionsregel: Gestrichen", Icons.close_rounded),
+          _buildLegendText(theme, "Optionsregel: Einbringung", Icons.join_full_rounded),
+
+          const SizedBox(height: 40),
+
+          ...?settings.choice?.abiSubjects.map((subject) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: AbiSubjectCard(subject: subject, result: results[subject]![Semester.abi]!),
+          )),
+
+          const SizedBox(height: 40),
+
+          _buildText(theme, "Pflicht Einbringungen", "${flags.forcedSemesters}"),
+          const SizedBox(height: 8),
+          _buildText(theme, "Punkte Q Phase", "${flags.pointsQ}"),
+          _buildText(theme, "Punkte Abitur", "${flags.pointsAbi}"),
+          const SizedBox(height: 8),
+          _buildText(theme, "insgesamt Punkte", "${flags.pointsQ + flags.pointsAbi}"),
+          _buildText(theme, "erreichter Schnitt", SemesterResult.pointsToAbiGrade(flags.pointsQ + flags.pointsAbi)),
+        ]);
+  }
+
+  Widget _buildText(ThemeData theme, String text, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(text, style: theme.textTheme.labelSmall),
+        Text(value, style: theme.textTheme.bodyMedium),
+      ],
     );
   }
 
-  Widget _buildText(double leftOffset, ThemeData theme, String text, String value) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: leftOffset),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(text, style: theme.textTheme.bodyMedium?.copyWith(color: theme.textTheme.bodySmall?.color, fontWeight: FontWeight.w500)),
-          Text(value, style: theme.textTheme.bodyMedium),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLegendText(double leftOffset, ThemeData theme, String text, IconData icon) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: leftOffset),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: theme.textTheme.bodySmall?.color),
-          const SizedBox(width: 8),
-          Text(text, style: theme.textTheme.bodyMedium?.copyWith(color: theme.textTheme.bodySmall?.color, fontWeight: FontWeight.w500)),
-        ],
-      ),
+  Widget _buildLegendText(ThemeData theme, String text, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: theme.textTheme.bodySmall?.color),
+        const SizedBox(width: 8),
+        Text(text, style: theme.textTheme.labelSmall),
+      ],
     );
   }
 }

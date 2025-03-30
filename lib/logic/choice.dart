@@ -1,5 +1,6 @@
-import 'package:abi_app/logic/types.dart';
 import 'package:hive/hive.dart';
+
+import 'types.dart';
 
 part 'choice.g.dart';
 

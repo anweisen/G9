@@ -1,7 +1,9 @@
-
-import 'package:abi_app/widgets/nav.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import 'dart:ui';
+
+import 'nav.dart';
 import 'subpage.dart';
 
 class PageSkeleton extends StatefulWidget {
@@ -26,22 +28,62 @@ class _PageSkeletonState extends State<PageSkeleton> {
   @override
   Widget build(BuildContext context) {
     return SubpageController(
-      child: Scaffold(
-        bottomNavigationBar: const Nav(),
-        extendBody: true,
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 860, maxHeight: 1200),
-            child: Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 25, horizontal: PageSkeleton.leftOffset),
-                  child: widget.title,
-                ),
-                ListView(
-                    padding: const EdgeInsets.fromLTRB(0, 60, 0, 60),
-                    children: widget.children)
-              ],
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: MediaQuery.of(context).platformBrightness == Brightness.dark
+            ? SystemUiOverlayStyle.light // Light icons for dark mode
+            : SystemUiOverlayStyle.dark,
+        child: Scaffold(
+          bottomNavigationBar: const Nav(),
+          extendBody: true,
+
+          body: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 860, maxHeight: 1200),
+              child: CustomScrollView(
+                slivers: [
+
+                  SliverAppBar(
+                    backgroundColor: Colors.transparent,
+                    pinned: true,
+                    centerTitle: true,
+                    automaticallyImplyLeading: false,
+                    titleSpacing: 0,
+                    leadingWidth: 0,
+                    // toolbarHeight: 56,
+                    primary: true,
+                    // expandedHeight: 156,
+                    floating: true,
+                    flexibleSpace: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Container(
+                          constraints: constraints,
+                          child: ClipRRect(
+                              child: Container(
+                                color: Colors.black.withOpacity(0.25),
+                                child: BackdropFilter(
+                                    filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                                    child: Padding(padding: const EdgeInsets.symmetric(horizontal: PageSkeleton.leftOffset, vertical: 8), child: widget.title)),
+                              )),
+                        );
+                      }
+                    ),
+                  ),
+
+                  SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: PageSkeleton.leftOffset),
+                      sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            childCount: widget.children.length,
+                                (context, index) => widget.children[index],
+                          )
+                      ),
+                  ),
+
+                  const SliverToBoxAdapter(child: SizedBox(height: 60))
+
+                ],
+              ),
+
             ),
           ),
         ),
@@ -61,6 +103,7 @@ class PageTitle extends StatelessWidget {
     final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(title, style: theme.textTheme.headlineMedium),
         if (info != null) info!,

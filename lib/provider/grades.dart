@@ -1,8 +1,8 @@
-import 'package:abi_app/logic/choice.dart';
-import 'package:abi_app/logic/types.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
+import '../logic/choice.dart';
+import '../logic/types.dart';
 import '../logic/grades.dart';
 
 part "grades.g.dart";

@@ -64,6 +64,7 @@ class MyApp extends StatelessWidget {
             bodyMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 18),
             bodySmall: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 12, height: 1),
             labelMedium: TextStyle(fontWeight: bold, color: Colors.black, fontSize: 18),
+            labelSmall: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 18, letterSpacing: 0),
           )),
       theme: ThemeData(
         brightness: Brightness.light,
@@ -78,6 +79,7 @@ class MyApp extends StatelessWidget {
           bodyMedium: TextStyle(fontWeight: bold, color: Colors.black, fontSize: 18),
           bodySmall: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 12, height: 1),
           labelMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 18),
+          labelSmall: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 18, letterSpacing: 0),
         ),
       ),
 

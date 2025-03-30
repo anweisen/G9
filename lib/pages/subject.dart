@@ -30,6 +30,7 @@ class _SubjectPageState extends State<SubjectPage> {
   }
 
   void setCurrentSemester(Semester semester) {
+    Provider.of<GradesDataProvider>(context, listen: false).currentSemester = semester;
     setState(() {
       _currentSemester = semester;
     });

@@ -6,6 +6,7 @@ import '../provider/grades.dart';
 import '../provider/settings.dart';
 import '../logic/grades.dart';
 import '../logic/types.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/subpage.dart';
 
 // (!) USE A GLOBAL KEY
@@ -70,7 +71,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    const double leftOffset = 36;
+    const double leftOffset = PageSkeleton.leftOffset;
     final ThemeData theme = Theme.of(context);
 
     return Scaffold(
@@ -231,7 +232,7 @@ class GradeTypSelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const double leftOffset = 36;
+    const double leftOffset = PageSkeleton.leftOffset;
     final ThemeData theme = Theme.of(context);
 
     final Choice choice = Provider.of<SettingsDataProvider>(context).choice!;

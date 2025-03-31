@@ -7,6 +7,7 @@ import '../provider/settings.dart';
 import '../provider/grades.dart';
 import '../logic/grades.dart';
 import '../logic/types.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/subpage.dart';
 import 'grade.dart';
 
@@ -38,7 +39,7 @@ class _SubjectPageState extends State<SubjectPage> {
 
   @override
   Widget build(BuildContext context) {
-    const double leftOffset = 36;
+    const double leftOffset = PageSkeleton.leftOffset;
     final ThemeData theme = Theme.of(context);
     final Choice? choice = Provider.of<SettingsDataProvider>(context).choice;
     final GradesDataProvider dataProvider = Provider.of<GradesDataProvider>(context);

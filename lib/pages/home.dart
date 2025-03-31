@@ -1,4 +1,3 @@
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -55,17 +54,17 @@ class HomePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("Abitur Vorhersage", style: theme.textTheme.bodySmall),
-            _buildTextLine(Text("Note", style: theme.textTheme.labelSmall), [
+            _buildTextLine(Text("Note", style: theme.textTheme.bodyMedium), [
               Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
               const SizedBox(width: 4),
               Text(SemesterResult.pointsToAbiGrade(flags.pointsTotal), style: theme.textTheme.bodyMedium),
             ]),
-            _buildTextLine(Text("Punkte", style: theme.textTheme.labelSmall), [
+            _buildTextLine(Text("Punkte", style: theme.textTheme.bodyMedium), [
               Text("${flags.pointsTotal}", style: theme.textTheme.bodyMedium),
             ]),
             const SizedBox(height: 15),
             Text("Statistik", style: theme.textTheme.bodySmall),
-            _buildTextLine(Text("Notenzahl", style: theme.textTheme.labelSmall), [
+            _buildTextLine(Text("Notenzahl", style: theme.textTheme.bodyMedium), [
               Text("${stats.numberGrades}", style: theme.textTheme.bodyMedium),
             ]),
             const SizedBox(height: 15),
@@ -105,7 +104,7 @@ class HomePage extends StatelessWidget {
           height: 16,
         ),
         const SizedBox(width: 8),
-        Text(subject.name, style: textTheme.labelSmall, overflow: TextOverflow.clip, softWrap: false,),
+        Text(subject.name, style: textTheme.bodyMedium, overflow: TextOverflow.clip, softWrap: false,),
       ],
     );
   }
@@ -150,13 +149,13 @@ class HomePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: gradesDistribution.map((entry) {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: spacing + (16-12)/2),
+                    padding: const EdgeInsets.symmetric(vertical: spacing + (16-10)/2),
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(3.33),
                         color: theme.primaryColor,
                       ),
-                      height: 12, // uniform row height
+                      height: 10, // uniform row height
                       width: maxValue > 0 ? (entry.value / maxValue) * maxWidth : 0, // percentage-based width
                     ),
                   );

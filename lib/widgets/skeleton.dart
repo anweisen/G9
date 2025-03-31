@@ -7,7 +7,7 @@ import 'nav.dart';
 import 'subpage.dart';
 
 class PageSkeleton extends StatefulWidget {
-  static const double leftOffset = 36;
+  static const double leftOffset = 32;
 
   const PageSkeleton({super.key, required this.title, required this.children});
 

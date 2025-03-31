@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../widgets/skeleton.dart';
 import '../provider/settings.dart';
 import '../logic/choice.dart';
 import '../logic/types.dart';
@@ -433,7 +434,7 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    const double leftOffset = 36;
+    const double leftOffset = PageSkeleton.leftOffset;
 
     return Center(
       child: ConstrainedBox(
@@ -658,7 +659,7 @@ class SetupFinishPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const double leftOffset = 36;
+    const double leftOffset = PageSkeleton.leftOffset;
     final ThemeData theme = Theme.of(context);
 
     final Choice choice = choiceSupplier();

@@ -7,6 +7,7 @@ import 'logic/choice.dart';
 import 'logic/grades.dart';
 import 'logic/types.dart';
 import 'pages/home.dart';
+import 'pages/settings.dart';
 import 'pages/results.dart';
 import 'pages/setup.dart';
 import 'pages/subjects.dart';
@@ -93,6 +94,7 @@ class MyApp extends StatelessWidget {
         "/subjects": (context) => const SubjectsPage(),
         "/results": (context) => const ResultsPage(),
         "/setup": (context) => const SetupPage(),
+        "/settings": (context) => const SettingsPage(),
       },
     );
   }

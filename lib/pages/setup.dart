@@ -152,7 +152,7 @@ class _SetupPageState extends State<SetupPage> {
           children: [
             ..._buildSteps(),
 
-            SetupFinishPage(choiceBuilder: _choiceBuilder,)
+            SetupFinishPage(choiceSupplier: () => _choiceBuilder.build()),
           ],
         ));
   }
@@ -317,12 +317,14 @@ class _SetupPageState extends State<SetupPage> {
             else if (_choiceBuilder.vk == null && !(_choiceBuilder.substituteDeutsch ?? false) && !(_choiceBuilder.substituteMathe ?? false))
               _choiceBuilder.mintSg2,
           ]),
-          callback: _choiceBuilder.lk?.category == SubjectCategory.gpr ? setAbi5 : setAbi4,
-          currentlySelected: _choiceBuilder.lk?.category == SubjectCategory.gpr ? _choiceBuilder.abi5 : _choiceBuilder.abi4,
+          callback: _choiceBuilder.lk?.category == SubjectCategory.gpr ? setAbi4 : setAbi5,
+          currentlySelected: _choiceBuilder.lk?.category == SubjectCategory.gpr ? _choiceBuilder.abi4 : _choiceBuilder.abi5,
         ),
 
       // Sind die verpflichtenden Abiturprüfungsfächer bereits gewählt, kann ein weiteres beliebiges Fach gewählt werden
-      if (_choiceBuilder.lk != null && _choiceBuilder.abi5 == null)
+      // (!) before the check was whether abi5 was still null but led to a glitch when confirming this choice
+      if (_choiceBuilder.lk != null && (_choiceBuilder.lk?.category == SubjectCategory.gpr || _choiceBuilder.lk?.category == SubjectCategory.ntg
+          || _choiceBuilder.lk?.category == SubjectCategory.info || _choiceBuilder.lk?.category == SubjectCategory.sg))
         SetupStepPage(
           title: "Weiteres Abiturfach",
           pageController: _pageController,
@@ -582,8 +584,7 @@ class SubjectWidget extends StatelessWidget {
                 if (subject == SetupStepPage.skipSubject)
                     Icon(Icons.close_rounded, size: 22, color: Theme.of(context).textTheme.bodyMedium?.color, weight: 800,)
                   else Container(
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8), color: subject.color),
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: subject.color),
                   width: 22,
                   height: 22,
                 ),
@@ -631,8 +632,7 @@ class NextButton extends StatelessWidget {
           child: InkWell(
             onTap: callback,
             child: Container(
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10), color: theme.primaryColor),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: theme.primaryColor),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                 child: Row(
@@ -652,16 +652,16 @@ class NextButton extends StatelessWidget {
 }
 
 class SetupFinishPage extends StatelessWidget {
-  const SetupFinishPage({super.key, required this.choiceBuilder});
+  const SetupFinishPage({super.key, required this.choiceSupplier});
 
-  final ChoiceBuilder choiceBuilder;
+  final Choice Function() choiceSupplier;
 
   @override
   Widget build(BuildContext context) {
     const double leftOffset = 36;
     final ThemeData theme = Theme.of(context);
 
-    final built = choiceBuilder.build();
+    final Choice choice = choiceSupplier();
 
     return Center(
         child: ConstrainedBox(
@@ -669,8 +669,7 @@ class SetupFinishPage extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const SizedBox(height: 40),
               Padding(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 25, horizontal: leftOffset),
+                padding: const EdgeInsets.symmetric(vertical: 25, horizontal: leftOffset),
                 child: Text("Abgeschlossen!",
                     style: theme.textTheme.headlineMedium,
                     textAlign: TextAlign.left),
@@ -678,22 +677,24 @@ class SetupFinishPage extends StatelessWidget {
               Expanded(
                   child: Stack(
                 children: [
-                  ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 60),
-                      itemCount: built.subjects.length,
-                      itemBuilder: (context, index) => Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 7, horizontal: leftOffset + 5),
-                            child: SubjectWidget(
-                                subject: built.subjects[index],
-                                selected: false),
-                          )),
+                  // ListView.builder(
+                  //     padding: const EdgeInsets.fromLTRB(0, 0, 0, 60),
+                  //     itemCount: choice.subjects.length,
+                  //     itemBuilder: (context, index) => Padding(
+                  //           padding: const EdgeInsets.symmetric(
+                  //               vertical: 7, horizontal: leftOffset + 5),
+                  //           child: SubjectWidget(subject: choice.subjects[index]),
+                  //         )),
+                  ListView(
+                    padding: const EdgeInsets.fromLTRB(leftOffset + 5, 0, leftOffset + 5, 60),
+                    children: buildSubjects(choice, theme),
+                  ),
                   const SizedBox(height: 50, width: 50),
                   NextButton(
-                      text: "Abschließen",
+                      text: "Bestätigen",
                       icon: Icons.check_rounded,
                       callback: () => {
-                        Provider.of<SettingsDataProvider>(context, listen: false).choice = built,
+                        Provider.of<SettingsDataProvider>(context, listen: false).choice = choice,
                         Navigator.popAndPushNamed(context, "/home")
                       },
                       leftOffset: leftOffset,
@@ -702,4 +703,105 @@ class SetupFinishPage extends StatelessWidget {
               )),
             ])));
   }
+
+  static List<Widget> buildSubjects(Choice choice, ThemeData theme) {
+    const double labelSpacing = 5, sectionSpacing = 20, subjectSpacing = 3;
+
+    return [
+      Text("Leistungsfach", style: theme.textTheme.bodySmall),
+      const SizedBox(height: labelSpacing),
+      SubjectWidget(subject: choice.lk),
+      const SizedBox(height: sectionSpacing),
+
+      // 1. Fremdsprache
+      if (choice.lk != choice.sg1) ...[
+        Text("1. Fremdsprache", style: theme.textTheme.bodySmall),
+        const SizedBox(height: labelSpacing),
+        SubjectWidget(subject: choice.sg1),
+        const SizedBox(height: sectionSpacing),
+      ],
+
+      // 1. Naturwissenschaft
+      if (choice.lk != choice.ntg1) ...[
+        Text("1. Naturwissenschaft", style: theme.textTheme.bodySmall),
+        const SizedBox(height: labelSpacing),
+        SubjectWidget(subject: choice.ntg1),
+        const SizedBox(height: sectionSpacing),
+      ],
+
+      // 2. Fremdsprache / Naturwissenschaft
+      Text("2. Fremdsprache / Naturwissenschaft", style: theme.textTheme.bodySmall),
+      const SizedBox(height: labelSpacing),
+      SubjectWidget(subject: choice.mintSg2),
+      const SizedBox(height: sectionSpacing),
+
+      // Kunst / Musik
+      Text("Kunst oder Musik", style: theme.textTheme.bodySmall),
+      const SizedBox(height: labelSpacing),
+      SubjectWidget(subject: choice.musikKunst),
+      const SizedBox(height: sectionSpacing),
+
+      // Geo / WR
+      Text("Geographie oder Wirtschaft & Recht in Q12", style: theme.textTheme.bodySmall),
+      const SizedBox(height: labelSpacing),
+      SubjectWidget(subject: choice.geoWr),
+      const SizedBox(height: sectionSpacing),
+
+      // Weiterführung in Q13 (PuG vs Geo / WR)
+      Text("Weiterführung in Q13", style: theme.textTheme.bodySmall),
+      const SizedBox(height: labelSpacing),
+      SubjectWidget(subject: choice.pug13 ? Subject.pug : choice.geoWr),
+      const SizedBox(height: sectionSpacing),
+
+      // Pflichtfächer
+      Text("Pflichtfächer", style: theme.textTheme.bodySmall),
+      const SizedBox(height: labelSpacing),
+      SubjectWidget(subject: Subject.mathe),
+      const SizedBox(height: subjectSpacing),
+      SubjectWidget(subject: Subject.deutsch),
+      const SizedBox(height: subjectSpacing),
+      if (choice.lk != Subject.sport) ...[
+        SubjectWidget(subject: Subject.sport),
+        const SizedBox(height: subjectSpacing),
+      ],
+      if (choice.lk != Subject.reli) ...[
+        SubjectWidget(subject: Subject.reli),
+        const SizedBox(height: subjectSpacing),
+      ],
+      if (choice.lk != Subject.geschi) ...[
+        SubjectWidget(subject: Subject.geschi),
+        const SizedBox(height: subjectSpacing),
+      ],
+      if (choice.lk != Subject.pug) ...[
+        SubjectWidget(subject: Subject.pug),
+        const SizedBox(height: subjectSpacing),
+      ],
+      SubjectWidget(subject: choice.seminar),
+      const SizedBox(height: sectionSpacing),
+
+      // Vertiefungskurs (optional, ersetzt mintSg2 in Q13), nicht mit spät beginnender Fremdsprache
+      Text("Vertiefungskurs", style: theme.textTheme.bodySmall),
+      const SizedBox(height: labelSpacing),
+      SubjectWidget(subject: choice.vk ?? SetupStepPage.skipSubject),
+      const SizedBox(height: sectionSpacing),
+
+      // Profilfach (optional)
+      Text("Profilfach", style: theme.textTheme.bodySmall),
+      const SizedBox(height: labelSpacing),
+      SubjectWidget(subject: choice.profil ?? SetupStepPage.skipSubject),
+      const SizedBox(height: sectionSpacing),
+
+      // Prüfungsfächer
+      Text("Abiturprüfungsfächer", style: theme.textTheme.bodySmall),
+      const SizedBox(height: labelSpacing),
+      ...choice.abiSubjects.map((e) => Column(
+        children: [
+          SubjectWidget(subject: e),
+          const SizedBox(height: subjectSpacing),
+        ],
+      )).toList(),
+
+    ];
+  }
+
 }

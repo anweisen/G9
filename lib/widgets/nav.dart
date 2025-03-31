@@ -8,7 +8,7 @@ class Nav extends StatelessWidget {
   int _getCurrentIndex(BuildContext context) {
     String? routeName = ModalRoute.of(context)?.settings.name;
     switch (routeName) {
-      case "/setup":
+      case "/settings":
         return 3;
       case "/results":
         return 2;
@@ -47,7 +47,7 @@ class Nav extends StatelessWidget {
             } else if (index == 2) {
               Navigator.pushNamed(context, '/results');
             } else if (index == 3) {
-              Navigator.pushNamed(context, '/setup');
+              Navigator.pushNamed(context, '/settings');
             }
           },
           items: const [

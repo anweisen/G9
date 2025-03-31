@@ -33,7 +33,7 @@ class GradeHelper {
     return avg.toStringAsFixed(decimals).replaceFirst(".", ",");
   }
 
-  static double averageOfSubject(SubjectGradesMap grades) {
+  static double averageOfSubjects(SubjectGradesMap grades) {
     double sum = 0;
     int count = 0;
 

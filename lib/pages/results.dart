@@ -50,8 +50,8 @@ class ResultsPage extends StatelessWidget {
           _buildText(theme, "Punkte Q Phase", "${flags.pointsQ}"),
           _buildText(theme, "Punkte Abitur", "${flags.pointsAbi}"),
           const SizedBox(height: 8),
-          _buildText(theme, "insgesamt Punkte", "${flags.pointsQ + flags.pointsAbi}"),
-          _buildText(theme, "erreichter Schnitt", SemesterResult.pointsToAbiGrade(flags.pointsQ + flags.pointsAbi)),
+          _buildText(theme, "insgesamt Punkte", "${flags.pointsTotal}"),
+          _buildText(theme, "erreichter Schnitt", SemesterResult.pointsToAbiGrade(flags.pointsTotal)),
         ]);
   }
 

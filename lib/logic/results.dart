@@ -192,7 +192,7 @@ class SemesterResult {
     int pointsAbi = 0;
     for (var subject in choice.abiSubjects) {
       if (result[subject]?[Semester.abi] != null) {
-        pointsAbi += result[subject]![Semester.abi]!.grade * 4;
+        pointsAbi += result[subject]![Semester.abi]!.grade * 4; // Api Prüfung entspricht 4 Einbringungen
       }
     }
 
@@ -213,7 +213,7 @@ class SemesterResult {
         results.putIfAbsent(subject, () => {});
 
         if (grades.isNotEmpty) {
-          results[subject]![semester] = SemesterResult(GradeHelper.result(grades), false);
+          results[subject]![semester] = SemesterResult(GradeHelper.result(grades), grades.length);
         }
       });
     });
@@ -247,7 +247,7 @@ class SemesterResult {
         }
 
         if (results[subject]![semester] == null) {
-          results[subject]![semester] = SemesterResult(prediction, true);
+          results[subject]![semester] = SemesterResult(prediction, 0);
         }
       }
 
@@ -262,7 +262,7 @@ class SemesterResult {
         }
 
         if (results[subject]![semester] == null) {
-          results[subject]![semester] = SemesterResult(totalPrediction, true);
+          results[subject]![semester] = SemesterResult(totalPrediction, 0);
         }
       }
     }
@@ -270,9 +270,44 @@ class SemesterResult {
     return results;
   }
 
+  static Statistics calculateStatistics(Choice choice, Map<Subject, Map<Semester, SemesterResult>> result) {
+    Subject bestSubject = choice.subjects.first;
+    double bestSubjectAvg = 0;
+    int numberGrades = 0;
+
+    for (var subject in choice.subjects) {
+      int points = 0;
+      int semesters = 0;
+
+      for (var semester in Semester.qPhase) {
+        if (result[subject]![semester] == null) continue;
+        if (result[subject]![semester]!.prediction) continue;
+
+        numberGrades += result[subject]![semester]!.basedOnGradeCount;
+        points += result[subject]![semester]!.grade;
+        semesters++;
+      }
+
+      if (semesters == 0) continue;
+
+      double avg = points.toDouble() / semesters.toDouble();
+
+      if (avg > bestSubjectAvg) {
+        bestSubject = subject;
+        bestSubjectAvg = avg;
+      }
+    }
+
+    return Statistics(bestSubject, bestSubjectAvg, numberGrades);
+  }
+
   static double convertAverage(double points) {
     if (points == 0) return 0;
     return 6 - (5 / 14) * points;
+  }
+
+  static double pointsAverage(int points) {
+    return (points / 60.0);
   }
 
   static String pointsToAbiGrade(int points) {
@@ -315,17 +350,19 @@ class SemesterResult {
   }
 
   final int grade;
-  final bool prediction;
+  final int basedOnGradeCount;
 
   bool useForced = false;
   bool useExtra = false;
   bool useJoker = false; // used as joker
 
+  bool get prediction => basedOnGradeCount == 0;
+
   bool get used => (useForced || useExtra || useJoker) && !replacedByJoker;
 
   bool replacedByJoker = false;
 
-  SemesterResult(this.grade, this.prediction);
+  SemesterResult(this.grade, this.basedOnGradeCount);
 
   @override
   String toString() => "$grade[${used ? "used" : "free"}${prediction ? ", predicted" : ""}]";
@@ -338,5 +375,19 @@ class ResultsFlags {
   final int pointsAbi;
   final bool isEmpty;
 
+  get pointsTotal => pointsQ + pointsAbi;
+
   ResultsFlags(this.forcedSemesters, this.pointsQ, this.pointsAbi, this.isEmpty);
+}
+
+class Statistics {
+
+  final Subject bestSubject;
+  final double bestSubjectAvg;
+  final int numberGrades;
+
+  Statistics(this.bestSubject, this.bestSubjectAvg, this.numberGrades);
+
+  @override
+  String toString() => "Statistics{bestSubject: $bestSubject, bestSubjectAvg: $bestSubjectAvg, numberGrades: $numberGrades}";
 }

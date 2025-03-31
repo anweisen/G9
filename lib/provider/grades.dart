@@ -57,6 +57,10 @@ class GradesDataProvider extends ChangeNotifier {
       .asMap().map((_, subject) => MapEntry(subject.id, currentMap[subject.id] ?? []));
   }
 
+  Map<Semester, SubjectGradesMap> getRawGrades() {
+    return _data ?? {};
+  }
+
   void addGrade(SubjectId subjectId, GradeEntry grade, {Semester? semester}) {
     print("Adding grade $grade to $subjectId in $semester");
     assert (_data != null);

@@ -212,10 +212,8 @@ class GradeOptionPlaceholder extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     return Row(
       children: [
-        if (icon != null)
-          icon!
-        else
-          Icon(Icons.add_circle_rounded, color: theme.textTheme.bodySmall?.color, size: 24),
+        if (icon != null) icon!
+        else Icon(Icons.add_circle_rounded, color: theme.textTheme.bodySmall?.color, size: 24),
         const SizedBox(width: 16),
         Text(text,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -256,10 +254,15 @@ class GradeTypSelectionPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: leftOffset, vertical: 7),
               child: GestureDetector(
                 onTap: () => SubpageController.of(context).closeSubpage(types[index]),
-                child: GradeOptionPlaceholder(
-                    text: types[index].name,
-                    icon: Icon(getIcon(types[index]),
-                        color: theme.primaryColor, size: 24)),
+                child: Padding(
+                  padding: (index > 0 && types[index - 1].area != types[index].area)
+                      ? const EdgeInsets.only(top: 20)
+                      : const EdgeInsets.all(0),
+                  child: GradeOptionPlaceholder(
+                      text: types[index].name,
+                      icon: Icon(getIcon(types[index]),
+                          color: theme.primaryColor, size: 24)),
+                ),
               ),
             ),
           ),

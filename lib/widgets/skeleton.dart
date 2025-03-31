@@ -49,7 +49,7 @@ class _PageSkeletonState extends State<PageSkeleton> {
                     automaticallyImplyLeading: false,
                     titleSpacing: 0,
                     leadingWidth: 0,
-                    // toolbarHeight: 56,
+                    toolbarHeight: 64,
                     primary: true,
                     // expandedHeight: 156,
                     floating: true,
@@ -62,7 +62,7 @@ class _PageSkeletonState extends State<PageSkeleton> {
                                 color: Colors.black.withOpacity(0.25),
                                 child: BackdropFilter(
                                     filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                                    child: Padding(padding: const EdgeInsets.symmetric(horizontal: PageSkeleton.leftOffset, vertical: 8), child: widget.title)),
+                                    child: Padding(padding: const EdgeInsets.fromLTRB(PageSkeleton.leftOffset, 16, PageSkeleton.leftOffset, 10), child: widget.title)),
                               )),
                         );
                       }

@@ -110,10 +110,10 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildChart(BuildContext context, Map<int, int> gradesDistribution) {
+  Widget _buildChart(BuildContext context, List<MapEntry<int, int>> gradesDistribution) {
     const spacing = 4.0;
 
-    final int maxValue = gradesDistribution.values.isEmpty ? 1 : gradesDistribution.values.reduce((a, b) => a > b ? a : b); // find max value for scaling
+    final int maxValue = gradesDistribution.isEmpty ? 1 : gradesDistribution.reduce((a, b) => a.value > b.value ? a : b).value; // find max value for scaling
     final ThemeData theme = Theme.of(context);
 
     return LayoutBuilder(
@@ -127,7 +127,7 @@ class HomePage extends StatelessWidget {
               width: 80, // <-- fixed width
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: gradesDistribution.entries.map((entry) {
+                children: gradesDistribution.map((entry) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: spacing),
                     child: Row(
@@ -148,7 +148,7 @@ class HomePage extends StatelessWidget {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
-                children: gradesDistribution.entries.map((entry) {
+                children: gradesDistribution.map((entry) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: spacing + (16-12)/2),
                     child: Container(
@@ -169,7 +169,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Map<int, int> _calculateSingleGradesDistribution(SettingsDataProvider settings, Map<SubjectId, GradesList> currentSemesterGrades) {
+  List<MapEntry<int, int>> _calculateSingleGradesDistribution(SettingsDataProvider settings, Map<SubjectId, GradesList> currentSemesterGrades) {
     Map<int, int> gradesDistribution = {};
     for (var subject in settings.choice!.subjects) {
       var grades = currentSemesterGrades[subject.id] ?? [];
@@ -177,6 +177,8 @@ class HomePage extends StatelessWidget {
         gradesDistribution[grade.grade] = (gradesDistribution[grade.grade] ?? 0) + 1;
       }
     }
-    return gradesDistribution;
+    // sort descending
+    return gradesDistribution.entries.toList()
+      ..sort((a, b) => b.key.compareTo(a.key));
   }
 }

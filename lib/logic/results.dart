@@ -240,7 +240,7 @@ class SemesterResult {
       }
 
       // apply prediction
-      int prediction = (sum / count).round();
+      int prediction = (sum / count).floor();
       for (var semester in Semester.values) {
         if (Semester.qPhase.contains(semester) && semester.index >= choice.numberOfSemestersFor(subject)) {
           continue; // subject not taken that semester

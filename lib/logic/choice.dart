@@ -53,6 +53,8 @@ class ChoiceBuilder {
       mint1 = lk;
     } else if (lk!.category == SubjectCategory.sg) {
       sg1 = lk;
+    } else if (lk!.category == SubjectCategory.kumu) {
+      musikKunst = lk;
     }
 
     if (sbs != null) {

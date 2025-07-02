@@ -161,21 +161,22 @@ class _SetupPageState extends State<SetupPage> {
   List<SetupStepPage> _buildSteps() {
     return [
       SetupStepPage(
-        title: "Musik oder Kunst",
-        subjectsPool: [Subject.kunst, Subject.musik],
-        pageController: _pageController,
-        allowNextStep: allowNextStep,
-        callback: setMusikKunst,
-        currentlySelected: _choiceBuilder.musikKunst,
-      ),
-      SetupStepPage(
         title: "Dein Leistungsfach",
         pageController: _pageController,
         allowNextStep: allowNextStep,
-        subjectsPool: Subject.lks.where((it) => it != (_choiceBuilder.musikKunst == Subject.kunst ? Subject.musik : Subject.kunst)).toList(),
+        subjectsPool: Subject.lks,
         callback: setLk,
         currentlySelected: _choiceBuilder.lk,
       ),
+      if (getLkCategory() != SubjectCategory.kumu)
+        SetupStepPage(
+          title: "Musik oder Kunst",
+          subjectsPool: [Subject.kunst, Subject.musik],
+          pageController: _pageController,
+          allowNextStep: allowNextStep,
+          callback: setMusikKunst,
+          currentlySelected: _choiceBuilder.musikKunst,
+        ),
 
       // 1. Naturwissenschaft/Sprache,
       // gesetzt durch LK NTG/SG

@@ -78,6 +78,7 @@ class SemesterResult {
     // - Deutsch, Mathe auch wenn substituiert
     // - einzige Fremdsprache oder Naturwissenschaft
     // - nur über 2 Semester belegte Fächer (min 1 HJ)
+    // - W-Seminar
 
     if (subject.category == SubjectCategory.abi) { // Deutsch, Mathe
       return false;
@@ -96,6 +97,10 @@ class SemesterResult {
     } else if (subject == choice.vk) { // VK
       return false;
     } else if (subject == choice.mintSg2 && choice.vk != null) { // Durch VK ersetztes Fach
+      return false;
+    } else if (subject == Subject.pug && !choice.pug13) { // PuG nur 2 Semester belegt
+      return false;
+    } else if (subject == choice.geoWr && choice.pug13) { // Geo/WR nur 2 Semester belegt
       return false;
     }
 

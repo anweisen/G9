@@ -1,4 +1,6 @@
 
+import 'dart:collection';
+
 import 'choice.dart';
 import 'grades.dart';
 import 'types.dart';
@@ -310,43 +312,41 @@ class SemesterResult {
     return (points / 60.0);
   }
 
+  // https://www.gesetze-bayern.de/Content/Document/BayGSO-ANL_23
+  static Map<int, double> minPointsForAbiGradeMap = Map.unmodifiable(SplayTreeMap((a, b) => b.compareTo(a))..addAll({
+    823: 1.0, 805: 1.1, 787: 1.2, 769: 1.3, 751: 1.4, 733: 1.5, 715: 1.6, 697: 1.7, 679: 1.8, 661: 1.9,
+    643: 2.0, 625: 2.1, 607: 2.2, 589: 2.3, 571: 2.4, 553: 2.5, 535: 2.6, 517: 2.7, 499: 2.8, 481: 2.9,
+    463: 3.0, 445: 3.1, 427: 3.2, 409: 3.3, 391: 3.4, 373: 3.5, 355: 3.6, 337: 3.7, 319: 3.8, 301: 3.9,
+    300: 4.0,
+  }));
+
   static String pointsToAbiGrade(int points) {
-    if (points >= 823 && points <= 900) return "1,0";
-    if (points >= 805 && points <= 822) return "1,1";
-    if (points >= 787 && points <= 804) return "1,2";
-    if (points >= 769 && points <= 786) return "1,3";
-    if (points >= 751 && points <= 768) return "1,4";
-    if (points >= 733 && points <= 750) return "1,5";
-    if (points >= 715 && points <= 732) return "1,6";
-    if (points >= 697 && points <= 714) return "1,7";
-    if (points >= 679 && points <= 696) return "1,8";
-    if (points >= 661 && points <= 678) return "1,9";
-
-    if (points >= 643 && points <= 660) return "2,0";
-    if (points >= 625 && points <= 642) return "2,1";
-    if (points >= 607 && points <= 624) return "2,2";
-    if (points >= 589 && points <= 606) return "2,3";
-    if (points >= 571 && points <= 588) return "2,4";
-    if (points >= 553 && points <= 570) return "2,5";
-    if (points >= 535 && points <= 552) return "2,6";
-    if (points >= 517 && points <= 534) return "2,7";
-    if (points >= 499 && points <= 516) return "2,8";
-    if (points >= 481 && points <= 498) return "2,9";
-
-    if (points >= 463 && points <= 480) return "3,0";
-    if (points >= 445 && points <= 462) return "3,1";
-    if (points >= 427 && points <= 444) return "3,2";
-    if (points >= 409 && points <= 426) return "3,3";
-    if (points >= 391 && points <= 408) return "3,4";
-    if (points >= 373 && points <= 390) return "3,5";
-    if (points >= 355 && points <= 372) return "3,6";
-    if (points >= 337 && points <= 354) return "3,7";
-    if (points >= 319 && points <= 336) return "3,8";
-    if (points >= 301 && points <= 318) return "3,9";
-
-    if (points == 300) return "4,0";
-
+    if (points >= 300 && points <= 900) {
+      for (var entry in minPointsForAbiGradeMap.entries) {
+        if (points >= entry.key) {
+          return GradeHelper.formatNumber(entry.value, decimals: 1);
+        }
+      }
+    }
     return "ungültig";
+  }
+
+  static int getMinPointsForBetterAbiGrade(int points) {
+    int lastGradePoints = 900;
+    for (var entry in minPointsForAbiGradeMap.entries) {
+      if (points >= entry.key) break;
+      lastGradePoints = entry.key;
+    }
+    return lastGradePoints;
+  }
+
+  static int getMinPointsForThisAbiGrade(int points) {
+    for (var entry in minPointsForAbiGradeMap.entries) {
+      if (points >= entry.key) {
+        return entry.key;
+      }
+    }
+    return 0;
   }
 
   final int grade;

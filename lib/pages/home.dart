@@ -170,12 +170,28 @@ class HomePage extends StatelessWidget {
 
   List<MapEntry<int, int>> _calculateSingleGradesDistribution(SettingsDataProvider settings, Map<SubjectId, GradesList> currentSemesterGrades) {
     Map<int, int> gradesDistribution = {};
+    for (int i = 0; i <= 15; i++) {
+      gradesDistribution[i] = 0; // initialize all grades from 0 to 15
+    }
+
     for (var subject in settings.choice!.subjects) {
       var grades = currentSemesterGrades[subject.id] ?? [];
       for (var grade in grades) {
         gradesDistribution[grade.grade] = (gradesDistribution[grade.grade] ?? 0) + 1;
       }
     }
+
+    // trim bottom to top
+    for (int i = 0; i <= 15; i++) {
+      if (gradesDistribution[i] != 0) break;
+      gradesDistribution.remove(i);
+    }
+    // trim top to bottom
+    for (int i = 15; i >= 0; i--) {
+      if (gradesDistribution[i] != 0) break;
+      gradesDistribution.remove(i);
+    }
+
     // sort descending
     return gradesDistribution.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));

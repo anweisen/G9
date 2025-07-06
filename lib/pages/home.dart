@@ -27,6 +27,16 @@ class HomePage extends StatelessWidget {
     var currentSemesterAvg = GradeHelper.averageOfSubjects(currentSemesterGrades);
     var gradesDistribution = _calculateSingleGradesDistribution(settings, currentSemesterGrades);
 
+    Map<Semester, double> pastSemestersAvg = {};
+    for (Semester semester in Semester.qPhase) {
+      var pastSemesterGrades = grades.getGradesForSemester(settings.choice!, semester: semester);
+      double avg = GradeHelper.averageOfSubjects(pastSemesterGrades);
+      if (avg <= 0) continue; // skip semesters with no grades
+      pastSemestersAvg[semester] = avg;
+    }
+
+    var betterGradePoints = SemesterResult.getMinPointsForBetterAbiGrade(flags.pointsTotal);
+
     return PageSkeleton(title: const PageTitle(title: "Übersicht"), children: [
 
       _buildTextLine(Text("Q${grades.currentSemester.display}", style: theme.textTheme.bodyMedium), [
@@ -62,6 +72,20 @@ class HomePage extends StatelessWidget {
             _buildTextLine(Text("Punkte", style: theme.textTheme.bodyMedium), [
               Text("${flags.pointsTotal}", style: theme.textTheme.bodyMedium),
             ]),
+            if (betterGradePoints != 900)
+              _buildTextLine(Text("Bessere Note", style: theme.textTheme.displayMedium), [
+                Text("${SemesterResult.pointsToAbiGrade(betterGradePoints)} bei $betterGradePoints", style: theme.textTheme.displayMedium),
+              ]),
+            if (pastSemestersAvg.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Text("Semester", style: theme.textTheme.bodySmall),
+              for (var entry in pastSemestersAvg.entries)
+                _buildTextLine(Text(entry.key.display, style: theme.textTheme.bodyMedium), [
+                  Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+                  const SizedBox(width: 4),
+                  Text(GradeHelper.formatNumber(entry.value, decimals: 2), style: theme.textTheme.bodyMedium),
+                ]),
+            ],
             const SizedBox(height: 15),
             Text("Statistik", style: theme.textTheme.bodySmall),
             _buildTextLine(Text("Notenzahl", style: theme.textTheme.bodyMedium), [

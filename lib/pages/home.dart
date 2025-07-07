@@ -34,11 +34,11 @@ class HomePage extends StatelessWidget {
       if (avg <= 0) continue; // skip semesters with no grades
       pastSemestersAvg[semester] = avg;
     }
-
     var betterGradePoints = SemesterResult.getMinPointsForBetterAbiGrade(flags.pointsTotal);
 
-    return PageSkeleton(title: const PageTitle(title: "Übersicht"), children: [
+    var (admissionHurdleType, admissionHurdleText) = AdmissionHurdle.check(settings.choice!, results);
 
+    return PageSkeleton(title: const PageTitle(title: "Übersicht"), children: [
       _buildTextLine(Text("Q${grades.currentSemester.display}", style: theme.textTheme.bodyMedium), [
         Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
         const SizedBox(width: 6),
@@ -52,6 +52,22 @@ class HomePage extends StatelessWidget {
         child: _buildChart(context, gradesDistribution),
       ),
       const SizedBox(height: 36),
+
+      if (admissionHurdleType != null && admissionHurdleText != null)...[
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: theme.splashColor,
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text("Zulassungshürden", style: theme.textTheme.bodySmall),
+            Text(admissionHurdleType.desc, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+            Text(admissionHurdleText, style: theme.textTheme.displayMedium),
+          ]),
+        ),
+        const SizedBox(height: 30),
+      ],
 
       // Abitur Vorhersage
       Container(
@@ -77,7 +93,7 @@ class HomePage extends StatelessWidget {
                 Text("${SemesterResult.pointsToAbiGrade(betterGradePoints)} bei $betterGradePoints", style: theme.textTheme.displayMedium),
               ]),
             if (pastSemestersAvg.isNotEmpty) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: 15),
               Text("Semester", style: theme.textTheme.bodySmall),
               for (var entry in pastSemestersAvg.entries)
                 _buildTextLine(Text(entry.key.display, style: theme.textTheme.bodyMedium), [

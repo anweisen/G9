@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/adapters.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'logic/choice.dart';
@@ -60,10 +61,12 @@ class MyApp extends StatelessWidget {
           hintColor: const Color.fromRGBO(143, 143, 147, 1.0),
           dividerColor: const Color.fromRGBO(28, 28, 32, 1.0),
           primaryColor: Colors.white,
+          splashColor: const Color.fromRGBO(252, 130, 130, 0.2),
           textTheme: const TextTheme(
             headlineMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 24),
             bodyMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 18),
             bodySmall: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 12, height: 1),
+            displayMedium: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 14),
             labelMedium: TextStyle(fontWeight: bold, color: Colors.black, fontSize: 18),
             labelSmall: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 18, letterSpacing: 0),
           )),
@@ -73,12 +76,14 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
         cardColor: Colors.white,
         hintColor: Colors.white,
-        dividerColor: const Color.fromRGBO(223, 228, 236, 1.0),
+        dividerColor: const Color.fromRGBO(228, 233, 240, 1.0),
         primaryColor: Colors.black,
+        splashColor: const Color.fromRGBO(252, 130, 130, 0.4),
         textTheme: const TextTheme(
           headlineMedium: TextStyle(fontWeight: bold, color: Colors.black, fontSize: 24),
           bodyMedium: TextStyle(fontWeight: bold, color: Colors.black, fontSize: 18),
           bodySmall: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 12, height: 1),
+          displayMedium: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 14),
           labelMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 18),
           labelSmall: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 18, letterSpacing: 0),
         ),
@@ -90,11 +95,11 @@ class MyApp extends StatelessWidget {
       // initialRoute: "/home",
       home: const SplashScreenPage(),
       routes: {
-        "/home": (context) => const HomePage(),
-        "/subjects": (context) => const SubjectsPage(),
-        "/results": (context) => const ResultsPage(),
-        "/setup": (context) => const SetupPage(),
-        "/settings": (context) => const SettingsPage(),
+        "/home": (context) => const HomePage(key: Key("home")),
+        "/subjects": (context) => const SubjectsPage(key: Key("subjects")),
+        "/results": (context) => const ResultsPage(key: Key("results")),
+        "/setup": (context) => const SetupPage(key: Key("setup")),
+        "/settings": (context) => const SettingsPage(key: Key("settings")),
       },
     );
   }

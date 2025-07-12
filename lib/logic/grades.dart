@@ -3,6 +3,7 @@ import 'package:hive/hive.dart';
 import '../provider/grades.dart';
 import 'choice.dart';
 import 'types.dart';
+import 'results.dart';
 
 part "grades.g.dart";
 
@@ -51,6 +52,25 @@ class GradeHelper {
     return sum / count;
   }
 
+  static double averageOfSemester(Map<Subject, Map<Semester, SemesterResult>> results, Semester semester) {
+    double sum = 0;
+    int count = 0;
+
+    results.forEach((subject, semesters) {
+      var result = semesters[semester];
+      if (result == null || result.prediction) return; // only use real results
+      if (!result.used) return; // only use used results
+      sum += result.grade;
+      count++;
+    });
+
+    if (count == 0) {
+      return 0;
+    }
+
+    return sum / count;
+  }
+
   static int result(GradesList grades) {
     return average(grades).round();
   }
@@ -89,7 +109,7 @@ class GradeHelper {
   static double averageSportLk(GradesList grades) {
     // Die jeweiligen Leistungen werden zu einer Note gerundet
     double praxis = averageOf(grades.where((e) => e.type.area == GradeTypeArea.sport).toList()).roundToDouble();
-    double theorie = averageNormal(grades).roundToDouble();
+    double theorie = averageNormal(grades.where((e) => e.type.area != GradeTypeArea.sport).toList()).roundToDouble();
     return averageWeighted(praxis, theorie, 1);
   }
 

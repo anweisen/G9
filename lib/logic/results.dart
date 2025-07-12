@@ -203,7 +203,7 @@ class SemesterResult {
       }
     }
 
-    return ResultsFlags(forcedSemesters, pointsQ, pointsAbi, false);
+    return ResultsFlags(forcedSemesters, pointsQ, pointsAbi, (pointsQ + pointsAbi) == 0);
   }
 
   static Map<Subject, Map<Semester, SemesterResult>> calculateResultsWithPredictions(Choice choice, GradesDataProvider provider) {

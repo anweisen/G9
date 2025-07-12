@@ -25,14 +25,21 @@ class HomePage extends StatelessWidget {
 
     var currentSemesterGrades = grades.getGradesForSemester(settings.choice!);
     var currentSemesterAvg = GradeHelper.averageOfSubjects(currentSemesterGrades);
+    var currentSemesterAvgUsed = GradeHelper.averageOfSemester(results, grades.currentSemester);
     var gradesDistribution = _calculateSingleGradesDistribution(settings, currentSemesterGrades);
 
     Map<Semester, double> pastSemestersAvg = {};
+    Map<Semester, double> pastSemestersAvgUsed = {};
     for (Semester semester in Semester.qPhase) {
       var pastSemesterGrades = grades.getGradesForSemester(settings.choice!, semester: semester);
       double avg = GradeHelper.averageOfSubjects(pastSemesterGrades);
-      if (avg <= 0) continue; // skip semesters with no grades
-      pastSemestersAvg[semester] = avg;
+      if (avg > 0) {
+        pastSemestersAvg[semester] = avg;
+      }
+      double avgUsed = GradeHelper.averageOfSemester(results, semester);
+      if (avgUsed > 0) {
+        pastSemestersAvgUsed[semester] = avgUsed;
+      }
     }
     var betterGradePoints = SemesterResult.getMinPointsForBetterAbiGrade(flags.pointsTotal);
 
@@ -46,14 +53,23 @@ class HomePage extends StatelessWidget {
         const SizedBox(width: 6),
         Text("(${GradeHelper.formatNumber(SemesterResult.convertAverage(currentSemesterAvg))})", style: theme.textTheme.bodySmall),
       ]),
-      const SizedBox(height: 8),
+      _buildTextLine(null, [
+        Text("Einbringungen", style: theme.textTheme.bodySmall),
+        const SizedBox(width: 6),
+        Text("Ø", style: theme.textTheme.displayMedium),
+        const SizedBox(width: 3),
+        Text(GradeHelper.formatNumber(currentSemesterAvgUsed, decimals: 2), style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600)),
+        const SizedBox(width: 3),
+        Text("(${GradeHelper.formatNumber(SemesterResult.convertAverage(currentSemesterAvgUsed))})", style: theme.textTheme.bodySmall),
+      ]),
+      const SizedBox(height: 4),
       Padding(
         padding: const EdgeInsets.fromLTRB(2, 0, 2, 0),
         child: _buildChart(context, gradesDistribution),
       ),
       const SizedBox(height: 36),
 
-      if (admissionHurdleType != null && admissionHurdleText != null)...[
+      if (!flags.isEmpty && admissionHurdleType != null && admissionHurdleText != null)...[
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
           decoration: BoxDecoration(
@@ -88,32 +104,41 @@ class HomePage extends StatelessWidget {
             _buildTextLine(Text("Punkte", style: theme.textTheme.bodyMedium), [
               Text("${flags.pointsTotal}", style: theme.textTheme.bodyMedium),
             ]),
-            if (betterGradePoints != 900)
+            if (betterGradePoints < 823)
               _buildTextLine(Text("Bessere Note", style: theme.textTheme.displayMedium), [
                 Text("${SemesterResult.pointsToAbiGrade(betterGradePoints)} bei $betterGradePoints", style: theme.textTheme.displayMedium),
               ]),
             if (pastSemestersAvg.isNotEmpty) ...[
               const SizedBox(height: 15),
               Text("Semester", style: theme.textTheme.bodySmall),
-              for (var entry in pastSemestersAvg.entries)
+              for (var entry in pastSemestersAvg.entries) ...[
                 _buildTextLine(Text(entry.key.display, style: theme.textTheme.bodyMedium), [
+                  Text("Ø", style: theme.textTheme.displayMedium),
+                  const SizedBox(width: 2),
+                  Text(GradeHelper.formatNumber(pastSemestersAvgUsed[entry.key]!, decimals: 2), style: theme.textTheme.displayMedium),
+                  const SizedBox(width: 2),
+                  Text("(${GradeHelper.formatNumber(SemesterResult.convertAverage(pastSemestersAvgUsed[entry.key]!))})", style: theme.textTheme.bodySmall),
+                  const SizedBox(width: 8),
                   Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
                   const SizedBox(width: 4),
                   Text(GradeHelper.formatNumber(entry.value, decimals: 2), style: theme.textTheme.bodyMedium),
                 ]),
+              ]
             ],
             const SizedBox(height: 15),
             Text("Statistik", style: theme.textTheme.bodySmall),
             _buildTextLine(Text("Notenzahl", style: theme.textTheme.bodyMedium), [
               Text("${stats.numberGrades}", style: theme.textTheme.bodyMedium),
             ]),
-            const SizedBox(height: 15),
-            Text("Bestes Fach", style: theme.textTheme.bodySmall),
-            _buildTextLine(_buildSubject(theme.textTheme, stats.bestSubject), [
-              Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
-              const SizedBox(width: 4),
-              Text("${GradeHelper.formatNumber(stats.bestSubjectAvg, decimals: 2)}", style: theme.textTheme.bodyMedium),
-            ]),
+            if (!flags.isEmpty) ...[
+              const SizedBox(height: 15),
+              Text("Bestes Fach", style: theme.textTheme.bodySmall),
+              _buildTextLine(_buildSubject(theme.textTheme, stats.bestSubject), [
+                Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+                const SizedBox(width: 4),
+                Text("${GradeHelper.formatNumber(stats.bestSubjectAvg, decimals: 2)}", style: theme.textTheme.bodyMedium),
+              ]),
+            ]
 
           ],
         ),
@@ -121,11 +146,11 @@ class HomePage extends StatelessWidget {
     ]);
   }
 
-  Widget _buildTextLine(Widget front, List<Widget> back) {
+  Widget _buildTextLine(Widget? front, List<Widget> back) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        front,
+        front ?? const SizedBox.shrink(),
         Row(
             verticalDirection: VerticalDirection.down,
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -153,6 +178,7 @@ class HomePage extends StatelessWidget {
     const spacing = 4.0;
 
     final int maxValue = gradesDistribution.isEmpty ? 1 : gradesDistribution.reduce((a, b) => a.value > b.value ? a : b).value; // find max value for scaling
+    final int totalGrades = gradesDistribution.fold(0, (sum, entry) => sum + entry.value); // total number of grades
     final ThemeData theme = Theme.of(context);
 
     return LayoutBuilder(
@@ -166,8 +192,7 @@ class HomePage extends StatelessWidget {
               width: 80, // <-- fixed width
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: gradesDistribution.map((entry) {
-                  return Padding(
+                children: gradesDistribution.map((entry) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: spacing),
                     child: Row(
                       children: [
@@ -175,11 +200,14 @@ class HomePage extends StatelessWidget {
                             width: 20, // <-- fixed width
                             child: Text("${entry.key}", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500, height: 1, fontSize: 16))),
                         const SizedBox(width: 4),
-                        Text("${entry.value}x", style: theme.textTheme.bodySmall),
+                        SizedBox(
+                          width: 16,
+                          child: Text("${entry.value}x", style: theme.textTheme.displayMedium)),
+                        const SizedBox(width: 6),
+                        Text("${(entry.value / totalGrades * 100).round()}%", style: theme.textTheme.bodySmall),
                       ],
                     ),
-                  );
-                }).toList(),
+                )).toList(),
               ),
             ),
             const SizedBox(width: 8), // space between columns
@@ -187,8 +215,7 @@ class HomePage extends StatelessWidget {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
-                children: gradesDistribution.map((entry) {
-                  return Padding(
+                children: gradesDistribution.map((entry) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: spacing + (16-10)/2),
                     child: Container(
                       decoration: BoxDecoration(
@@ -197,9 +224,8 @@ class HomePage extends StatelessWidget {
                       ),
                       height: 10, // uniform row height
                       width: maxValue > 0 ? (entry.value / maxValue) * maxWidth : 0, // percentage-based width
-                    ),
-                  );
-                }).toList(),
+                  )
+                )).toList(),
               ),
             ),
           ],

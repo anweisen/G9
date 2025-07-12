@@ -27,6 +27,7 @@ class _PageSkeletonState extends State<PageSkeleton> {
 
   @override
   Widget build(BuildContext context) {
+    ThemeData theme = Theme.of(context);
     return SubpageController(
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: MediaQuery.of(context).platformBrightness == Brightness.dark
@@ -51,6 +52,7 @@ class _PageSkeletonState extends State<PageSkeleton> {
                     leadingWidth: 0,
                     toolbarHeight: 64,
                     primary: true,
+                    shadowColor: Colors.transparent,
                     // expandedHeight: 156,
                     floating: true,
                     flexibleSpace: LayoutBuilder(
@@ -59,7 +61,7 @@ class _PageSkeletonState extends State<PageSkeleton> {
                           constraints: constraints,
                           child: ClipRRect(
                               child: Container(
-                                color: Colors.black.withOpacity(0.25),
+                                color: theme.scaffoldBackgroundColor.withOpacity(.6),
                                 child: BackdropFilter(
                                     filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
                                     child: Padding(padding: const EdgeInsets.fromLTRB(PageSkeleton.leftOffset, 16, PageSkeleton.leftOffset, 10), child: widget.title)),

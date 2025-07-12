@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
     const FontWeight normal = FontWeight.w500;
 
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'G9: Notenapp',
       debugShowCheckedModeBanner: false,
       themeMode: settings.theme,
       // themeMode: ThemeMode.light,
@@ -66,7 +66,7 @@ class MyApp extends StatelessWidget {
             headlineMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 24),
             bodyMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 18),
             bodySmall: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 12, height: 1),
-            displayMedium: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 14),
+            displayMedium: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 14, height: 1),
             labelMedium: TextStyle(fontWeight: bold, color: Colors.black, fontSize: 18),
             labelSmall: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 18, letterSpacing: 0),
           )),
@@ -83,7 +83,7 @@ class MyApp extends StatelessWidget {
           headlineMedium: TextStyle(fontWeight: bold, color: Colors.black, fontSize: 24),
           bodyMedium: TextStyle(fontWeight: bold, color: Colors.black, fontSize: 18),
           bodySmall: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 12, height: 1),
-          displayMedium: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 14),
+          displayMedium: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 14, height: 1),
           labelMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 18),
           labelSmall: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 18, letterSpacing: 0),
         ),

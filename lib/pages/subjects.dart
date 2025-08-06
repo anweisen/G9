@@ -20,8 +20,7 @@ class SubjectsPage extends StatelessWidget {
     final grades = Provider.of<GradesDataProvider>(context).getGradesForSemester(settings.choice!);
 
     final avg = GradeHelper.averageOfSubjects(grades);
-    final subjects = (Provider.of<GradesDataProvider>(context).currentSemester == Semester.abi)
-        ? settings.choice?.abiSubjects : settings.choice?.subjects;
+    final subjects = settings.choice?.subjectsForSemester(Provider.of<GradesDataProvider>(context).currentSemester);
 
     print("Building subjects page with choice: ${settings.choice}");
 

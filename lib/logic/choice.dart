@@ -1,6 +1,7 @@
 import 'package:hive/hive.dart';
 
 import 'types.dart';
+import '../provider/grades.dart';
 
 part 'choice.g.dart';
 
@@ -172,6 +173,13 @@ class Choice extends HiveObject {
     abi4,
     abi5,
   ];
+
+  List<Subject> subjectsForSemester(Semester semester) {
+    if (semester == Semester.abi) {
+      return abiSubjects;
+    }
+    return subjects.where((element) => semester.index < numberOfSemestersFor(element)).toList();
+  }
 
   int numberOfSemestersFor(Subject subject) {
     // See also: results.dart

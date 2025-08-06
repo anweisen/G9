@@ -234,8 +234,8 @@ class HomePage extends StatelessWidget {
                             child: Text("${entry.key}", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500, height: 1, fontSize: 16))),
                         const SizedBox(width: 4),
                         SizedBox(
-                          width: 16,
-                          child: Text("${entry.value}x", style: theme.textTheme.displayMedium)),
+                          width: 22,
+                          child: Text("${entry.value}x", textAlign: TextAlign.end, style: theme.textTheme.displayMedium)),
                         const SizedBox(width: 6),
                         Text("${(entry.value / totalGrades * 100).round()}%", style: theme.textTheme.bodySmall),
                       ],

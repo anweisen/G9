@@ -224,7 +224,7 @@ class _SetupPageState extends State<SetupPage> {
         ),
       if (_choiceBuilder.sbs == null && _choiceBuilder.lk != Subject.info)
         SetupStepPage(
-          title: "Dein Vertiefungskurs, ersetzt ${_choiceBuilder.mintSg2?.name ?? ""}",
+          title: "Vertiefungskurs, ersetzt ${_choiceBuilder.mintSg2?.name ?? ""}",
           pageController: _pageController,
           allowNextStep: allowNextStep,
           subjectsPool: [ if (_choiceBuilder.mintSg2?.category == SubjectCategory.sg) Subject.deutschVk else Subject.matheVk ],

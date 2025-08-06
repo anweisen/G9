@@ -46,14 +46,14 @@ class HomePage extends StatelessWidget {
     var (admissionHurdleType, admissionHurdleText) = AdmissionHurdle.check(settings.choice!, results);
 
     return PageSkeleton(title: const PageTitle(title: "Übersicht"), children: [
-      _buildTextLine(Text("Q${grades.currentSemester.display}", style: theme.textTheme.bodyMedium), [
+      _buildTextLine(Text(grades.currentSemester.detailedDisplay, style: theme.textTheme.bodyMedium), [
         Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
         const SizedBox(width: 6),
         Text(GradeHelper.formatNumber(currentSemesterAvg, decimals: 2), style: theme.textTheme.bodyMedium),
         const SizedBox(width: 6),
         Text("(${GradeHelper.formatNumber(SemesterResult.convertAverage(currentSemesterAvg))})", style: theme.textTheme.bodySmall),
       ]),
-      _buildTextLine(null, [
+      if (grades.currentSemester != Semester.abi) _buildTextLine(null, [
         Text("Einbringungen", style: theme.textTheme.bodySmall),
         const SizedBox(width: 6),
         Text("Ø", style: theme.textTheme.displayMedium),
@@ -143,6 +143,39 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
+
+      const SizedBox(height: 50),
+
+      if (grades.currentSemester != Semester.abi)
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              grades.currentSemester = grades.currentSemester.nextSemester();
+              Navigator.popAndPushNamed(context, "/home");
+            },
+            child: Container(
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: theme.primaryColor),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text("Halbjahr ${grades.currentSemester.detailedDisplay} abschließen", style: theme.textTheme.displayMedium),
+                        Text("Als nächstes: ${grades.currentSemester.nextSemester().detailedDisplay}", style: theme.textTheme.labelMedium),
+                      ],
+                    ),
+                    Icon(Icons.chevron_right_rounded, color: theme.textTheme.labelMedium?.color),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        )
     ]);
   }
 

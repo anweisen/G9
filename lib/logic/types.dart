@@ -24,8 +24,7 @@ class Subject {
   }
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) || other is Subject && id == other.id;
+  bool operator ==(Object other) => identical(this, other) || other is Subject && id == other.id;
 
   @override
   int get hashCode => id;

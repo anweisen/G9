@@ -286,12 +286,20 @@ class GradeTypSelectionPage extends StatelessWidget {
         return Icons.emoji_people_rounded;
       case GradeType.praxis:
         return Icons.sports_soccer_rounded;
+      case GradeType.technik:
+        return Icons.build_rounded;
       case GradeType.theorie:
         return Icons.menu_book_rounded;
       case GradeType.seminar:
         return Icons.bookmark_outlined;
       case GradeType.seminarreferat:
-        return Icons.emoji_people_rounded;
+        return Icons.question_answer_rounded;
+      case GradeType.schriftlich:
+        return Icons.article_rounded;
+      case GradeType.muendlich:
+        return Icons.mic_rounded;
+      default:
+        return Icons.label_rounded; // Fallback icon
     }
   }
 }

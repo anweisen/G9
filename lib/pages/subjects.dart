@@ -20,6 +20,8 @@ class SubjectsPage extends StatelessWidget {
     final grades = Provider.of<GradesDataProvider>(context).getGradesForSemester(settings.choice!);
 
     final avg = GradeHelper.averageOfSubjects(grades);
+    final subjects = (Provider.of<GradesDataProvider>(context).currentSemester == Semester.abi)
+        ? settings.choice?.abiSubjects : settings.choice?.subjects;
 
     print("Building subjects page with choice: ${settings.choice}");
 
@@ -37,19 +39,14 @@ class SubjectsPage extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text("(${GradeHelper.formatNumber(SemesterResult.convertAverage(avg))})", style: theme.textTheme.bodySmall),
                 ]
-              )
-        ),
+              )),
         children: [
-          if (Provider.of<SettingsDataProvider>(context).choice != null)
-            for (int index = 0; index < Provider.of<SettingsDataProvider>(context).choice!.subjects.length; index++)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: SubjectWidget(subject: Provider.of<SettingsDataProvider>(context).choice!.subjects[index]),
-              )
-
-
-        ]
-    );
+          for (Subject subject in subjects!)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: SubjectWidget(subject: subject),
+            )
+        ]);
   }
 }
 

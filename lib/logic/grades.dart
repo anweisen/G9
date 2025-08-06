@@ -209,14 +209,25 @@ enum GradeType {
   @HiveField(10)
   praxis("Praxis", GradeTypeArea.sport),
 
+  @HiveField(12)
+  technik("Technik", GradeTypeArea.sport),
+
   @HiveField(11)
   theorie("Theorie", GradeTypeArea.sport),
 
   @HiveField(20)
-  seminar("Seminar-Arbeit", GradeTypeArea.seminar), // wird 3x gewichtet
+  seminar("Seminar Arbeit", GradeTypeArea.seminar), // wird 3x gewichtet
 
   @HiveField(21)
-  seminarreferat("Seminar-Referat", GradeTypeArea.seminar),
+  seminarreferat("Seminar Referat", GradeTypeArea.seminar),
+
+  @HiveField(30)
+  schriftlich("Schriftliche Prüfung", GradeTypeArea.abi),
+
+  @HiveField(31)
+  muendlich("Mündliche Prüfung", GradeTypeArea.abi),
+
+  // TODO: Fach-, Zusatzprüfungen, etc.
 
   ;
 
@@ -232,6 +243,10 @@ enum GradeType {
   }
 
   static List<GradeType> types(Choice choice, Subject subject, Semester semester) {
+    if (semester == Semester.abi) {
+      return only(GradeTypeArea.abi);
+    }
+
     if (subject == Subject.seminar) {
       if (semester == Semester.q12_1 || semester == Semester.q12_2) {
         return normal;
@@ -257,4 +272,6 @@ enum GradeTypeArea {
   seminar,
   /// Das Fach Sport(GK) hat keine üblichen Noten(sondern Praxis & Theorie) (= Praxisteil im LK)
   sport,
+  /// Abiturprüfungen: schriftliche / mündliche Prüfungen, Fachprüfungen, Zusatzprüfungen, etc.
+  abi,
 }

@@ -13,7 +13,7 @@ class SemesterResult {
     // Profilfach nicht Pflicht
     if (subject == Subject.sport && choice.lk != Subject.sport) {
       return 0;
-    } else if (subject == choice.profil) {
+    } else if (subject == choice.profil12 || subject == choice.profil13) {
       return 0;
     }
 
@@ -61,8 +61,8 @@ class SemesterResult {
       return 3;
     } else if (subject.category == SubjectCategory.vk) { // VKs immer nur max. 2 Semester
       return 2;
-    } else if (subject == choice.profil) { // Vom Profilfach dürfen nur 3 Semester eingebracht werden
-      return 3;
+    } else if (subject == choice.profil12 || subject == choice.profil13) { // Vom Profilfach dürfen nur 3 Semester eingebracht werden (wenn über 4 Semester belegt)
+      return 3; // TODO: insgesamt von allen Profilfächern nur 3 Semester?
     } else if (!choice.pug13 && subject == Subject.pug) { // PuG nur in Q12
       return 2;
     } else if (choice.pug13 && subject == choice.geoWr) { // PuG in Q12+13, Geo/WR nur in Q12
@@ -249,7 +249,7 @@ class SemesterResult {
       // apply prediction
       int prediction = (sum / count).floor();
       for (var semester in Semester.values) {
-        if (Semester.qPhase.contains(semester) && semester.index >= choice.numberOfSemestersFor(subject)) {
+        if (Semester.qPhase.contains(semester) && !choice.hasSubjectInSemester(subject, semester)) {
           continue; // subject not taken that semester
         }
 
@@ -264,7 +264,7 @@ class SemesterResult {
     int totalPrediction = totalCount == 0 ? 0 : (totalSum / totalCount).floor();
     for (var subject in choice.subjects) {
       for (var semester in Semester.values) {
-        if (Semester.qPhase.contains(semester) && semester.index >= choice.numberOfSemestersFor(subject)) {
+        if (Semester.qPhase.contains(semester) && !choice.hasSubjectInSemester(subject, semester)) {
           continue; // subject not taken that semester
         }
 
@@ -440,7 +440,7 @@ enum AdmissionHurdle {
 
         SemesterResult sr = result[subject]![semester]!;
         // no0: Alle Belegungen müssen mindestens 1 Punkt haben (sonst nicht belegt)
-        if (sr.grade < 1 && subject != choice.profil) { // Belegung Profilfach nicht Pflicht
+        if (sr.grade < 1 && subject != choice.profil12 && subject != choice.profil13) { // Belegung Profilfach nicht Pflicht
           return (AdmissionHurdle.no0, "${subject.name} in ${semester.display}");
         }
         if (sr.used) {

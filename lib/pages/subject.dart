@@ -137,7 +137,7 @@ class _SubjectPageState extends State<SubjectPage> {
 
     return GestureDetector(
       onTap: () => {
-        if (semester.index < choice!.numberOfSemestersFor(widget.subject)) {
+        if (choice!.hasSubjectInSemester(widget.subject, semester)) {
           callback(semester)
         }
       },

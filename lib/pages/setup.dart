@@ -87,9 +87,15 @@ class _SetupPageState extends State<SetupPage> {
     });
   }
 
-  void setProfil(Subject? subject) {
+  void setProfil12(Subject? subject) {
     setState(() {
-      _choiceBuilder.profil = subject;
+      _choiceBuilder.profil12 = subject;
+    });
+  }
+
+  void setProfil13(Subject? subject) {
+    setState(() {
+      _choiceBuilder.profil13 = subject;
     });
   }
 
@@ -253,15 +259,26 @@ class _SetupPageState extends State<SetupPage> {
           currentlySelected: _choiceBuilder.pug13 == null ? null : (_choiceBuilder.pug13! ? Subject.pug : getGeoWr()),
         ),
 
-      // Profilfach (Wahlfach, Vertiefungskurse wenn noch nicht gewählt, bisher unbelegte Kurse)
+      // Profilfach in Q13 (Wahlfach, Vertiefungskurse wenn noch nicht gewählt, bisher unbelegte Kurse)
       SetupStepPage(
-        title: "Profilfach",
+        title: "Profilfach Q12",
         pageController: _pageController,
         allowNextStep: allowNextStep,
         subjectsPool: Subject.allOf(SubjectCategory.profil, _choiceBuilder.vk == null ? SubjectCategory.vk : null),
         canSkip: true,
-        callback: setProfil,
-        currentlySelected: _choiceBuilder.profil,
+        callback: setProfil12,
+        currentlySelected: _choiceBuilder.profil12,
+      ),
+
+      // Profilfach in Q13 (Wahlfach, bisher unbelegte Kurse), Vertiefungskurse nur in Q12 möglich
+      SetupStepPage(
+        title: "Profilfach Q13",
+        pageController: _pageController,
+        allowNextStep: allowNextStep,
+        subjectsPool: Subject.allOf(SubjectCategory.profil),
+        canSkip: true,
+        callback: setProfil13,
+        currentlySelected: _choiceBuilder.profil13,
       ),
 
       //
@@ -788,9 +805,10 @@ class SetupFinishPage extends StatelessWidget {
       const SizedBox(height: sectionSpacing),
 
       // Profilfach (optional)
-      Text("Profilfach", style: theme.textTheme.bodySmall),
+      Text("Profilfach Q12 / Q13", style: theme.textTheme.bodySmall),
       const SizedBox(height: labelSpacing),
-      SubjectWidget(subject: choice.profil ?? SetupStepPage.skipSubject),
+      SubjectWidget(subject: choice.profil12 ?? SetupStepPage.skipSubject),
+      SubjectWidget(subject: choice.profil13 ?? SetupStepPage.skipSubject),
       const SizedBox(height: sectionSpacing),
 
       // Prüfungsfächer

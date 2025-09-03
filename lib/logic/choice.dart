@@ -33,7 +33,8 @@ class ChoiceBuilder {
   Subject? musikKunst;
   Subject? vk;
   Subject? seminar;
-  Subject? profil;
+  Subject? profil12;
+  Subject? profil13;
 
   bool? substituteMathe;
   bool? substituteDeutsch;
@@ -78,7 +79,8 @@ class ChoiceBuilder {
 
         // optional
         vk?.id,
-        profil?.id,
+        profil12?.id,
+        profil13?.id,
 
         // abi
         substituteMathe ?? false,
@@ -119,7 +121,10 @@ class Choice extends HiveObject {
   final SubjectId _seminar;
 
   @HiveField(9)
-  final SubjectId? _profil;
+  final SubjectId? _profil12;
+
+  @HiveField(14)
+  final SubjectId? _profil13;
 
   @HiveField(10)
   final bool substituteMathe;
@@ -143,7 +148,8 @@ class Choice extends HiveObject {
   Subject get geoWr => _byId(_geoWr);
   Subject get musikKunst => _byId(_musikKunst);
   Subject? get vk => _byIdOpt(_vk);
-  Subject? get profil => _byIdOpt(_profil);
+  Subject? get profil12 => _byIdOpt(_profil12);
+  Subject? get profil13 => _byIdOpt(_profil13);
   Subject get seminar => _byId(_seminar);
   Subject get abi4 => _byId(_abi4);
   Subject get abi5 => _byId(_abi5);
@@ -163,7 +169,8 @@ class Choice extends HiveObject {
     Subject.geschi,
     Subject.sport,
     seminar,
-    if (profil != null) profil!,
+    if (profil12 != null) profil12!,
+    if (profil13 != null && profil13 != profil12) profil13!,
   ];
 
   List<Subject> get abiSubjects => [
@@ -178,7 +185,12 @@ class Choice extends HiveObject {
     if (semester == Semester.abi) {
       return abiSubjects;
     }
-    return subjects.where((element) => semester.index < numberOfSemestersFor(element)).toList();
+    return subjects.where((subject) => hasSubjectInSemester(subject, semester)).toList();
+  }
+
+  bool hasSubjectInSemester(Subject subject, Semester semester) {
+    if (subject == profil13) return (semester.index - 2) < numberOfSemestersFor(subject);
+    return semester.index < numberOfSemestersFor(subject);
   }
 
   int numberOfSemestersFor(Subject subject) {
@@ -188,6 +200,10 @@ class Choice extends HiveObject {
         return 2;
       }
     } else if (subject.category == SubjectCategory.vk) { // VK als Profilfach
+      return 2;
+    }
+
+    if ((subject == profil12 || subject == profil13) && profil12 != profil13) {
       return 2;
     }
 
@@ -214,7 +230,8 @@ class Choice extends HiveObject {
     this._musikKunst,
     this._seminar,
     this._vk,
-    this._profil,
+    this._profil12,
+    this._profil13,
     this.substituteMathe,
     this.substituteDeutsch,
     this._abi4,
@@ -225,6 +242,6 @@ class Choice extends HiveObject {
 
   @override
   String toString() {
-    return 'Choice{_lk: $_lk, _sg1: $_sg1, _ntg1: $_ntg1, _mintSg2: $_mintSg2, pug13: $pug13, _geoWr: $_geoWr, _musikKunst: $_musikKunst, _vk: $_vk, _seminar: $_seminar, _profil: $_profil, substituteMathe: $substituteMathe, substituteDeutsch: $substituteDeutsch, _abi4: $_abi4, _abi5: $_abi5}';
+    return 'Choice{_lk: $_lk, _sg1: $_sg1, _ntg1: $_ntg1, _mintSg2: $_mintSg2, pug13: $pug13, _geoWr: $_geoWr, _musikKunst: $_musikKunst, _vk: $_vk, _seminar: $_seminar, _profil12: $_profil12, _profil13: $_profil13, substituteMathe: $substituteMathe, substituteDeutsch: $substituteDeutsch, _abi4: $_abi4, _abi5: $_abi5}';
   }
 }

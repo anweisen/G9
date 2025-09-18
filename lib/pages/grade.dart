@@ -24,6 +24,7 @@ class GradePage extends StatefulWidget {
 class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixin {
 
   Subject? _subject;
+  Semester? _semester;
 
   int? _grade;
   GradeType? _type;
@@ -34,6 +35,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
     super.initState();
 
     _subject = widget.subject;
+    _semester = widget.semester;
     _grade = widget.entry?.grade;
     _type = widget.entry?.type;
     _date = widget.entry?.date ?? DateTime.now();
@@ -121,14 +123,19 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
                         icon: Container(
                           height: 22,
                           width: 22,
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              color: _subject!.color),
-                        )),
-                  // on subject change: reset GradeType if need
+                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: _subject!.color),)
+                    ),
+                  // on subject/semester change: reset GradeType if need
+                  const SizedBox(height: 20),
+                  if (_subject == null)
+                    const GradeOptionPlaceholder(text: "Wähle ein Semester")
+                  else
+                    GradeOptionPlaceholder(
+                        text: _semester!.detailedDisplay,
+                        icon: Icon(Icons.account_tree_rounded, color: theme.primaryColor, size: 24)),
                   const SizedBox(height: 20),
                   GestureDetector(
-                      onTap: () => SubpageController.of(context).openSubpage(GradeTypSelectionPage(semester: widget.semester, subject: _subject), callback: (type) => {
+                      onTap: () => SubpageController.of(context).openSubpage(GradeTypSelectionPage(semester: _semester, subject: _subject), callback: (type) => {
                         if (type is GradeType) {
                           setType(type)
                         }
@@ -227,7 +234,7 @@ class GradeOptionPlaceholder extends StatelessWidget {
 class GradeTypSelectionPage extends StatelessWidget {
   const GradeTypSelectionPage({super.key, required this.semester, this.subject});
 
-  final Semester semester;
+  final Semester? semester;
   final Subject? subject;
 
   @override
@@ -236,7 +243,7 @@ class GradeTypSelectionPage extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
 
     final Choice choice = Provider.of<SettingsDataProvider>(context).choice!;
-    final List<GradeType> types = (subject != null) ? GradeType.types(choice, subject!, semester) : GradeType.normal;
+    final List<GradeType> types = (subject != null && semester != null) ? GradeType.types(choice, subject!, semester!) : List.empty();
 
     return Scaffold(
       backgroundColor: Colors.transparent,

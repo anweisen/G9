@@ -105,7 +105,7 @@ class _SubjectPageState extends State<SubjectPage> {
                       GradePage(subject: widget.subject, key: GlobalKey(), semester: _currentSemester!,),
                       callback: (result) => {
                         if (result is GradeEditResult) {
-                          dataProvider.addGrade(result.subject.id, result.entry, semester: _currentSemester)
+                          _addGrade(dataProvider, result)
                         }
                       }),
                   child: Icon(Icons.add, color: theme.primaryColor, size: 30)),
@@ -122,13 +122,37 @@ class _SubjectPageState extends State<SubjectPage> {
                   child: TestItem(theme: theme, entry: grades[index], subject: widget.subject,
                   callback: (result) {
                     if (result is GradeEditResult) {
-                      dataProvider.removeGrade(widget.subject.id, index, semester: _currentSemester);
-                      if (!result.remove) dataProvider.addGrade(result.subject.id, result.entry, semester: _currentSemester);
+                      removeGrade(dataProvider, index);
+                      if (!result.remove) _addGrade(dataProvider, result);
                     }
                   }, semester: _currentSemester!,))),
         ),
       ]),
     );
+  }
+
+  void removeGrade(GradesDataProvider dataProvider, int index) {
+    dataProvider.removeGrade(widget.subject.id, index, semester: _currentSemester);
+
+    if (widget.subject.category == SubjectCategory.seminar) {
+      if (_currentSemester == Semester.q13_1) {
+        dataProvider.removeGrade(widget.subject.id, index, semester: Semester.q13_2);
+      } else if (_currentSemester == Semester.q13_2) {
+        dataProvider.removeGrade(widget.subject.id, index, semester: Semester.q13_1);
+      }
+    }
+  }
+
+  void _addGrade(GradesDataProvider dataProvider, GradeEditResult result) {
+    dataProvider.addGrade(result.subject.id, result.entry, semester: _currentSemester);
+
+    if (result.subject.category == SubjectCategory.seminar) {
+      if (_currentSemester == Semester.q13_1) {
+        dataProvider.addGrade(result.subject.id, result.entry, semester: Semester.q13_2);
+      } else if (_currentSemester == Semester.q13_2) {
+        dataProvider.addGrade(result.subject.id, result.entry, semester: Semester.q13_1);
+      }
+    }
   }
 
   Widget _buildSemester(ThemeData theme, GradesDataProvider dataProvider, Choice? choice, Semester currentSemester, Semester semester, void Function(Semester) callback) {

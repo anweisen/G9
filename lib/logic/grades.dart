@@ -72,7 +72,8 @@ class GradeHelper {
   }
 
   static int result(GradesList grades) {
-    return average(grades).round();
+    final avg = average(grades);
+    return avg < 1 ? 0 : avg.round();
   }
 
   static String formatAverage(GradesList grades, {int decimals = 1}) {

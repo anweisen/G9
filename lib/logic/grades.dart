@@ -107,7 +107,6 @@ class GradeHelper {
     if (areas.contains(GradeTypeArea.seminar)) {
       return averageSeminar(grades);
     }
-
     if (areas.contains(GradeTypeArea.sport) && grades.length > 1) {
       return averageSportLk(grades);
     }
@@ -134,6 +133,14 @@ class GradeHelper {
     double seminararbeit = averageOf(grades.where((e) => e.type == GradeType.seminar).toList());
     double seminarreferat = averageOf(grades.where((e) => e.type == GradeType.seminarreferat).toList());
     return averageWeighted(seminararbeit, seminarreferat, 3) * 2;
+  }
+
+  // https://www.gesetze-bayern.de/Content/Document/BayGSO-ANL_21
+  // TODO fix this (rounding after *4 !)
+  static double averageAbi(GradesList grades) {
+    double normal = averageOf(grades.where((e) => e.type != GradeType.zusatz).toList());
+    double zusatz = averageOf(grades.where((e) => e.type == GradeType.zusatz).toList());
+    return averageWeighted(normal, zusatz, 2);
   }
 
   static double averageOf(List<GradeEntry> grades) {
@@ -241,7 +248,10 @@ enum GradeType {
   schriftlich("Schriftliche Prüfung", GradeTypeArea.abi),
 
   @HiveField(31)
-  muendlich("Mündliche Prüfung", GradeTypeArea.abi),
+  muendlich("Mündliche Prüfung (Kolloquium)", GradeTypeArea.abi),
+
+  @HiveField(32)
+  zusatz("Mündliche Zusatzprüfung (Nachprüfung)", GradeTypeArea.abi),
 
   // TODO: Fach-, Zusatzprüfungen, etc.
 
@@ -253,6 +263,7 @@ enum GradeType {
   final GradeTypeArea area;
 
   static List<GradeType> normal = only(GradeTypeArea.normal);
+  static List<GradeType> normalNoK = GradeType.normal.where((element) => element != GradeType.klausur).toList();
 
   static List<GradeType> only(GradeTypeArea area) {
     return values.where((it) => it.area == area).toList();
@@ -276,7 +287,29 @@ enum GradeType {
       return only(GradeTypeArea.sport);
     }
 
+    if (semester == Semester.q13_2 && !choice.abiSubjects.contains(subject)) {
+      return normalNoK;
+    }
+
     return normal;
+  }
+
+  bool stillPossible(List<GradeType> existingTypes) {
+    switch (this) {
+      case GradeType.klausur: // max 1 Klausur
+        return !existingTypes.contains(GradeType.klausur);
+      case GradeType.seminar: // max 1 Seminararbeit
+        return !existingTypes.contains(GradeType.seminar);
+      case GradeType.seminarreferat: // max 1 Seminarreferat
+        return !existingTypes.contains(GradeType.seminarreferat);
+      case GradeType.schriftlich: // max 1 (schriftliche, mündliche) Abiturprüfung
+      case GradeType.muendlich:
+        return !existingTypes.contains(GradeType.schriftlich) && !existingTypes.contains(GradeType.muendlich);
+      case GradeType.zusatz: // max 1 Zusatzprüfung, nur bei schriftlicher Prüfung
+        return !existingTypes.contains(GradeType.zusatz) && existingTypes.contains(GradeType.schriftlich);
+      default:
+        return true;
+    }
   }
 
 }

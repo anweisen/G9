@@ -85,7 +85,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
               padding: const EdgeInsets.symmetric(horizontal: leftOffset),
               child:
                   Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                Text("Note hinzufügen", style: theme.textTheme.headlineMedium),
+                    Text("Note ${widget.entry == null ? "hinzufügen" : "ändern"}", style: theme.textTheme.headlineMedium),
               ]),
             ),
             const SizedBox(height: 24),
@@ -99,8 +99,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
                   children: [
                     for (int indexJ = 4 * indexI; indexJ < 4 * indexI + 4; indexJ++)
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         child: GestureDetector(
                           onTap: () => setGrade(15 - indexJ),
                           child: _buildGradeButton(indexJ, theme, _grade),
@@ -115,6 +114,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
               padding: const EdgeInsets.symmetric(horizontal: leftOffset),
               child: Column(
                 children: [
+
                   if (_subject == null)
                     const GradeOptionPlaceholder(text: "Wähle ein Fach")
                   else
@@ -210,8 +210,9 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
 }
 
 class GradeOptionPlaceholder extends StatelessWidget {
-  const GradeOptionPlaceholder({super.key, required this.text, this.icon});
+  const GradeOptionPlaceholder({super.key, required this.text, this.icon, this.textColor});
 
+  final Color? textColor;
   final String text;
   final Widget? icon;
 
@@ -223,11 +224,22 @@ class GradeOptionPlaceholder extends StatelessWidget {
         if (icon != null) icon!
         else Icon(Icons.add_circle_rounded, color: theme.textTheme.bodySmall?.color, size: 24),
         const SizedBox(width: 16),
-        Text(text,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: icon == null ? theme.textTheme.bodySmall?.color : null)),
+        Text(text, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: textColor ?? (icon == null ? theme.textTheme.bodySmall?.color : null))),
       ],
     );
+  }
+}
+class GradeOptionPlaceholderIcon extends StatelessWidget {
+  const GradeOptionPlaceholderIcon({super.key, required this.text, required this.icon, this.textColor});
+
+  final Color? textColor;
+  final String text;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return GradeOptionPlaceholder(text: text, icon: Icon(icon, color: textColor ?? theme.primaryColor, size: 24), textColor: textColor);
   }
 }
 
@@ -243,7 +255,10 @@ class GradeTypSelectionPage extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
 
     final Choice choice = Provider.of<SettingsDataProvider>(context).choice!;
+    final grades = subject != null ? Provider.of<GradesDataProvider>(context).getGrades(subject!.id, semester: semester) : List<GradeEntry>.empty();
+    final existingTypes = grades.map((e) => e.type).toList();
     final List<GradeType> types = (subject != null && semester != null) ? GradeType.types(choice, subject!, semester!) : List.empty();
+    // TODO ignore current grade type if editing
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -261,15 +276,19 @@ class GradeTypSelectionPage extends StatelessWidget {
             itemBuilder: (context, index) => Padding(
               padding: const EdgeInsets.symmetric(horizontal: leftOffset, vertical: 7),
               child: GestureDetector(
-                onTap: () => SubpageController.of(context).closeSubpage(types[index]),
+                onTap:  () => {
+                  if (types[index].stillPossible(existingTypes)) {
+                    SubpageController.of(context).closeSubpage(types[index])
+                  }
+                },
                 child: Padding(
                   padding: (index > 0 && types[index - 1].area != types[index].area)
                       ? const EdgeInsets.only(top: 20)
                       : const EdgeInsets.all(0),
-                  child: GradeOptionPlaceholder(
+                  child: GradeOptionPlaceholderIcon(
+                      textColor: types[index].stillPossible(existingTypes) ? null : theme.textTheme.bodySmall?.color,
                       text: types[index].name,
-                      icon: Icon(getIcon(types[index]),
-                          color: theme.primaryColor, size: 24)),
+                      icon: getIcon(types[index])),
                 ),
               ),
             ),
@@ -304,6 +323,8 @@ class GradeTypSelectionPage extends StatelessWidget {
       case GradeType.schriftlich:
         return Icons.article_rounded;
       case GradeType.muendlich:
+        return Icons.speaker_notes_rounded;
+      case GradeType.zusatz:
         return Icons.mic_rounded;
       default:
         return Icons.label_rounded; // Fallback icon

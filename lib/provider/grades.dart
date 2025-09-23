@@ -50,6 +50,7 @@ class GradesDataProvider extends ChangeNotifier {
   }
 
   // (!) READ-ONLY
+  // TODO "parallel" semesters (e.g. seminar)
   Map<SubjectId, GradesList> getGradesForSemester(Choice choice, {Semester? semester}) {
     semester ??= _currentSemester;
     var currentMap = _data?[semester] ?? {};

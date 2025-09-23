@@ -1,4 +1,6 @@
+
 import '../provider/grades.dart';
+import 'grades.dart';
 import 'choice.dart';
 import 'results.dart';
 import 'types.dart';
@@ -96,15 +98,18 @@ enum AdmissionHurdle {
       return (AdmissionHurdle.min48dml, "$pointsInDML von 48");
     }
 
-    // Q13/1 und Q13/2 sind synchronisiert ("eines aussuchen")
-    final seminarGrades = provider.getGrades(choice.seminar.id, semester: Semester.q13_2);
+    final seminarGrades = provider.getGrades(choice.seminar.id, semester: Semester.seminar13);
     for (var entry in seminarGrades) {
       if (entry.grade == 0) {
         return (AdmissionHurdle.no0sem, entry.type.name);
       }
     }
-
-    // TODO min9sem W-SEMINAR >= 9; != 0
+    if (seminarGrades.isNotEmpty) {
+      final finalSeminarGrade = GradeHelper.average(seminarGrades);
+      if (finalSeminarGrade < 9) {
+        return (AdmissionHurdle.min9sem, "$finalSeminarGrade von 9");
+      }
+    }
 
     return (null, null);
   }

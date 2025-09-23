@@ -67,6 +67,8 @@ class SemesterResult {
       return 2;
     } else if (choice.pug13 && subject == choice.geoWr) { // PuG in Q12+13, Geo/WR nur in Q12
       return 2;
+    } else if (subject == choice.seminar || subject.category == SubjectCategory.seminar) { // Seminararbeit
+      return 2; // 2 Semester in Q12 normal, Seminararbeit in Q13 als extra Sonderregel!
     }
 
     return choice.numberOfSemestersFor(subject);
@@ -92,7 +94,7 @@ class SemesterResult {
       return false;
     } else if (subject.category == SubjectCategory.ntg && choice.mintSg2.category != SubjectCategory.ntg && choice.mintSg2.category != SubjectCategory.info) { // einzige Naturwissenschaft
       return false;
-    } else if (subject == Subject.seminar) { // Seminararbeit
+    } else if (subject == choice.seminar || subject.category == SubjectCategory.seminar) { // Seminararbeit
       return false;
     } else if (subject == choice.vk) { // VK
       return false;
@@ -121,12 +123,17 @@ class SemesterResult {
 
       print("Subject: ${subject.name} - ${result[subject]}");
 
-      int minSemesters = getMinSemestersForSubject(choice, subject);
-
       List<SemesterResult> sorted = result[subject]!.entries
-          .where((entry) => Semester.qPhase.contains(entry.key))
+          .where((entry) => Semester.qPhaseEquivalents(subject.category).contains(entry.key))
           .map((e) => e.value).toList()
         ..sort((a, b) => b.grade.compareTo(a.grade));
+
+      int minSemesters = getMinSemestersForSubject(choice, subject);
+      // Spezialfall: Seminararbeit in Q13 = x2 Semester-Einbringungen (aber nur 1 SemesterResult)
+      if (subject == choice.seminar) {
+        forcedSemesters += 1; // 1 SemesterResult, das als 2 (verpflichtende) Einbringungen zählt
+        minSemesters -= 1; // nur 1 SemesterResult nicht 2
+      }
 
       for (int i = 0; i < minSemesters; i++) {
         sorted[i].useForced = true;
@@ -139,7 +146,6 @@ class SemesterResult {
         freeSemesterGrades.add(MapEntry(subject, sorted[i]));
       }
     }
-
 
     // Noch keine Noten eingetragen
     if (usedSemesterGrades.isEmpty) {
@@ -162,6 +168,8 @@ class SemesterResult {
         }
       }
     }
+
+    // TODO sort again,modified?
 
     // Optionsregel ("Joker")
     for (var entry in usedSemesterGrades.reversed) {
@@ -231,7 +239,7 @@ class SemesterResult {
 
       int count = 0;
       int sum = 0;
-      for (var semester in Semester.values) {
+      for (var semester in Semester.normal) {
         if (results[subject]![semester] != null) {
           sum += results[subject]![semester]!.grade;
           count++;
@@ -247,8 +255,8 @@ class SemesterResult {
 
       // apply prediction
       int prediction = (sum / count).floor();
-      for (var semester in Semester.values) {
-        if (Semester.qPhase.contains(semester) && !choice.hasSubjectInSemester(subject, semester)) {
+      for (var semester in Semester.normal) {
+        if (!choice.hasSubjectInSemester(subject, semester)) {
           continue; // subject not taken that semester
         }
 
@@ -262,8 +270,8 @@ class SemesterResult {
     // calculate total prediction
     int totalPrediction = totalCount == 0 ? 0 : (totalSum / totalCount).floor();
     for (var subject in choice.subjects) {
-      for (var semester in Semester.values) {
-        if (Semester.qPhase.contains(semester) && !choice.hasSubjectInSemester(subject, semester)) {
+      for (var semester in Semester.normal) {
+        if (!choice.hasSubjectInSemester(subject, semester)) {
           continue; // subject not taken that semester
         }
 
@@ -271,6 +279,11 @@ class SemesterResult {
           results[subject]![semester] = SemesterResult(totalPrediction, 0);
         }
       }
+    }
+
+    int seminarPrediction = totalCount == 0 ? 0 : (2 * totalSum / totalCount).floor();
+    if (results[choice.seminar]![Semester.seminar13]?.prediction ?? true) {
+      results[choice.seminar]![Semester.seminar13] = SemesterResult(seminarPrediction, 0);
     }
 
     return results;
@@ -294,9 +307,7 @@ class SemesterResult {
       }
 
       if (semesters == 0) continue;
-
       double avg = points.toDouble() / semesters.toDouble();
-
       bestSubjects.add((subject, avg));
     }
 

@@ -125,33 +125,59 @@ class GradesDataProvider extends ChangeNotifier {
 }
 
 
-
+// TODO move to logic package
 @HiveType(typeId: 4)
 enum Semester {
   @HiveField(0)
-  q12_1("12/1", "Q12/1"),
+  q12_1(0, "12/1", "Q12/1"),
 
   @HiveField(1)
-  q12_2("12/2", "Q12/2"),
+  q12_2(1, "12/2", "Q12/2"),
 
   @HiveField(2)
-  q13_1("13/1", "Q13/1"),
+  q13_1(2, "13/1", "Q13/1"),
 
   @HiveField(3)
-  q13_2("13/2", "Q13/2"),
+  q13_2(3, "13/2", "Q13/2"),
+
+  @HiveField(5)
+  seminar13(3, "Seminararbeit", "Seminararbeit Q13"),
 
   @HiveField(4)
-  abi("Abi", "Abi Prüfungen");
+  abi(4, "Abi", "Abi Prüfungen");
 
   static const qPhase = [q12_1, q12_2, q13_1, q13_2];
+  static const normal = [...qPhase, abi];
+  static const seminarPhase = [q12_1, q12_2, seminar13];
 
+  final int order;
   final String display;
   final String detailedDisplay;
 
-  const Semester(this.display, this.detailedDisplay);
+  const Semester(this.order, this.display, this.detailedDisplay);
 
   Semester nextSemester() {
     // error: for the last semester (abi) ! no next semester
-    return Semester.values[index + 1];
+    return Semester.normal[order + 1];
+  }
+
+  static List<Semester> qPhaseEquivalents(SubjectCategory subjectCategory) {
+    if (subjectCategory == SubjectCategory.seminar) {
+      return seminarPhase;
+    }
+    return qPhase;
+  }
+
+  static Semester mapSemesterToDisplaySemester(Semester currentSemester, SubjectCategory subjectCategory) {
+    if (subjectCategory == SubjectCategory.seminar) {
+      if (currentSemester == Semester.q13_1 || currentSemester == Semester.q13_2) {
+        return Semester.seminar13;
+      }
+      return currentSemester;
+    }
+    // if (currentSemester == Semester.seminar13) {
+    //   return Semester.q13_1; // map seminar phase to normal phase
+    // }
+    return currentSemester;
   }
 }

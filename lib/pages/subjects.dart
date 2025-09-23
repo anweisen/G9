@@ -20,13 +20,13 @@ class SubjectsPage extends StatelessWidget {
     final semester = Provider.of<GradesDataProvider>(context).currentSemester;
     final grades = Provider.of<GradesDataProvider>(context).getGradesForSemester(settings.choice!, semester: semester);
     final avg = GradeHelper.averageOfSubjects(grades);
-    final subjects = settings.choice?.subjectsForSemester(semester);
+    final subjects = settings.choice?.subjectsToDisplayForSemester(semester);
 
     print("Building subjects page with choice: ${settings.choice}");
 
     return PageSkeleton(
         title: PageTitle(
-            title: "Fächer",
+            title: "Fächer – ${semester.display}",
             info: Row(
                 verticalDirection: VerticalDirection.down,
                 crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -43,7 +43,7 @@ class SubjectsPage extends StatelessWidget {
           for (Subject subject in subjects!)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
-              child: SubjectWidget(subject: subject),
+              child: SubjectWidget(subject: subject, semester: Semester.mapSemesterToDisplaySemester(semester, subject.category)),
             )
         ]);
   }
@@ -51,15 +51,16 @@ class SubjectsPage extends StatelessWidget {
 
 class SubjectWidget extends StatelessWidget {
   final Subject subject;
+  final Semester semester;
 
   const SubjectWidget({
-    super.key, required this.subject,
+    super.key, required this.subject, required this.semester
   });
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final grades = Provider.of<GradesDataProvider>(context).getGrades(subject.id);
+    final grades = Provider.of<GradesDataProvider>(context).getGrades(subject.id, semester: semester); // sorted!
 
     final Color contrastColor = subject.color.computeLuminance() > 0.80 ? (theme.brightness == Brightness.light ? Colors.black : Colors.black87) : Colors.white;
 

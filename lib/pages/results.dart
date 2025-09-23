@@ -126,7 +126,7 @@ class SubjectCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            for (var semester in Semester.qPhase)
+            for (var semester in Semester.qPhaseEquivalents(subject.category))
                 _buildSemester(theme, semester, results[semester]),
           ],
         )

@@ -168,9 +168,9 @@ class Choice extends HiveObject {
     Subject.reli,
     Subject.geschi,
     Subject.sport,
-    seminar,
     if (profil12 != null) profil12!,
     if (profil13 != null && profil13 != profil12) profil13!,
+    seminar,
   ];
 
   List<Subject> get abiSubjects => [
@@ -181,26 +181,36 @@ class Choice extends HiveObject {
     abi5,
   ];
 
-  List<Subject> subjectsForSemester(Semester semester) {
-    if (semester == Semester.abi) {
-      return abiSubjects;
-    }
-    return subjects.where((subject) => hasSubjectInSemester(subject, semester)).toList();
+  List<Subject> subjectsToDisplayForSemester(Semester semester) {
+    if (semester == Semester.abi) return abiSubjects;
+    final takenSubjects = subjects.where((subject) => hasSubjectInSemester(subject, semester)).toList();
+    if (!takenSubjects.contains(seminar)) return [...takenSubjects, seminar];
+    return takenSubjects;
   }
 
   bool hasSubjectInSemester(Subject subject, Semester semester) {
-    if (subject == profil13) return (semester.index - 2) < numberOfSemestersFor(subject);
-    return semester.index < numberOfSemestersFor(subject);
+    if (semester == Semester.abi) return abiSubjects.contains(subject);
+    if (subject == seminar || subject.category == SubjectCategory.seminar) return Semester.seminarPhase.contains(semester);
+    if (subject == profil13) return (semester.order - 2) < numberOfSemestersFor(subject);
+    return semester.order < numberOfSemestersFor(subject);
   }
 
   int numberOfSemestersFor(Subject subject) {
     // See also: results.dart
+
+    // W-Seminar als Kurs mit HJ-Leistungen in Q12/1 und Q12/2,
+    // in Q13 auch "zwei HJ-Leistungen" in Form der Seminararbeit (bis zu 30 Punkte)
+
     if (_vk != null) { // VK(sg/ntg): 2+2 Semester
       if (subject == vk || subject == mintSg2) {
         return 2;
       }
     } else if (subject.category == SubjectCategory.vk) { // VK als Profilfach
       return 2;
+    }
+
+    if (subject == seminar || subject.category == SubjectCategory.seminar) { // Seminararbeit
+      return 2; // 2 Semester in Q12 normal, Seminararbeit in Q13 als extra Sonderregel!
     }
 
     if ((subject == profil12 || subject == profil13) && profil12 != profil13) {

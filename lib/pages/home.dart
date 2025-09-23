@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -131,10 +133,10 @@ class HomePage extends StatelessWidget {
             _buildTextLine(Text("Notenzahl", style: theme.textTheme.bodyMedium), [
               Text("${stats.numberGrades}", style: theme.textTheme.bodyMedium),
             ]),
-            if (!flags.isEmpty) ...[
+            if (!flags.isEmpty && stats.bestSubjects.isNotEmpty) ...[
               const SizedBox(height: 15),
-              Text("Top 3 Fächer", style: theme.textTheme.bodySmall),
-              for (int i = 0; i < 3; i++)
+              Text("Top ${min(5, stats.bestSubjects.length)} Fächer", style: theme.textTheme.bodySmall),
+              for (int i = 0; i < 5 && i < stats.bestSubjects.length; i++)
                 _buildTextLine(_buildSubject(theme.textTheme, stats.bestSubjects[i].$1), [
                   Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
                   const SizedBox(width: 4),

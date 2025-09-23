@@ -128,11 +128,12 @@ class GradeHelper {
     return averageWeighted(praxis, theorie, 1);
   }
 
+  // (!) 2x HJ => Bis zu 30 Punkte
   static double averageSeminar(GradesList grades) {
     // Seminararbeit wird 3x gewichtet
     double seminararbeit = averageOf(grades.where((e) => e.type == GradeType.seminar).toList());
     double seminarreferat = averageOf(grades.where((e) => e.type == GradeType.seminarreferat).toList());
-    return averageWeighted(seminararbeit, seminarreferat, 3);
+    return averageWeighted(seminararbeit, seminarreferat, 3) * 2;
   }
 
   static double averageOf(List<GradeEntry> grades) {

@@ -27,11 +27,23 @@ class _SubjectPageState extends State<SubjectPage> {
   @override
   void initState() {
     super.initState();
-    _currentSemester ??= Provider.of<GradesDataProvider>(context, listen: false).currentSemester;
+    final originalSemester = Provider.of<GradesDataProvider>(context, listen: false).currentSemester;
+    _currentSemester ??= Semester.mapSemesterToDisplaySemester(originalSemester, widget.subject.category);
   }
 
   void setCurrentSemester(Semester semester) {
     Provider.of<GradesDataProvider>(context, listen: false).currentSemester = semester;
+    setState(() {
+      _currentSemester = semester;
+    });
+  }
+
+  void setCurrentSemesterTranslated(Semester semester) {
+    final provider = Provider.of<GradesDataProvider>(context, listen: false);
+    if (semester == Semester.seminar13 && !(provider.currentSemester == Semester.q13_1 || provider.currentSemester == Semester.q13_2)) {
+      provider.currentSemester = Semester.q13_1;
+    }
+
     setState(() {
       _currentSemester = semester;
     });
@@ -88,8 +100,12 @@ class _SubjectPageState extends State<SubjectPage> {
                 children: [
                   _buildSemester(theme, dataProvider, choice, _currentSemester!, Semester.q12_1, setCurrentSemester),
                   _buildSemester(theme, dataProvider, choice, _currentSemester!, Semester.q12_2, setCurrentSemester),
-                  _buildSemester(theme, dataProvider, choice, _currentSemester!, Semester.q13_1, setCurrentSemester),
-                  _buildSemester(theme, dataProvider, choice, _currentSemester!, Semester.q13_2, setCurrentSemester),
+                  if (widget.subject.category == SubjectCategory.seminar) ...[
+                    _buildSemester(theme, dataProvider, choice, _currentSemester!, Semester.seminar13, setCurrentSemesterTranslated),
+                  ] else ...[
+                    _buildSemester(theme, dataProvider, choice, _currentSemester!, Semester.q13_1, setCurrentSemester),
+                    _buildSemester(theme, dataProvider, choice, _currentSemester!, Semester.q13_2, setCurrentSemester),
+                  ],
                 ],
               )),
         ),
@@ -122,7 +138,7 @@ class _SubjectPageState extends State<SubjectPage> {
                   child: TestItem(theme: theme, entry: grades[index], subject: widget.subject,
                   callback: (result) {
                     if (result is GradeEditResult) {
-                      removeGrade(dataProvider, index);
+                      _removeGrade(dataProvider, index);
                       if (!result.remove) _addGrade(dataProvider, result);
                     }
                   }, semester: _currentSemester!,))),
@@ -131,7 +147,7 @@ class _SubjectPageState extends State<SubjectPage> {
     );
   }
 
-  void removeGrade(GradesDataProvider dataProvider, int index) {
+  void _removeGrade(GradesDataProvider dataProvider, int index) {
     dataProvider.removeGrade(widget.subject.id, index, semester: _currentSemester);
 
     if (widget.subject.category == SubjectCategory.seminar) {
@@ -165,17 +181,19 @@ class _SubjectPageState extends State<SubjectPage> {
           callback(semester)
         }
       },
-      child: Container(
-        width: 44,
-        padding: const EdgeInsets.fromLTRB(6, 10, 6, 6),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(6),
-          color: selected ? theme.scaffoldBackgroundColor : null,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 44),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(8, 10, 8, 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            color: selected ? theme.scaffoldBackgroundColor : null,
+          ),
+          child: Column(children: [
+            Text(semester.display, style: theme.textTheme.bodySmall),
+            Text(grades.isEmpty ? "-" : GradeHelper.result(grades).toString(), style: theme.textTheme.labelMedium?.copyWith(color: selected ? theme.primaryColor : null)),
+          ]),
         ),
-        child: Column(children: [
-          Text(semester.display, style: theme.textTheme.bodySmall),
-          Text(grades.isEmpty ? "-" : GradeHelper.result(grades).toString(), style: theme.textTheme.labelMedium?.copyWith(color: selected ? theme.primaryColor : null)),
-        ]),
       ),
     );
   }

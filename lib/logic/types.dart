@@ -2,7 +2,6 @@ import 'package:hive/hive.dart';
 
 import 'dart:ui';
 
-
 part 'types.g.dart';
 
 @HiveType(typeId: 10)
@@ -84,7 +83,7 @@ typedef SubjectId = int;
 @HiveType(typeId: 11)
 enum SubjectCategory {
 
-  /// Verpflichtende Abiturfächer
+  /// Verpflichtende Abiturfächer (Deutsch & Mathe)
   @HiveField(0)
   abi,
 
@@ -100,15 +99,15 @@ enum SubjectCategory {
   @HiveField(3)
   sg,
 
-  /// spät beginnende Fremdsprachen als 2. Fremdsprache (direkt gesetzt)
+  /// spät beginnende Fremdsprachen (als 2. Fremdsprache, direkt gesetzt)
   @HiveField(4)
   sbs,
 
-  /// Gesellschaftswissenschaften, Religion, Philosophie
+  /// Gesellschaftswissenschaften (Religion, Geschichte, Geo, WR, PuG)
   @HiveField(5)
   gpr,
 
-  /// Vertiefungskurse
+  /// Vertiefungskurse (für Deutsch & Mathe)
   @HiveField(6)
   vk,
 
@@ -128,7 +127,7 @@ enum SubjectCategory {
   @HiveField(10)
   profil,
 
-  /// Sonstiges
+  /// Sonstiges ("nicht gewählt" Platzhalter)
   @HiveField(11)
   none
 }

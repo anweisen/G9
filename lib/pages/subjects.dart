@@ -17,8 +17,8 @@ class SubjectsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final settings = Provider.of<SettingsDataProvider>(context);
-    final grades = Provider.of<GradesDataProvider>(context).getGradesForSemester(settings.choice!);
     final semester = Provider.of<GradesDataProvider>(context).currentSemester;
+    final grades = Provider.of<GradesDataProvider>(context).getGradesForSemester(settings.choice!, semester: semester);
     final avg = GradeHelper.averageOfSubjects(grades);
     final subjects = settings.choice?.subjectsForSemester(semester);
 

@@ -25,6 +25,20 @@ class GradeEntry {
   GradeEntry(this.grade, this.type, this.date);
 }
 
+// https://www.gesetze-bayern.de/Content/Document/BayGSO-29
+// 2) 1. Die Leistungen in den Fächern werden am Ende eines jeden Ausbildungsabschnitts zu einer Halbjahresleistung zusammengefasst und in einer Endpunktzahl von höchstens 15 Punkten ausgedrückt.
+//    2. Die Endpunktzahl ergibt sich als Durchschnittswert aus der Punktzahl der Schulaufgabe sowie aus dem Durchschnitt der Punktzahlen der kleinen Leistungsnachweise.
+//    3. In den Fächern auf grundlegendem Anforderungsniveau ergibt sich die Halbjahresleistung im Ausbildungsabschnitt 13/2 aus dem Durchschnitt der kleinen Leistungsnachweise.
+//    4. In den Ausbildungsabschnitten 12/1 und 12/2 des Wissenschaftspropädeutischen Seminars ergibt sich die Halbjahresleistung jeweils aus dem Durchschnittswert der kleinen Leistungsnachweise.
+//    5. Das Ergebnis wird gerundet; eine Aufrundung zur Endpunktzahl 1 ist nicht zulässig. 6§ 28 Abs. 1 Satz 2 und Abs. 4 gilt entsprechend.
+// 3) 1. Im Leistungsfach Kunst ergibt sich die Halbjahresleistung aus dem Durchschnitt aus der Punktzahl der Schulaufgabe, der Punktzahl des künstlerischen Projekts sowie dem Durchschnitt der Punktzahlen der kleinen Leistungsnachweise.
+//    2. Die Endpunktzahl wird nach Abs. 2 Satz 1 gebildet.
+// 4) 1. Im Leistungsfach Musik ergibt sich die Halbjahresleistung aus dem Durchschnitt aus der Punktzahl der Schulaufgabe, der Punktzahl der praktischen Prüfung sowie dem Durchschnitt der Punktzahlen der kleinen Leistungsnachweise.
+//    2. Die Endpunktzahl wird nach Abs. 2 Satz 1 gebildet.
+// 5) 1. Im Fach Sport ergibt sich die Halbjahresleistung als Durchschnittswert aus dem doppelt gewichteten Durchschnitt der Punktzahlen der praktischen Leistungen im gewählten sportlichen Handlungsfeld sowie dem Durchschnitt der Punktzahlen der kleinen Leistungsnachweise.
+//    2. Im Leistungsfach Sport ergibt sich die Endpunktzahl aus dem Durchschnitt der Punktzahl im Fach Sport gemäß Satz 1 und der Punktzahl in der Sporttheorie, die nach Abs. 2 Satz 2 gebildet wird.
+// 6) 1. Zur Ermittlung der Gesamtleistung in der Seminararbeit wird zunächst die Punktzahl für die abgelieferte Arbeit verdreifacht und die Punktzahl für Präsentation mit Prüfungsgespräch addiert.
+//    2. Die Summe wird durch 2 geteilt und das Ergebnis gerundet.
 class GradeHelper {
   static formatNumber(double avg, {int decimals = 1}) {
     if (avg <= 0) {
@@ -220,7 +234,7 @@ enum GradeType {
   seminar("Seminar Arbeit", GradeTypeArea.seminar), // wird 3x gewichtet
 
   @HiveField(21)
-  seminarreferat("Seminar Referat", GradeTypeArea.seminar),
+  seminarreferat("Seminar Präsentation", GradeTypeArea.seminar),
 
   @HiveField(30)
   schriftlich("Schriftliche Prüfung", GradeTypeArea.abi),

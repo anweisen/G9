@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../widgets/skeleton.dart';
+import '../logic/hurdles.dart';
 import '../logic/choice.dart';
 import '../logic/types.dart';
 import '../logic/results.dart';
@@ -20,7 +21,7 @@ class ResultsPage extends StatelessWidget {
 
     var results = SemesterResult.calculateResultsWithPredictions(settings.choice!, grades);
     var flags = SemesterResult.applyUseFlags(settings.choice!, results);
-    var (admissionHurdleType, admissionHurdleText) = AdmissionHurdle.check(settings.choice!, results);
+    var (admissionHurdleType, admissionHurdleText) = AdmissionHurdle.check(settings.choice!, results, grades);
 
     return PageSkeleton(
         title: const PageTitle(title: "Ergebnisse"),

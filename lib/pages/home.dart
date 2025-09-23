@@ -1,7 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../logic/hurdles.dart';
 import '../logic/types.dart';
 import '../logic/results.dart';
 import '../provider/grades.dart';
@@ -43,7 +43,7 @@ class HomePage extends StatelessWidget {
     }
     var betterGradePoints = SemesterResult.getMinPointsForBetterAbiGrade(flags.pointsTotal);
 
-    var (admissionHurdleType, admissionHurdleText) = AdmissionHurdle.check(settings.choice!, results);
+    var (admissionHurdleType, admissionHurdleText) = AdmissionHurdle.check(settings.choice!, results, grades);
 
     return PageSkeleton(title: const PageTitle(title: "Übersicht"), children: [
       _buildTextLine(Text(grades.currentSemester.detailedDisplay, style: theme.textTheme.bodyMedium), [
@@ -77,7 +77,8 @@ class HomePage extends StatelessWidget {
             color: theme.splashColor,
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text("Zulassungshürden", style: theme.textTheme.bodySmall),
+            Text("Zulassungshürde", style: theme.textTheme.bodySmall),
+            Text(admissionHurdleType.paragraph, style: theme.textTheme.bodySmall),
             Text(admissionHurdleType.desc, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
             Text(admissionHurdleText, style: theme.textTheme.displayMedium),
           ]),
@@ -132,19 +133,20 @@ class HomePage extends StatelessWidget {
             ]),
             if (!flags.isEmpty) ...[
               const SizedBox(height: 15),
-              Text("Bestes Fach", style: theme.textTheme.bodySmall),
-              _buildTextLine(_buildSubject(theme.textTheme, stats.bestSubject), [
-                Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
-                const SizedBox(width: 4),
-                Text("${GradeHelper.formatNumber(stats.bestSubjectAvg, decimals: 2)}", style: theme.textTheme.bodyMedium),
-              ]),
+              Text("Top 3 Fächer", style: theme.textTheme.bodySmall),
+              for (int i = 0; i < 3; i++)
+                _buildTextLine(_buildSubject(theme.textTheme, stats.bestSubjects[i].$1), [
+                  Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+                  const SizedBox(width: 4),
+                  Text("${GradeHelper.formatNumber(stats.bestSubjects[i].$2, decimals: 2)}", style: theme.textTheme.bodyMedium),
+                ]),
             ]
 
           ],
         ),
       ),
 
-      const SizedBox(height: 50),
+      const SizedBox(height: 30),
 
       if (grades.currentSemester != Semester.abi)
         Material(

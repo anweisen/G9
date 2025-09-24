@@ -107,7 +107,7 @@ class GradeHelper {
     if (areas.contains(GradeTypeArea.seminar)) {
       return averageSeminar(grades);
     }
-    if (areas.contains(GradeTypeArea.sport) && grades.length > 1) {
+    if (areas.contains(GradeTypeArea.sport)) {
       return averageSportLk(grades);
     }
 
@@ -121,10 +121,16 @@ class GradeHelper {
   }
 
   static double averageSportLk(GradesList grades) {
-    // Die jeweiligen Leistungen werden zu einer Note gerundet
-    double praxis = averageOf(grades.where((e) => e.type.area == GradeTypeArea.sport).toList()).roundToDouble();
-    double theorie = averageNormal(grades.where((e) => e.type.area != GradeTypeArea.sport).toList()).roundToDouble();
+    // Die jeweiligen Leistungen werden zu einer Note (gerundet ?!?)
+    double praxis = averageSportGk(grades.where((e) => e.type.area == GradeTypeArea.sport).toList());
+    double theorie = averageNormal(grades.where((e) => e.type.area != GradeTypeArea.sport).toList());
     return averageWeighted(praxis, theorie, 1);
+  }
+
+  static double averageSportGk(GradesList grades) {
+    double praktisch = averageOf(grades.where((e) => e.type != GradeType.theorie).toList());
+    double test = averageOf(grades.where((e) => e.type == GradeType.theorie).toList());
+    return averageWeighted(praktisch, test, 2);
   }
 
   // (!) 2x HJ => Bis zu 30 Punkte

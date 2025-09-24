@@ -23,6 +23,11 @@ class GradeEntry {
   final DateTime date;
 
   GradeEntry(this.grade, this.type, this.date);
+
+  @override
+  String toString() {
+    return 'GradeEntry{$type =$grade}';
+  }
 }
 
 // https://www.gesetze-bayern.de/Content/Document/BayGSO-29
@@ -221,19 +226,19 @@ class GradeHelper {
 @HiveType(typeId: 21)
 enum GradeType {
   @HiveField(0)
-  klausur("Klausur", GradeTypeArea.normal),
+  klausur("Klausur", GradeTypeArea.klausur),
 
   @HiveField(1)
-  test("Stegreifaufgabe", GradeTypeArea.normal),
+  test("Stegreifaufgabe", GradeTypeArea.muendlich),
 
   @HiveField(2)
-  ausfrage("Ausfrage", GradeTypeArea.normal),
+  ausfrage("Ausfrage", GradeTypeArea.muendlich),
 
   @HiveField(3)
-  referat("Referat", GradeTypeArea.normal),
+  referat("Referat", GradeTypeArea.muendlich),
 
   @HiveField(4)
-  mitarbeit("Unterrichtsbeitrag", GradeTypeArea.normal),
+  mitarbeit("Unterrichtsbeitrag", GradeTypeArea.muendlich),
 
   @HiveField(10)
   praxis("Praxis", GradeTypeArea.sport),
@@ -268,8 +273,8 @@ enum GradeType {
   final String name;
   final GradeTypeArea area;
 
-  static List<GradeType> normal = only(GradeTypeArea.normal);
-  static List<GradeType> normalNoK = GradeType.normal.where((element) => element != GradeType.klausur).toList();
+  static List<GradeType> normalNoK = only(GradeTypeArea.muendlich);
+  static List<GradeType> normal = [klausur, ...normalNoK];
 
   static List<GradeType> only(GradeTypeArea area) {
     return values.where((it) => it.area == area).toList();
@@ -282,7 +287,7 @@ enum GradeType {
 
     if (subject == Subject.seminar) {
       if (semester == Semester.q12_1 || semester == Semester.q12_2) {
-        return normal;
+        return normalNoK;
       }
       return only(GradeTypeArea.seminar);
     }
@@ -321,8 +326,10 @@ enum GradeType {
 }
 
 enum GradeTypeArea {
-  /// Normale Noten in einem Fach
-  normal,
+  /// Klausur / Schulaufgabe
+  klausur,
+  /// Mündliche Noten in einem Fach
+  muendlich,
   /// Die beiden letzten Halbjahreseinbringungen setzen sich aus der Seminararbeit und dem Referat dazu zusammen
   seminar,
   /// Das Fach Sport(GK) hat keine üblichen Noten(sondern Praxis & Theorie) (= Praxisteil im LK)

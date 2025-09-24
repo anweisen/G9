@@ -32,16 +32,12 @@ class _SubjectPageState extends State<SubjectPage> {
   }
 
   void setCurrentSemester(Semester semester) {
-    Provider.of<GradesDataProvider>(context, listen: false).currentSemester = semester;
-    setState(() {
-      _currentSemester = semester;
-    });
-  }
-
-  void setCurrentSemesterTranslated(Semester semester) {
+    // TODO extract
     final provider = Provider.of<GradesDataProvider>(context, listen: false);
     if (semester == Semester.seminar13 && !(provider.currentSemester == Semester.q13_1 || provider.currentSemester == Semester.q13_2)) {
       provider.currentSemester = Semester.q13_1;
+    } else {
+      provider.currentSemester = semester;
     }
 
     setState(() {
@@ -55,7 +51,7 @@ class _SubjectPageState extends State<SubjectPage> {
     final ThemeData theme = Theme.of(context);
     final Choice? choice = Provider.of<SettingsDataProvider>(context).choice;
     final GradesDataProvider dataProvider = Provider.of<GradesDataProvider>(context);
-    final grades = dataProvider.getGrades(widget.subject.id, semester: _currentSemester);
+    final GradesList grades = dataProvider.getGrades(widget.subject.id, semester: _currentSemester);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -98,14 +94,8 @@ class _SubjectPageState extends State<SubjectPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildSemester(theme, dataProvider, choice, _currentSemester!, Semester.q12_1, setCurrentSemester),
-                  _buildSemester(theme, dataProvider, choice, _currentSemester!, Semester.q12_2, setCurrentSemester),
-                  if (widget.subject.category == SubjectCategory.seminar) ...[
-                    _buildSemester(theme, dataProvider, choice, _currentSemester!, Semester.seminar13, setCurrentSemesterTranslated),
-                  ] else ...[
-                    _buildSemester(theme, dataProvider, choice, _currentSemester!, Semester.q13_1, setCurrentSemester),
-                    _buildSemester(theme, dataProvider, choice, _currentSemester!, Semester.q13_2, setCurrentSemester),
-                  ],
+                  for (Semester semester in Semester.qPhaseEquivalents(widget.subject.category))
+                    _buildSemester(theme, dataProvider, choice, _currentSemester!, semester, setCurrentSemester)
                 ],
               )),
         ),
@@ -149,26 +139,10 @@ class _SubjectPageState extends State<SubjectPage> {
 
   void _removeGrade(GradesDataProvider dataProvider, int index) {
     dataProvider.removeGrade(widget.subject.id, index, semester: _currentSemester);
-
-    if (widget.subject.category == SubjectCategory.seminar) {
-      if (_currentSemester == Semester.q13_1) {
-        dataProvider.removeGrade(widget.subject.id, index, semester: Semester.q13_2);
-      } else if (_currentSemester == Semester.q13_2) {
-        dataProvider.removeGrade(widget.subject.id, index, semester: Semester.q13_1);
-      }
-    }
   }
 
   void _addGrade(GradesDataProvider dataProvider, GradeEditResult result) {
     dataProvider.addGrade(result.subject.id, result.entry, semester: _currentSemester);
-
-    if (result.subject.category == SubjectCategory.seminar) {
-      if (_currentSemester == Semester.q13_1) {
-        dataProvider.addGrade(result.subject.id, result.entry, semester: Semester.q13_2);
-      } else if (_currentSemester == Semester.q13_2) {
-        dataProvider.addGrade(result.subject.id, result.entry, semester: Semester.q13_1);
-      }
-    }
   }
 
   Widget _buildSemester(ThemeData theme, GradesDataProvider dataProvider, Choice? choice, Semester currentSemester, Semester semester, void Function(Semester) callback) {

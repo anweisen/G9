@@ -135,7 +135,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
                         icon: Icon(Icons.account_tree_rounded, color: theme.primaryColor, size: 24)),
                   const SizedBox(height: 20),
                   GestureDetector(
-                      onTap: () => SubpageController.of(context).openSubpage(GradeTypSelectionPage(semester: _semester, subject: _subject), callback: (type) => {
+                      onTap: () => SubpageController.of(context).openSubpage(GradeTypSelectionPage(semester: _semester, subject: _subject, originalType: _type), callback: (type) => {
                         if (type is GradeType) {
                           setType(type)
                         }
@@ -244,10 +244,11 @@ class GradeOptionPlaceholderIcon extends StatelessWidget {
 }
 
 class GradeTypSelectionPage extends StatelessWidget {
-  const GradeTypSelectionPage({super.key, required this.semester, this.subject});
+  const GradeTypSelectionPage({super.key, required this.semester, this.subject, this.originalType});
 
   final Semester? semester;
   final Subject? subject;
+  final GradeType? originalType;
 
   @override
   Widget build(BuildContext context) {
@@ -257,8 +258,14 @@ class GradeTypSelectionPage extends StatelessWidget {
     final Choice choice = Provider.of<SettingsDataProvider>(context).choice!;
     final grades = subject != null ? Provider.of<GradesDataProvider>(context).getGrades(subject!.id, semester: semester) : List<GradeEntry>.empty();
     final existingTypes = grades.map((e) => e.type).toList();
+    // only remove one!
+    for (int i = 0; i < existingTypes.length; i++) {
+      if (existingTypes[i] == originalType) {
+        existingTypes.removeAt(i);
+        break;
+      }
+    }
     final List<GradeType> types = (subject != null && semester != null) ? GradeType.types(choice, subject!, semester!) : List.empty();
-    // TODO ignore current grade type if editing
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -283,7 +290,7 @@ class GradeTypSelectionPage extends StatelessWidget {
                 },
                 child: Padding(
                   padding: (index > 0 && types[index - 1].area != types[index].area)
-                      ? const EdgeInsets.only(top: 20)
+                      ? const EdgeInsets.only(top: 10)
                       : const EdgeInsets.all(0),
                   child: GradeOptionPlaceholderIcon(
                       textColor: types[index].stillPossible(existingTypes) ? null : theme.textTheme.bodySmall?.color,

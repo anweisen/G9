@@ -85,7 +85,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
               padding: const EdgeInsets.symmetric(horizontal: leftOffset),
               child:
                   Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                    Text("Note ${widget.entry == null ? "hinzufügen" : "ändern"}", style: theme.textTheme.headlineMedium),
+                    Text("Note ${isFromExisting ? "ändern" : "hinzufügen"}", style: theme.textTheme.headlineMedium),
               ]),
             ),
             const SizedBox(height: 24),

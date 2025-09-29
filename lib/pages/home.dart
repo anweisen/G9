@@ -226,7 +226,7 @@ class HomePage extends StatelessWidget {
           children: [
             // left column (fixed width for consistent alignment)
             SizedBox(
-              width: 80, // <-- fixed width
+              width: 84, // <-- fixed width
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: gradesDistribution.map((entry) => Padding(

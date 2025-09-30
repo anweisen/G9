@@ -109,6 +109,14 @@ class SemesterResult {
     return true;
   }
 
+  static int getQSemesterCountEquivalent(Semester semester) {
+    switch (semester) {
+      case Semester.abi: return 4;
+      case Semester.seminar13: return 2;
+      default: return 1;
+    }
+  }
+
   static ResultsFlags applyUseFlags(Choice choice, Map<Subject, Map<Semester, SemesterResult>> result) {
     List<MapEntry<Subject, SemesterResult>> freeSemesterGrades = [];
     List<MapEntry<Subject, SemesterResult>> usedSemesterGrades = [];
@@ -206,7 +214,8 @@ class SemesterResult {
     int pointsAbi = 0;
     for (var subject in choice.abiSubjects) {
       if (result[subject]?[Semester.abi] != null) {
-        pointsAbi += result[subject]![Semester.abi]!.grade * 4; // Api Prüfung entspricht 4 Einbringungen
+        pointsAbi += result[subject]![Semester.abi]!.grade; // Abi Prüfung entspricht 4 Einbringungen (ist bereits x4 in SemesterResult)
+        result[subject]![Semester.abi]!.useForced = true; // Abi Prüfung immer verpflichtend
       }
     }
 
@@ -239,7 +248,7 @@ class SemesterResult {
 
       int count = 0;
       int sum = 0;
-      for (var semester in Semester.normal) {
+      for (var semester in Semester.qPhase) {
         if (results[subject]![semester] != null) {
           sum += results[subject]![semester]!.grade;
           count++;
@@ -261,7 +270,7 @@ class SemesterResult {
         }
 
         if (results[subject]![semester] == null) {
-          results[subject]![semester] = SemesterResult(prediction, 0);
+          results[subject]![semester] = SemesterResult(prediction * getQSemesterCountEquivalent(semester), 0);
         }
       }
 
@@ -276,7 +285,7 @@ class SemesterResult {
         }
 
         if (results[subject]![semester] == null) {
-          results[subject]![semester] = SemesterResult(totalPrediction, 0);
+          results[subject]![semester] = SemesterResult(totalPrediction * getQSemesterCountEquivalent(semester), 0);
         }
       }
     }

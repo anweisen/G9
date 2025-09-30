@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
+import '../logic/results.dart';
 import '../logic/choice.dart';
 import '../provider/settings.dart';
 import '../provider/grades.dart';
@@ -71,14 +71,15 @@ class _SubjectPageState extends State<SubjectPage> {
               const SizedBox(width: 16),
               Expanded(flex: 100, child: Text(widget.subject.name, softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 2, style: theme.textTheme.headlineMedium)),
               const Spacer(),
-              SvgPicture.asset(
-                "assets/svg/average.svg",
-                width: 20,
-                colorFilter: ColorFilter.mode(theme.primaryColor, BlendMode.srcIn),
-                height: 20,
-              ),
+              Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300, fontSize: 22)),
               const SizedBox(width: 8),
-              Text(GradeHelper.formatAverage(grades, decimals: 2), style: theme.textTheme.headlineMedium),
+              Text(GradeHelper.formatSemesterAverage(grades, decimals: 2), style: theme.textTheme.headlineMedium),
+              if (SemesterResult.getQSemesterCountEquivalent(_currentSemester!) > 1) ...[
+                const SizedBox(width: 6),
+                Text("(≈ ", style: theme.textTheme.labelSmall),
+                Text(GradeHelper.formatSemesterAverage(grades, decimals: 1, qSemesterCountEquivalent: SemesterResult.getQSemesterCountEquivalent(_currentSemester!)), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
+                Text(")", style: theme.textTheme.labelSmall),
+              ]
             ],
           ),
         ),

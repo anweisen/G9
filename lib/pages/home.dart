@@ -27,7 +27,7 @@ class HomePage extends StatelessWidget {
 
     var currentSemesterGrades = grades.getGradesForSemester(settings.choice!);
     var currentSemesterAvg = GradeHelper.averageOfSubjects(currentSemesterGrades);
-    var currentSemesterAvgUsed = GradeHelper.averageOfSemester(results, grades.currentSemester);
+    var currentSemesterAvgUsed = GradeHelper.averageOfSemesterUsed(results, grades.currentSemester);
     var gradesDistribution = _calculateSingleGradesDistribution(settings, currentSemesterGrades);
 
     Map<Semester, double> pastSemestersAvg = {};
@@ -35,13 +35,9 @@ class HomePage extends StatelessWidget {
     for (Semester semester in Semester.qPhase) {
       var pastSemesterGrades = grades.getGradesForSemester(settings.choice!, semester: semester);
       double avg = GradeHelper.averageOfSubjects(pastSemesterGrades);
-      if (avg > 0) {
-        pastSemestersAvg[semester] = avg;
-      }
-      double avgUsed = GradeHelper.averageOfSemester(results, semester);
-      if (avgUsed > 0) {
-        pastSemestersAvgUsed[semester] = avgUsed;
-      }
+      if (avg > 0) pastSemestersAvg[semester] = avg;
+      double avgUsed = GradeHelper.averageOfSemesterUsed(results, semester);
+      if (avgUsed > 0) pastSemestersAvgUsed[semester] = avgUsed;
     }
     var betterGradePoints = SemesterResult.getMinPointsForBetterAbiGrade(flags.pointsTotal);
 
@@ -53,7 +49,7 @@ class HomePage extends StatelessWidget {
         const SizedBox(width: 6),
         Text(GradeHelper.formatNumber(currentSemesterAvg, decimals: 2), style: theme.textTheme.bodyMedium),
         const SizedBox(width: 6),
-        Text("(${GradeHelper.formatNumber(SemesterResult.convertAverage(currentSemesterAvg))})", style: theme.textTheme.bodySmall),
+        Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(currentSemesterAvg))})", style: theme.textTheme.bodySmall),
       ]),
       if (grades.currentSemester != Semester.abi) _buildTextLine(null, [
         Text("Einbringungen", style: theme.textTheme.bodySmall),
@@ -62,7 +58,7 @@ class HomePage extends StatelessWidget {
         const SizedBox(width: 3),
         Text(GradeHelper.formatNumber(currentSemesterAvgUsed, decimals: 2), style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(width: 3),
-        Text("(${GradeHelper.formatNumber(SemesterResult.convertAverage(currentSemesterAvgUsed))})", style: theme.textTheme.bodySmall),
+        Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(currentSemesterAvgUsed))})", style: theme.textTheme.bodySmall),
       ]),
       const SizedBox(height: 4),
       Padding(
@@ -120,7 +116,7 @@ class HomePage extends StatelessWidget {
                   const SizedBox(width: 2),
                   Text(GradeHelper.formatNumber(pastSemestersAvgUsed[entry.key]!, decimals: 2), style: theme.textTheme.displayMedium),
                   const SizedBox(width: 2),
-                  Text("(${GradeHelper.formatNumber(SemesterResult.convertAverage(pastSemestersAvgUsed[entry.key]!))})", style: theme.textTheme.bodySmall),
+                  Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(pastSemestersAvgUsed[entry.key]!))})", style: theme.textTheme.bodySmall),
                   const SizedBox(width: 8),
                   Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
                   const SizedBox(width: 4),

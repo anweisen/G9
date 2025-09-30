@@ -333,6 +333,8 @@ class GradeTypSelectionPage extends StatelessWidget {
         return Icons.speaker_notes_rounded;
       case GradeType.zusatz:
         return Icons.mic_rounded;
+      case GradeType.fach:
+        return Icons.architecture_rounded;
       default:
         return Icons.label_rounded; // Fallback icon
     }

@@ -36,7 +36,7 @@ class SubjectsPage extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(GradeHelper.formatNumber(avg, decimals: 2), style: theme.textTheme.headlineMedium),
                   const SizedBox(width: 8),
-                  Text("(${GradeHelper.formatNumber(SemesterResult.convertAverage(avg))})", style: theme.textTheme.bodySmall),
+                  Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(avg))})", style: theme.textTheme.bodySmall),
                 ]
               )),
         children: [
@@ -85,7 +85,7 @@ class SubjectWidget extends StatelessWidget {
                 width: 36,
                 height: 22,
               ),
-              Center(child: Text(GradeHelper.formatAverage(grades), style: TextStyle(color: contrastColor, fontSize: 13, fontWeight: FontWeight.w500))),
+              Center(child: Text(GradeHelper.formatSemesterAverage(grades, qSemesterCountEquivalent: SemesterResult.getQSemesterCountEquivalent(semester)), style: TextStyle(color: contrastColor, fontSize: 13, fontWeight: FontWeight.w500))),
             ]),
             const SizedBox(width: 10),
             Text(subject.name, style: theme.textTheme.labelMedium?.copyWith(color: contrastColor), maxLines: 1, overflow: TextOverflow.clip),

@@ -46,6 +46,22 @@ class GradeEntry {
 //    2. Im Leistungsfach Sport ergibt sich die Endpunktzahl aus dem Durchschnitt der Punktzahl im Fach Sport gemäß Satz 1 und der Punktzahl in der Sporttheorie, die nach Abs. 2 Satz 2 gebildet wird.
 // 6) 1. Zur Ermittlung der Gesamtleistung in der Seminararbeit wird zunächst die Punktzahl für die abgelieferte Arbeit verdreifacht und die Punktzahl für Präsentation mit Prüfungsgespräch addiert.
 //    2. Die Summe wird durch 2 geteilt und das Ergebnis gerundet.
+//
+// https://www.gesetze-bayern.de/Content/Document/BayGSO-52
+// 1) 1. Das Ergebnis der Prüfungsleistungen in den Abiturprüfungsfächern wird dadurch festgesetzt, dass die jeweils erzielten Punktzahlen vervierfacht werden.
+//    2. Wird in einem schriftlichen Prüfungsfach hingegen auch eine Zusatzprüfung nach § 50 Abs. 1 und 3 durchgeführt, so werden die beiden Prüfungsteile im Verhältnis 2:1 gewertet.
+//    3. Das Endergebnis wird nach der in Anlage 12 aufgeführten Formel berechnet.
+// 2) Wurde Musik als schriftliches Abiturprüfungsfach mit besonderer Fachprüfung oder Sport als schriftliches oder mündliches Abiturprüfungsfach mit besonderer Fachprüfung gewählt, gilt Folgendes:
+//    1. Wenn eine Zusatzprüfung nicht abgelegt wurde, werden die Ergebnisse des schriftlichen bzw. mündlichen und des praktischen Teils der besonderen Fachprüfung addiert; die sich ergebende Summe wird verdoppelt.
+//    2. Wenn eine Zusatzprüfung abgelegt wurde, werden die Ergebnisse des schriftlichen und des praktischen Teils der besonderen Fachprüfung addiert und die sich ergebende Summe vervierfacht;
+//       die Punktzahl für die Zusatzprüfung wird vervierfacht. Die zwei sich ergebenden Punktwerte werden addiert. Die Summe wird durch drei geteilt.
+//
+// https://www.gesetze-bayern.de/Content/Document/BayGSO-ANL_21
+// Berechnung des Prüfungsergebnisses aus schriftlicher Prüfung und mündlicher Zusatzprüfung
+// 1. Das Prüfungsergebnis ist mit folgender Formel zu berechnen:
+//    P = (2s+m)/3 * 4.
+//    (P = Prüfungsergebnis, s = Punktzahl der schriftlichen Prüfung, m = Punktzahl der mündlichen Prüfung).
+// 2. Das Prüfungsergebnis wird gerundet. 3Bei einem Ergebnis (vierfache Wertung) von unter 4 Punkten ist die Abiturprüfung nicht bestanden.
 class GradeHelper {
   static formatNumber(double avg, {int decimals = 1, bool allowZero = false}) {
     if (avg < 0 || (!allowZero && avg == 0)) {
@@ -57,6 +73,7 @@ class GradeHelper {
     return trimmed.toStringAsFixed(decimals).replaceFirst(".", ",");
   }
 
+  // TODO qSemesterCountEquivalent
   static double averageOfSubjects(SubjectGradesMap grades) {
     double sum = 0;
     int count = 0;
@@ -75,7 +92,8 @@ class GradeHelper {
     return sum / count;
   }
 
-  static double averageOfSemester(Map<Subject, Map<Semester, SemesterResult>> results, Semester semester) {
+  // TODO qSemesterCountEquivalent
+  static double averageOfSemesterUsed(Map<Subject, Map<Semester, SemesterResult>> results, Semester semester) {
     double sum = 0;
     int count = 0;
 
@@ -99,14 +117,17 @@ class GradeHelper {
     return avg < 1 ? 0 : avg.round();
   }
 
-  static String formatAverage(GradesList grades, {int decimals = 1}) {
+  static String formatSemesterAverage(GradesList grades, {int decimals = 1, int qSemesterCountEquivalent = 1}) {
     if (grades.isEmpty) {
       return "-";
     }
 
-    return formatNumber(average(grades), decimals: decimals, allowZero: true);
+    return formatNumber(average(grades) / qSemesterCountEquivalent, decimals: decimals, allowZero: true);
   }
 
+  // Für Q-Semester: 0-15
+  // Für Seminar13: 0-30
+  // Für Abi-Semester: 0-60
   static double average(GradesList grades) {
     if (grades.isEmpty) {
       return 0;
@@ -118,6 +139,9 @@ class GradeHelper {
     }
     if (areas.contains(GradeTypeArea.sport)) {
       return averageSportLk(grades);
+    }
+    if (areas.contains(GradeTypeArea.abi)) {
+      return averageAbi(grades);
     }
 
     return averageNormal(grades);
@@ -150,12 +174,29 @@ class GradeHelper {
     return averageWeighted(seminararbeit, seminarreferat, 3) * 2;
   }
 
+  // https://www.gesetze-bayern.de/Content/Document/BayGSO-52
   // https://www.gesetze-bayern.de/Content/Document/BayGSO-ANL_21
-  // TODO fix this (rounding after *4 !)
+  // (!) 4x HJ => Bis zu 60 Punkte
   static double averageAbi(GradesList grades) {
-    double normal = averageOf(grades.where((e) => e.type != GradeType.zusatz).toList());
+    // Normal mit Zusatzprüfung;        2:1 - schriftlich : zusatz
+    // Fachprüfung ohne Zusatzprüfung;  1:1 - schriftlich/mündlich : fach
+    // Fachprüfung mit Zusatzprüfung;   1:1:1 - schriftlich : fach : zusatz (kryptisch formuliert in BayGSO-52(2)2.)
+
+    double normal = averageOf(grades.where((e) => e.type == GradeType.schriftlich || e.type == GradeType.muendlich).toList());
     double zusatz = averageOf(grades.where((e) => e.type == GradeType.zusatz).toList());
-    return averageWeighted(normal, zusatz, 2);
+
+    final types = grades.map((e) => e.type).toSet();
+    if (types.contains(GradeType.fach)) {
+      double fach = averageOf(grades.where((e) => e.type == GradeType.fach).toList());
+
+      if (types.contains(GradeType.zusatz)) {
+        return ((normal + fach) * 4 + zusatz * 4) / 3; // 1:1:1
+      } else {
+        return (normal + fach) * 2; // 1:1
+      }
+    }
+
+    return averageWeighted(normal, zusatz, 2) * 4;
   }
 
   static double averageOf(List<GradeEntry> grades) {
@@ -268,7 +309,8 @@ enum GradeType {
   @HiveField(32)
   zusatz("Mündliche Zusatzprüfung (Nachprüfung)", GradeTypeArea.abi),
 
-  // TODO: Fach-, Zusatzprüfungen, etc.
+  @HiveField(33)
+  fach("Besondere Fachprüfung (Praktisch)", GradeTypeArea.abi),
 
   ;
 
@@ -277,8 +319,10 @@ enum GradeType {
   final String name;
   final GradeTypeArea area;
 
-  static List<GradeType> normalNoK = only(GradeTypeArea.muendlich);
-  static List<GradeType> normal = [klausur, ...normalNoK];
+  static List<GradeType> listNormalNoK = only(GradeTypeArea.muendlich);
+  static List<GradeType> listNormal = [klausur, ...listNormalNoK];
+  static List<GradeType> listAbiNormal = [schriftlich, muendlich, zusatz]; // keine besondere Fachprüfung
+  static List<GradeType> listAbiBesFach = only(GradeTypeArea.abi);
 
   static List<GradeType> only(GradeTypeArea area) {
     return values.where((it) => it.area == area).toList();
@@ -286,27 +330,32 @@ enum GradeType {
 
   static List<GradeType> types(Choice choice, Subject subject, Semester semester) {
     if (semester == Semester.abi) {
-      return only(GradeTypeArea.abi);
+      if (subject == choice.lk && (subject == Subject.sport || subject == Subject.musik)) {
+        // besondere Fachprüfung im LK: Sport, Musik
+        return listAbiBesFach;
+      }
+
+      return listAbiNormal;
     }
 
     if (subject == Subject.seminar) {
       if (semester == Semester.q12_1 || semester == Semester.q12_2) {
-        return normalNoK;
+        return listNormalNoK;
       }
       return only(GradeTypeArea.seminar);
     }
     if (subject == Subject.sport) {
       if (choice.lk == Subject.sport) {
-        return [...normal, ...only(GradeTypeArea.sport)];
+        return [...listNormal, ...only(GradeTypeArea.sport)];
       }
       return only(GradeTypeArea.sport);
     }
 
     if (semester == Semester.q13_2 && !choice.abiSubjects.contains(subject)) {
-      return normalNoK;
+      return listNormalNoK;
     }
 
-    return normal;
+    return listNormal;
   }
 
   bool stillPossible(List<GradeType> existingTypes) {
@@ -317,11 +366,13 @@ enum GradeType {
         return !existingTypes.contains(GradeType.seminar);
       case GradeType.seminarreferat: // max 1 Seminarreferat
         return !existingTypes.contains(GradeType.seminarreferat);
-      case GradeType.schriftlich: // max 1 (schriftliche, mündliche) Abiturprüfung
+      case GradeType.schriftlich: // max 1 (schriftliche ODER mündliche) Abiturprüfung
       case GradeType.muendlich:
         return !existingTypes.contains(GradeType.schriftlich) && !existingTypes.contains(GradeType.muendlich);
       case GradeType.zusatz: // max 1 Zusatzprüfung, nur bei schriftlicher Prüfung
         return !existingTypes.contains(GradeType.zusatz) && existingTypes.contains(GradeType.schriftlich);
+      case GradeType.fach: // max 1 Fachprüfung (bei mündlicher UND schriftlicher Prüfung möglich)
+        return !existingTypes.contains(GradeType.fach);
       default:
         return true;
     }

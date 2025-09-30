@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:hive/hive.dart';
 
 import '../provider/grades.dart';
@@ -45,12 +47,14 @@ class GradeEntry {
 // 6) 1. Zur Ermittlung der Gesamtleistung in der Seminararbeit wird zunächst die Punktzahl für die abgelieferte Arbeit verdreifacht und die Punktzahl für Präsentation mit Prüfungsgespräch addiert.
 //    2. Die Summe wird durch 2 geteilt und das Ergebnis gerundet.
 class GradeHelper {
-  static formatNumber(double avg, {int decimals = 1}) {
-    if (avg <= 0) {
+  static formatNumber(double avg, {int decimals = 1, bool allowZero = false}) {
+    if (avg < 0 || (!allowZero && avg == 0)) {
       return "-";
     }
 
-    return avg.toStringAsFixed(decimals).replaceFirst(".", ",");
+    num factor = pow(10, decimals);
+    double trimmed = (avg * factor).truncate() / factor;
+    return trimmed.toStringAsFixed(decimals).replaceFirst(".", ",");
   }
 
   static double averageOfSubjects(SubjectGradesMap grades) {
@@ -100,7 +104,7 @@ class GradeHelper {
       return "-";
     }
 
-    return average(grades).toStringAsFixed(decimals).replaceFirst(".", ",");
+    return formatNumber(average(grades), decimals: decimals, allowZero: true);
   }
 
   static double average(GradesList grades) {

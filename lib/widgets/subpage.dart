@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class SubpageController extends StatefulWidget {
   final Widget child;
@@ -18,6 +19,7 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
 
   late AnimationController _controller;
   late Animation<double> _animation;
+  late FocusNode _focusNode;
 
   bool _isOpened = false;
 
@@ -32,6 +34,8 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
       parent: _controller,
       curve: Curves.ease,
     ));
+
+    _focusNode = FocusNode(); // required for keyboard listener
   }
 
   @override
@@ -76,72 +80,85 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
     }
   }
 
+  void _handleKeyEvent(RawKeyEvent event) {
+    if (event is RawKeyDownEvent) {
+      if (event.logicalKey == LogicalKeyboardKey.escape && _isOpened) {
+        closeSubpage();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
+    return RawKeyboardListener(
+      focusNode: _focusNode,
+      onKey: _handleKeyEvent,
+      autofocus: true,
+      child: Scaffold(
+        body: Stack(
+          children: [
 
-          // the pages underneath the current one
-          AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: 1 - (_animation.value * 0.05),
-                  child: Stack(children: [
-
-                    // the root page
-                    if (_stack.length > 1)
-                      Transform.scale(
-                          scale: 1 + (_animation.value * 0.05) - 0.05,
-                          child: widget.child)
-                    else widget.child,
-
-                    if (_stack.length > 1)
-                      Transform.scale(
-                        scale: 1 + (_animation.value * 0.05),
-                        child: Container(
-                          color: Colors.black.withOpacity((1 - _animation.value) * 0.8),
-                          height: MediaQuery.sizeOf(context).height,
-                          width: MediaQuery.sizeOf(context).width,
-                        ),
-                      ),
-
-                    ..._stack
-                        .sublist(0, (_stack.length - 1).clamp(0, 100))
-                        .map((element) => _buildSubpage(context, element.content))
-                  ]),
-                );
-              }),
-
-          // opaque background
-          GestureDetector(
-            onTap: closeSubpage,
-            behavior: HitTestBehavior.deferToChild,
-            child: AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) => IgnorePointer(
-                  ignoring: !_isOpened || _animation.value < 0.5,
-                  child: Container(
-                    color: Colors.black.withOpacity(_animation.value * 0.8),
-                    height: MediaQuery.sizeOf(context).height,
-                    width: MediaQuery.sizeOf(context).width,
-                  ),
-                )
-            ),
-          ),
-
-
-          // current subpage
-          if (_isOpened)
+            // the pages underneath the current one
             AnimatedBuilder(
-              animation: _controller,
-              builder: (context, child) => Transform.translate(
-                offset: Offset(0, MediaQuery.sizeOf(context).height * (1 - _animation.value)),
-                child: _buildSubpage(context, _stack.lastOrNull!.content),
+                animation: _controller,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: 1 - (_animation.value * 0.05),
+                    child: Stack(children: [
+
+                      // the root page
+                      if (_stack.length > 1)
+                        Transform.scale(
+                            scale: 1 + (_animation.value * 0.05) - 0.05,
+                            child: widget.child)
+                      else widget.child,
+
+                      if (_stack.length > 1)
+                        Transform.scale(
+                          scale: 1 + (_animation.value * 0.05),
+                          child: Container(
+                            color: Colors.black.withOpacity((1 - _animation.value) * 0.8),
+                            height: MediaQuery.sizeOf(context).height,
+                            width: MediaQuery.sizeOf(context).width,
+                          ),
+                        ),
+
+                      ..._stack
+                          .sublist(0, (_stack.length - 1).clamp(0, 100))
+                          .map((element) => _buildSubpage(context, element.content))
+                    ]),
+                  );
+                }),
+
+            // opaque background
+            GestureDetector(
+              onTap: closeSubpage,
+              behavior: HitTestBehavior.deferToChild,
+              child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) => IgnorePointer(
+                    ignoring: !_isOpened || _animation.value < 0.5,
+                    child: Container(
+                      color: Colors.black.withOpacity(_animation.value * 0.8),
+                      height: MediaQuery.sizeOf(context).height,
+                      width: MediaQuery.sizeOf(context).width,
+                    ),
+                  )
               ),
-            )
-        ],
+            ),
+
+
+            // current subpage
+            if (_isOpened)
+              AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) => Transform.translate(
+                  offset: Offset(0, MediaQuery.sizeOf(context).height * (1 - _animation.value)),
+                  child: _buildSubpage(context, _stack.lastOrNull!.content),
+                ),
+              )
+          ],
+        ),
       ),
     );
   }

@@ -37,7 +37,8 @@ class GradeEntry {
 //    2. Die Endpunktzahl ergibt sich als Durchschnittswert aus der Punktzahl der Schulaufgabe sowie aus dem Durchschnitt der Punktzahlen der kleinen Leistungsnachweise.
 //    3. In den Fächern auf grundlegendem Anforderungsniveau ergibt sich die Halbjahresleistung im Ausbildungsabschnitt 13/2 aus dem Durchschnitt der kleinen Leistungsnachweise.
 //    4. In den Ausbildungsabschnitten 12/1 und 12/2 des Wissenschaftspropädeutischen Seminars ergibt sich die Halbjahresleistung jeweils aus dem Durchschnittswert der kleinen Leistungsnachweise.
-//    5. Das Ergebnis wird gerundet; eine Aufrundung zur Endpunktzahl 1 ist nicht zulässig. 6§ 28 Abs. 1 Satz 2 und Abs. 4 gilt entsprechend.
+//    5. Das Ergebnis wird gerundet; eine Aufrundung zur Endpunktzahl 1 ist nicht zulässig.
+//    6. § 28 Abs. 1 Satz 2 und Abs. 4 gilt entsprechend.
 // 3) 1. Im Leistungsfach Kunst ergibt sich die Halbjahresleistung aus dem Durchschnitt aus der Punktzahl der Schulaufgabe, der Punktzahl des künstlerischen Projekts sowie dem Durchschnitt der Punktzahlen der kleinen Leistungsnachweise.
 //    2. Die Endpunktzahl wird nach Abs. 2 Satz 1 gebildet.
 // 4) 1. Im Leistungsfach Musik ergibt sich die Halbjahresleistung aus dem Durchschnitt aus der Punktzahl der Schulaufgabe, der Punktzahl der praktischen Prüfung sowie dem Durchschnitt der Punktzahlen der kleinen Leistungsnachweise.
@@ -73,14 +74,14 @@ class GradeHelper {
     return trimmed.toStringAsFixed(decimals).replaceFirst(".", ",");
   }
 
-  // TODO qSemesterCountEquivalent
-  static double averageOfSubjects(SubjectGradesMap grades) {
+  static double averageOfSubjects(SubjectGradesMap grades, {Semester? semester}) {
     double sum = 0;
     int count = 0;
 
+    final qSemesterCountEquivalent = semester != null ? SemesterResult.getQSemesterCountEquivalent(semester) : 1;
     grades.forEach((subjectId, grades) {
       if (grades.isNotEmpty) {
-        sum += result(grades);
+        sum += result(grades) / qSemesterCountEquivalent;
         count++;
       }
     });
@@ -92,16 +93,16 @@ class GradeHelper {
     return sum / count;
   }
 
-  // TODO qSemesterCountEquivalent
   static double averageOfSemesterUsed(Map<Subject, Map<Semester, SemesterResult>> results, Semester semester) {
     double sum = 0;
     int count = 0;
 
+    final qSemesterCountEquivalent = SemesterResult.getQSemesterCountEquivalent(semester);
     results.forEach((subject, semesters) {
       var result = semesters[semester];
       if (result == null || result.prediction) return; // only use real results
       if (!result.used) return; // only use used results
-      sum += result.grade;
+      sum += result.grade / qSemesterCountEquivalent;
       count++;
     });
 
@@ -143,6 +144,12 @@ class GradeHelper {
     if (areas.contains(GradeTypeArea.abi)) {
       return averageAbi(grades);
     }
+    if (areas.contains(GradeTypeArea.kunstLk)) {
+      return averageKunstLk(grades);
+    }
+    if (areas.contains(GradeTypeArea.musikLk)) {
+      return averageMusikLk(grades);
+    }
 
     return averageNormal(grades);
   }
@@ -164,6 +171,20 @@ class GradeHelper {
     double praktisch = averageOf(grades.where((e) => e.type != GradeType.theorie).toList());
     double test = averageOf(grades.where((e) => e.type == GradeType.theorie).toList());
     return averageWeighted(praktisch, test, 2);
+  }
+
+  static double averageKunstLk(GradesList grades) {
+    double klausur = averageOf(grades.where((e) => e.type == GradeType.klausur).toList());
+    double projekt = averageOf(grades.where((e) => e.type == GradeType.kunstprojekt).toList());
+    double rest = averageOf(grades.where((e) => e.type != GradeType.klausur && e.type != GradeType.kunstprojekt).toList());
+    return averageOfThree(klausur, projekt, rest);
+  }
+
+  static double averageMusikLk(GradesList grades) {
+    double klausur = averageOf(grades.where((e) => e.type == GradeType.klausur).toList());
+    double praxis = averageOf(grades.where((e) => e.type == GradeType.musikpruefung).toList());
+    double rest = averageOf(grades.where((e) => e.type != GradeType.klausur && e.type != GradeType.musikpruefung).toList());
+    return averageOfThree(klausur, praxis, rest);
   }
 
   // (!) 2x HJ => Bis zu 30 Punkte
@@ -199,6 +220,7 @@ class GradeHelper {
     return averageWeighted(normal, zusatz, 2) * 4;
   }
 
+  // ! GradeType will be ignored !
   static double averageOf(List<GradeEntry> grades) {
     if (grades.isEmpty) {
       return -1;
@@ -221,6 +243,27 @@ class GradeHelper {
     }
 
     return (a * weightAtoB + b) / (weightAtoB + 1);
+  }
+
+  static double averageOfThree(double a, double b, double c) {
+    int count = 0;
+    double sum = 0;
+    if (a != -1) {
+      sum += a;
+      count++;
+    }
+    if (b != -1) {
+      sum += b;
+      count++;
+    }
+    if (c != -1) {
+      sum += c;
+      count++;
+    }
+    if (count == 0) {
+      return -1;
+    }
+    return sum / count;
   }
 
   static String formatDate(DateTime date) {
@@ -265,6 +308,56 @@ class GradeHelper {
       default:
         return "$month. ";
     }
+  }
+
+  // TODO extract; not very elegant
+  static String getWeightingExplanation(Subject subject, Semester semester, Choice choice) {
+    if (semester == Semester.seminar13 && subject == choice.seminar) {
+      return "Gewichtung 3:1 ≙ 3×(Seminararbeit) : 1×(Seminarpräsentation)\n"
+          "max. 30 Punkte (x2 Halbjahresleistungen)";
+    }
+    if (semester == Semester.abi) {
+      if (subject == choice.lk && (subject == Subject.sport || subject == Subject.musik)) {
+        return "Gewichtung (ohne Nachprüfung) 1:1 ≙ 1×(schriftl. Prüfung) : 1×(bes. Fachprüfung)\n"
+            "Gewichtung (mit Nachprüfung) 1:1:1 ≙ 1×(schriftl. Prüfung) : 1×(bes. Fachprüfung) : 1×(mündl. Zusatzprüfung)\n"
+            "max. 60 Punkte (x4 Halbjahresleistungen)";
+      }
+      return "Ergebnis (ohne Nachprüfung) = (mündl./schrift. Prüfung)\n"
+          "Gewichtung (mit Nachprüfung) 2:1 ≙ 2×(schriftl. Prüfung) : 1×(mündl. Zusatzprüfung)\n"
+          "max. 60 Punkte (x4 Halbjahresleistungen)";
+    }
+    if (subject == Subject.sport) {
+      if (choice.lk == Subject.sport) {
+        return "Gewichtung 1:1 ≙ 1×(Sportpraxis 'gA') : 1×(Sporttheorie 'eA')\n"
+            "Sportpraxis: Gewichtung 2:1 ≙ 2×(⌀ prakt. Leistungen) : 1×(⌀ kl. Leistungsnachweise gA/Praxis)\n"
+            "Sporttheorie: Gewichtung 1:1 ≙ 1×(⌀ kl. Leistungsnachweise eA/Theorie) : 1×(Klausur)\n"
+            "Das Ergebnis wird gerundet (auf 1 wird nicht aufgerundet)\n"
+            "max. 15 Punkte (x1 Halbjahresleistung)";
+      }
+      return "Gewichtung 2:1 ≙ 2×(⌀ praktische Leistungen) : 1×(⌀ kl. Leistungsnachweise)\n"
+          "Das Ergebnis wird gerundet (auf 1 wird nicht aufgerundet)\n"
+          "max. 15 Punkte (x1 Halbjahresleistung)";
+    }
+    if (subject == Subject.kunst && choice.lk == subject) {
+      return "Gewichtung 1:1:1 ≙ 1×(Klausur) : 1×(künstlerisches Projekt) : 1×(⌀ kl. Leistungsnachweise)\n"
+          "Das Ergebnis wird gerundet (auf 1 wird nicht aufgerundet)\n"
+          "max. 15 Punkte (x1 Halbjahresleistung)";
+    }
+    if (subject == Subject.musik && choice.lk == subject) {
+      return "Gewichtung 1:1:1 ≙ 1×(Klausur) : 1×(praktische Prüfung) : 1×(⌀ kl. Leistungsnachweise)\n"
+          "Das Ergebnis wird gerundet (auf 1 wird nicht aufgerundet)\n"
+          "max. 15 Punkte (x1 Halbjahresleistung)";
+    }
+
+    if (semester == Semester.q13_2 && !choice.abiSubjects.contains(subject)
+        || (semester == Semester.q12_1 || semester == Semester.q12_2) && subject == choice.seminar) {
+      return "Ergebnis = ⌀ kl. Leistungsnachweise\n"
+          "Das Ergebnis wird gerundet (auf 1 wird nicht aufgerundet)\n"
+          "max. 15 Punkte (x1 Halbjahresleistung)";
+    }
+    return "Gewichtung 1:1 ≙ 1×(⌀ kl. Leistungsnachweise) : 1×(Klausur)\n"
+        "Das Ergebnis wird gerundet (auf 1 wird nicht aufgerundet)\n"
+        "max. 15 Punkte (x1 Halbjahresleistung)";
   }
 }
 
@@ -312,6 +405,12 @@ enum GradeType {
   @HiveField(33)
   fach("Besondere Fachprüfung (Praktisch)", GradeTypeArea.abi),
 
+  @HiveField(40)
+  kunstprojekt("Künstlerisches Projekt", GradeTypeArea.kunstLk),
+
+  @HiveField(50)
+  musikpruefung("Praktische Prüfung", GradeTypeArea.musikLk)
+
   ;
 
   const GradeType(this.name, this.area);
@@ -350,6 +449,12 @@ enum GradeType {
       }
       return only(GradeTypeArea.sport);
     }
+    if (subject == Subject.kunst && choice.lk == Subject.kunst) {
+      return [...listNormal, kunstprojekt];
+    }
+    if (subject == Subject.musik && choice.lk == Subject.musik) {
+      return [...listNormal, musikpruefung];
+    }
 
     if (semester == Semester.q13_2 && !choice.abiSubjects.contains(subject)) {
       return listNormalNoK;
@@ -373,6 +478,10 @@ enum GradeType {
         return !existingTypes.contains(GradeType.zusatz) && existingTypes.contains(GradeType.schriftlich);
       case GradeType.fach: // max 1 Fachprüfung (bei mündlicher UND schriftlicher Prüfung möglich)
         return !existingTypes.contains(GradeType.fach);
+      case GradeType.kunstprojekt: // max 1 Kunstprojekt
+        return !existingTypes.contains(GradeType.kunstprojekt);
+      case GradeType.musikpruefung: // max 1 Musikprüfung
+        return !existingTypes.contains(GradeType.musikpruefung);
       default:
         return true;
     }
@@ -389,6 +498,10 @@ enum GradeTypeArea {
   seminar,
   /// Das Fach Sport(GK) hat keine üblichen Noten(sondern Praxis & Theorie) (= Praxisteil im LK)
   sport,
+  /// Im Kunst LK wird ein künstlerisches Projekt benotet
+  kunstLk,
+  /// Im Musik LK wird eine praktische Prüfung benotet
+  musikLk,
   /// Abiturprüfungen: schriftliche / mündliche Prüfungen, Fachprüfungen, Zusatzprüfungen, etc.
   abi,
 }

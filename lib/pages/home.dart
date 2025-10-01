@@ -26,7 +26,7 @@ class HomePage extends StatelessWidget {
     var stats = SemesterResult.calculateStatistics(settings.choice!, results);
 
     var currentSemesterGrades = grades.getGradesForSemester(settings.choice!);
-    var currentSemesterAvg = GradeHelper.averageOfSubjects(currentSemesterGrades);
+    var currentSemesterAvg = GradeHelper.averageOfSubjects(currentSemesterGrades, semester: grades.currentSemester);
     var currentSemesterAvgUsed = GradeHelper.averageOfSemesterUsed(results, grades.currentSemester);
     var gradesDistribution = _calculateSingleGradesDistribution(settings, currentSemesterGrades);
 

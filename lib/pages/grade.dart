@@ -224,7 +224,7 @@ class GradeOptionPlaceholder extends StatelessWidget {
         if (icon != null) icon!
         else Icon(Icons.add_circle_rounded, color: theme.textTheme.bodySmall?.color, size: 24),
         const SizedBox(width: 16),
-        Text(text, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: textColor ?? (icon == null ? theme.textTheme.bodySmall?.color : null))),
+        Expanded(child: Text(text, softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 2, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: textColor ?? (icon == null ? theme.textTheme.bodySmall?.color : null)))),
       ],
     );
   }
@@ -255,7 +255,7 @@ class GradeTypSelectionPage extends StatelessWidget {
     const double leftOffset = PageSkeleton.leftOffset;
     final ThemeData theme = Theme.of(context);
 
-    final Choice choice = Provider.of<SettingsDataProvider>(context).choice!;
+    final choice = Provider.of<SettingsDataProvider>(context).choice!;
     final grades = subject != null ? Provider.of<GradesDataProvider>(context).getGrades(subject!.id, semester: semester) : List<GradeEntry>.empty();
     final existingTypes = grades.map((e) => e.type).toList();
     // only remove one!
@@ -335,6 +335,10 @@ class GradeTypSelectionPage extends StatelessWidget {
         return Icons.mic_rounded;
       case GradeType.fach:
         return Icons.architecture_rounded;
+      case GradeType.kunstprojekt:
+        return Icons.palette_rounded;
+      case GradeType.musikpruefung:
+        return Icons.piano_rounded;
       default:
         return Icons.label_rounded; // Fallback icon
     }

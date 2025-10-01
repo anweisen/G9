@@ -182,10 +182,7 @@ class Choice extends HiveObject {
   ];
 
   List<Subject> subjectsToDisplayForSemester(Semester semester) {
-    if (semester == Semester.abi) return abiSubjects;
-    final takenSubjects = subjects.where((subject) => hasSubjectInSemester(subject, semester)).toList();
-    if (!takenSubjects.contains(seminar)) return [...takenSubjects, seminar];
-    return takenSubjects;
+    return subjects.where((subject) => hasSubjectInSemester(subject, Semester.mapSemesterToDisplaySemester(semester, subject.category))).toList();
   }
 
   bool hasSubjectInSemester(Subject subject, Semester semester) {

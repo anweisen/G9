@@ -217,11 +217,11 @@ class _SetupPageState extends State<SetupPage> {
           currentlySelected: _choiceBuilder.sbs,
         ),
 
-      // 2. Fremdsprache oder Naturwissenschaft,
+      // 2. Fremdsprache oder Naturwissenschaft oder Informatik,
       // gesetzt durch spät beginnende Fremdsprache oder Informatik als LK
       if (_choiceBuilder.sbs == null && _choiceBuilder.lk != Subject.info)
         SetupStepPage(
-          title: "2. Fremdsprache / Naturwissenschaft",
+          title: "2. Fremdsprache / Naturwissenschaft / Informatik",
           pageController: _pageController,
           allowNextStep: allowNextStep,
           subjectsPool: _without(Subject.allOf(SubjectCategory.ntg, SubjectCategory.info, SubjectCategory.sg), _choiceBuilder.lk, _choiceBuilder.sg1, _choiceBuilder.mint1),
@@ -749,7 +749,7 @@ class SetupFinishPage extends StatelessWidget {
       ],
 
       // 2. Fremdsprache / Naturwissenschaft
-      Text("2. Fremdsprache / Naturwissenschaft", style: theme.textTheme.bodySmall),
+      Text("2. Fremdsprache / Naturwissenschaft / Informatik", style: theme.textTheme.bodySmall),
       const SizedBox(height: labelSpacing),
       SubjectWidget(subject: choice.mintSg2),
       const SizedBox(height: sectionSpacing),

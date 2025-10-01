@@ -23,6 +23,7 @@ class SubjectPage extends StatefulWidget {
 class _SubjectPageState extends State<SubjectPage> {
 
   Semester? _currentSemester;
+  bool showInfo = false;
 
   @override
   void initState() {
@@ -45,6 +46,12 @@ class _SubjectPageState extends State<SubjectPage> {
     });
   }
 
+  void toggleInfo() {
+    setState(() {
+      showInfo = !showInfo;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     const double leftOffset = PageSkeleton.leftOffset;
@@ -52,6 +59,7 @@ class _SubjectPageState extends State<SubjectPage> {
     final Choice? choice = Provider.of<SettingsDataProvider>(context).choice;
     final GradesDataProvider dataProvider = Provider.of<GradesDataProvider>(context);
     final GradesList grades = dataProvider.getGrades(widget.subject.id, semester: _currentSemester);
+    final qSemesterCountEquivalent = SemesterResult.getQSemesterCountEquivalent(_currentSemester!);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -60,6 +68,7 @@ class _SubjectPageState extends State<SubjectPage> {
           padding: const EdgeInsets.symmetric(horizontal: leftOffset),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Container(
                 decoration: BoxDecoration(
@@ -68,16 +77,25 @@ class _SubjectPageState extends State<SubjectPage> {
                 width: 24,
                 height: 24,
               ),
-              const SizedBox(width: 16),
-              Expanded(flex: 100, child: Text(widget.subject.name, softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 2, style: theme.textTheme.headlineMedium)),
+              const SizedBox(width: 12),
+              Expanded(flex: 100, child: Text(widget.subject.name, softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 2, style: theme.textTheme.headlineMedium),),
               const Spacer(),
+              if (widget.subject == choice?.lk) Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
+                const SizedBox(width: 8),
+                Text("eA", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 15)),
+              ]) else if (_currentSemester != Semester.abi && choice!.abiSubjects.contains(widget.subject)) ...[
+                const SizedBox(width: 8),
+                Text("ABI", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.start),
+              ],
+
+              const SizedBox(width: 12),
               Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300, fontSize: 22)),
-              const SizedBox(width: 8),
-              Text(GradeHelper.formatSemesterAverage(grades, decimals: 2), style: theme.textTheme.headlineMedium),
-              if (SemesterResult.getQSemesterCountEquivalent(_currentSemester!) > 1) ...[
+              const SizedBox(width: 6),
+              Text(GradeHelper.formatSemesterAverage(grades, decimals: (qSemesterCountEquivalent > 1 ? 1 : 2)), style: theme.textTheme.headlineMedium),
+              if (qSemesterCountEquivalent > 1) ...[
                 const SizedBox(width: 6),
                 Text("(≈ ", style: theme.textTheme.labelSmall),
-                Text(GradeHelper.formatSemesterAverage(grades, decimals: 1, qSemesterCountEquivalent: SemesterResult.getQSemesterCountEquivalent(_currentSemester!)), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
+                Text(GradeHelper.formatSemesterAverage(grades, decimals: 1, qSemesterCountEquivalent: qSemesterCountEquivalent), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
                 Text(")", style: theme.textTheme.labelSmall),
               ]
             ],
@@ -103,19 +121,33 @@ class _SubjectPageState extends State<SubjectPage> {
         const SizedBox(height: 36),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: leftOffset),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, // align info text left
             children: [
-              Text("Noten", style: theme.textTheme.headlineMedium),
-              const Spacer(),
-              GestureDetector(
-                  onTap: () => SubpageController.of(context).openSubpage(
-                      GradePage(subject: widget.subject, key: GlobalKey(), semester: _currentSemester!,),
-                      callback: (result) => {
-                        if (result is GradeEditResult) {
-                          _addGrade(dataProvider, result)
-                        }
-                      }),
-                  child: Icon(Icons.add, color: theme.primaryColor, size: 30)),
+              Row(
+                children: [
+                  Text("Noten", style: theme.textTheme.headlineMedium),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                      onTap: toggleInfo,
+                      child: Icon(showInfo ? Icons.help_rounded : Icons.help_outline_rounded, size: 20)
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                      onTap: () => SubpageController.of(context).openSubpage(
+                          GradePage(subject: widget.subject, key: GlobalKey(), semester: _currentSemester!,),
+                          callback: (result) => {
+                            if (result is GradeEditResult) {
+                              _addGrade(dataProvider, result)
+                            }
+                          }),
+                      child: Icon(Icons.add, color: theme.primaryColor, size: 30)),
+                ],
+              ),
+              if (showInfo) ...[
+                CustomLineBreakText(GradeHelper.getWeightingExplanation(widget.subject, _currentSemester!, choice!), style: theme.textTheme.bodySmall),
+                const SizedBox(height: 10),
+              ],
             ],
           ),
         ),
@@ -174,6 +206,42 @@ class _SubjectPageState extends State<SubjectPage> {
   }
 }
 
+class CustomLineBreakText extends StatelessWidget {
+  final String text;
+  final TextStyle? style;
+
+  const CustomLineBreakText(this.text, {super.key, this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = text.split('\n');
+
+    // return RichText(
+    //   text: TextSpan(
+    //     style: style ?? DefaultTextStyle.of(context).style,
+    //     children: [
+    //       for (int i = 0; i < parts.length; i++) ...[
+    //         TextSpan(text: parts[i]),
+    //         if (i < parts.length - 1)
+    //           WidgetSpan(child: SizedBox(height: (style!.fontSize!) * 0.05, width: double.infinity)),
+    //       ],
+    //     ],
+    //   ),
+    // );
+    return
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (int i = 0; i < parts.length; i++) ...[
+            Text(parts[i], style: style ?? DefaultTextStyle.of(context).style),
+            if (i < parts.length - 1)
+              const SizedBox(height: 5)
+          ],
+        ],
+    );
+  }
+}
+
 class TestItem extends StatelessWidget {
   const TestItem({
     super.key,
@@ -199,12 +267,15 @@ class TestItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
         child: Row(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(entry.type.name, style: theme.textTheme.bodyMedium),
-                Text(GradeHelper.formatDate(entry.date), style: theme.textTheme.bodySmall),
-              ],
+            Expanded(
+              flex: 10,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(entry.type.name, style: theme.textTheme.bodyMedium, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
+                  Text(GradeHelper.formatDate(entry.date), style: theme.textTheme.bodySmall),
+                ],
+              ),
             ),
             const Spacer(),
             Text(entry.grade.toString(), style: theme.textTheme.bodyMedium),

@@ -145,7 +145,7 @@ enum Semester {
   seminar13(3, "Seminararbeit", "Seminararbeit Q13"),
 
   @HiveField(4)
-  abi(4, "Abi", "Abi Prüfungen");
+  abi(4, "Abi", "Abi Prüfungsphase");
 
   static const qPhase = [q12_1, q12_2, q13_1, q13_2];
   static const normal = [...qPhase, abi];
@@ -174,7 +174,6 @@ enum Semester {
       if (currentSemester == Semester.q13_1 || currentSemester == Semester.q13_2) {
         return Semester.seminar13;
       }
-      return currentSemester;
     }
     // if (currentSemester == Semester.seminar13) {
     //   return Semester.q13_1; // map seminar phase to normal phase

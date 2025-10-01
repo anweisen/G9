@@ -150,13 +150,15 @@ class HomePage extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text("Halbjahr ${grades.currentSemester.detailedDisplay} abschließen", style: theme.textTheme.displayMedium),
-                        Text("Als nächstes: ${grades.currentSemester.nextSemester().detailedDisplay}", style: theme.textTheme.labelMedium),
-                      ],
+                    Expanded( // Expanded to avoid overflow (Column is no intrinsic width / constraints)
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 4),
+                          Text("Halbjahr ${grades.currentSemester.detailedDisplay} abschließen", style: theme.textTheme.displayMedium),
+                          Text("Als nächstes: ${grades.currentSemester.nextSemester().detailedDisplay}", style: theme.textTheme.labelMedium, softWrap: false, overflow: TextOverflow.fade,),
+                        ],
+                      ),
                     ),
                     Icon(Icons.chevron_right_rounded, color: theme.textTheme.labelMedium?.color),
                   ],

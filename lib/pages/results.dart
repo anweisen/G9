@@ -22,6 +22,7 @@ class ResultsPage extends StatelessWidget {
     var results = SemesterResult.calculateResultsWithPredictions(settings.choice!, grades);
     var flags = SemesterResult.applyUseFlags(settings.choice!, results);
     var (admissionHurdleType, admissionHurdleText) = AdmissionHurdle.check(settings.choice!, results, grades);
+    var (graduationHurdleType, graduationHurdleText) = GraduationHurdle.check(settings.choice!, results, flags, grades);
 
     return PageSkeleton(
         title: const PageTitle(title: "Ergebnisse"),
@@ -53,6 +54,7 @@ class ResultsPage extends StatelessWidget {
           _buildText(theme, "Punkte Abitur", "${flags.pointsAbi}"),
           const SizedBox(height: 8),
           _buildText(theme, "Zugelassen", (admissionHurdleType == null) ? "Ja" : "Nein"),
+          _buildText(theme, "Anerkannt", (admissionHurdleType == null && graduationHurdleType == null) ? "Ja" : "Nein"),
           const SizedBox(height: 8),
           _buildText(theme, "insgesamt Punkte", "${flags.pointsTotal}"),
           _buildText(theme, "erreichter Schnitt", SemesterResult.pointsToAbiGrade(flags.pointsTotal)),

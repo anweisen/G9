@@ -18,8 +18,12 @@ class Subject {
   @HiveField(3)
   final SubjectCategory category;
 
-  Subject({required this.id, required this.name, required this.color, required this.category}) {
+  @HiveField(4)
+  late final SubjectTaskField field;
+
+  Subject({required this.id, required this.name, required this.color, required this.category, SubjectTaskField? field}) {
     byId[id] = this;
+    this.field = field ?? SubjectTaskField.fromSubjectCategory(category);
   }
 
   @override
@@ -32,11 +36,11 @@ class Subject {
   String toString() => "$name($id, ${category.name})";
 
   static Subject
-    mathe = Subject(id: 1, name: 'Mathe', color: const Color.fromRGBO(11, 107, 234, 1), category: SubjectCategory.abi),
-    deutsch = Subject(id: 2, name: 'Deutsch', color: const Color.fromRGBO(248, 248, 31, 1.0), category: SubjectCategory.abi),
+    mathe = Subject(id: 1, name: 'Mathe', color: const Color.fromRGBO(11, 107, 234, 1), category: SubjectCategory.abi, field: SubjectTaskField.mint),
+    deutsch = Subject(id: 2, name: 'Deutsch', color: const Color.fromRGBO(248, 248, 31, 1.0), category: SubjectCategory.abi, field: SubjectTaskField.slk),
 
-    matheVk = Subject(id: 11, name: 'Mathe Vertiefung', color: const Color.fromRGBO(11, 107, 234, 1), category: SubjectCategory.vk),
-    deutschVk = Subject(id: 12, name: 'Deutsch Vertiefung', color: const Color.fromRGBO(248, 248, 31, 1.0), category: SubjectCategory.vk),
+    matheVk = Subject(id: 11, name: 'Mathe Vertiefung', color: const Color.fromRGBO(11, 107, 234, 1), category: SubjectCategory.vk, field: SubjectTaskField.mint),
+    deutschVk = Subject(id: 12, name: 'Deutsch Vertiefung', color: const Color.fromRGBO(248, 248, 31, 1.0), category: SubjectCategory.vk, field: SubjectTaskField.slk),
 
     english = Subject(id: 21, name: 'Englisch', color: const Color.fromRGBO(228, 27, 27, 1.0), category: SubjectCategory.sg),
     franz = Subject(id: 22, name: 'Französisch', color: const Color.fromRGBO(224, 146, 46, 1.0), category: SubjectCategory.sg),
@@ -130,4 +134,46 @@ enum SubjectCategory {
   /// Sonstiges ("nicht gewählt" Platzhalter)
   @HiveField(11)
   none
+}
+
+// https://www.gesetze-bayern.de/Content/Document/BayGSO-ANL_3
+// "Aufgabenfelder"
+@HiveType(typeId: 12)
+enum SubjectTaskField {
+  @HiveField(0)
+  none("/"),
+
+  @HiveField(1)
+  slk("sprachlich-literarisch-künstlerisch (SLK)"),
+
+  @HiveField(2)
+  gpr("gesellschaftswissenschaftlich (GPR)"),
+
+  @HiveField(3)
+  mint("mathematisch-naturwissenschaftlich-technisch (MINT)"),
+
+  ;
+
+  final String display;
+
+  const SubjectTaskField(this.display);
+
+  static List<SubjectTaskField> all = [slk, gpr, mint];
+
+  static SubjectTaskField fromSubjectCategory(SubjectCategory category) {
+    // (!) SubjectCategory.abi, SubjectCategory.vk (AMBIGUOUS!) -> slk OR mint
+    switch (category) {
+      case SubjectCategory.sg:
+      case SubjectCategory.sbs:
+      case SubjectCategory.kumu:
+        return slk;
+      case SubjectCategory.gpr:
+        return gpr;
+      case SubjectCategory.ntg:
+      case SubjectCategory.info:
+        return mint;
+      default:
+        return none;
+    }
+  }
 }

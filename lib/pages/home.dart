@@ -42,6 +42,7 @@ class HomePage extends StatelessWidget {
     var betterGradePoints = SemesterResult.getMinPointsForBetterAbiGrade(flags.pointsTotal);
 
     var (admissionHurdleType, admissionHurdleText) = AdmissionHurdle.check(settings.choice!, results, grades);
+    var (graduationHurdleType, graduationHurdleText) = GraduationHurdle.check(settings.choice!, results, flags, grades);
 
     return PageSkeleton(title: const PageTitle(title: "Übersicht"), children: [
       _buildTextLine(Text(grades.currentSemester.detailedDisplay, style: theme.textTheme.bodyMedium), [
@@ -67,22 +68,10 @@ class HomePage extends StatelessWidget {
       ),
       const SizedBox(height: 36),
 
-      if (!flags.isEmpty && admissionHurdleType != null && admissionHurdleText != null)...[
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: theme.splashColor,
-          ),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text("Zulassungshürde", style: theme.textTheme.bodySmall),
-            Text(admissionHurdleType.paragraph, style: theme.textTheme.bodySmall),
-            Text(admissionHurdleType.desc, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
-            Text(admissionHurdleText, style: theme.textTheme.displayMedium),
-          ]),
-        ),
-        const SizedBox(height: 30),
-      ],
+      if (!flags.isEmpty && admissionHurdleType != null && admissionHurdleText != null)
+        ..._buildHurdleInfo(theme, "Zulassungshürde", admissionHurdleType.paragraph, admissionHurdleType.desc, admissionHurdleText)
+      else if (!flags.isEmpty && graduationHurdleType != null && graduationHurdleText != null)
+        ..._buildHurdleInfo(theme, "Anerkennungshürde", graduationHurdleType.paragraph, graduationHurdleType.desc, graduationHurdleText),
 
       // Abitur Vorhersage
       Container(
@@ -114,9 +103,9 @@ class HomePage extends StatelessWidget {
                 _buildTextLine(Text(entry.key.display, style: theme.textTheme.bodyMedium), [
                   Text("Ø", style: theme.textTheme.displayMedium),
                   const SizedBox(width: 2),
-                  Text(GradeHelper.formatNumber(pastSemestersAvgUsed[entry.key]!, decimals: 2), style: theme.textTheme.displayMedium),
+                  Text(GradeHelper.formatNumber(pastSemestersAvgUsed[entry.key] ?? 0, decimals: 2), style: theme.textTheme.displayMedium),
                   const SizedBox(width: 2),
-                  Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(pastSemestersAvgUsed[entry.key]!))})", style: theme.textTheme.bodySmall),
+                  Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(pastSemestersAvgUsed[entry.key] ?? 0))})", style: theme.textTheme.bodySmall),
                   const SizedBox(width: 8),
                   Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
                   const SizedBox(width: 4),
@@ -177,6 +166,25 @@ class HomePage extends StatelessWidget {
           ),
         )
     ]);
+  }
+
+  List<Widget> _buildHurdleInfo(ThemeData theme, String title, String paragraph, String desc, String text) {
+    return [
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: theme.splashColor,
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: theme.textTheme.bodySmall),
+          Text(paragraph, style: theme.textTheme.bodySmall),
+          Text(desc, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+          Text(text, style: theme.textTheme.displayMedium),
+        ]),
+      ),
+      const SizedBox(height: 30),
+    ];
   }
 
   Widget _buildTextLine(Widget? front, List<Widget> back) {

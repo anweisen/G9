@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <polygon style="stroke: currentColor; fill: none; stroke-linejoin: round; stroke-width: 18px;" points="80.265 170.86 243.978 110.339 405.001 162.622 406.729 301.059 387.898 281.993 367.21 301.304 365.583 180.872 245.095 222.586"></polygon>
+  <rect fill="currentColor" x="284.28" y="265.816" width="57.69" height="144.453" rx="12" ry="12"></rect>
+  <rect fill="currentColor" x="211.956" y="243.161" width="57.69" height="165.518" rx="12" ry="12"></rect>
+  <rect fill="currentColor" x="135.97" y="280.92" width="57.69" height="128.555" rx="12" ry="12"></rect>
+</svg>

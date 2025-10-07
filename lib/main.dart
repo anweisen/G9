@@ -4,6 +4,7 @@ import 'package:hive_flutter/adapters.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+import 'pages/welcome.dart';
 import 'logic/choice.dart';
 import 'logic/grades.dart';
 import 'logic/types.dart';
@@ -61,7 +62,7 @@ class MyApp extends StatelessWidget {
           hintColor: const Color.fromRGBO(143, 143, 147, 1.0),
           dividerColor: const Color.fromRGBO(28, 28, 32, 1.0),
           primaryColor: Colors.white,
-          splashColor: const Color.fromRGBO(252, 130, 130, 0.2),
+          splashColor: const Color.fromRGBO(252, 130, 130, 0.25),
           textTheme: const TextTheme(
             headlineMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 24),
             bodyMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 18),
@@ -95,6 +96,7 @@ class MyApp extends StatelessWidget {
       // initialRoute: "/home",
       home: const SplashScreenPage(),
       routes: {
+        "/welcome": (context) => const WelcomePage(key: Key("welcome")),
         "/home": (context) => const HomePage(key: Key("home")),
         "/subjects": (context) => const SubjectsPage(key: Key("subjects")),
         "/results": (context) => const ResultsPage(key: Key("results")),

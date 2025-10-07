@@ -460,7 +460,6 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 40),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 25, horizontal: leftOffset),
               child: Text(widget.title,

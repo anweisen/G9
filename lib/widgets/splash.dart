@@ -24,7 +24,7 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
     var notifier = Provider.of<SettingsDataProvider>(context, listen: false);
     await notifier.load(); // wait until data is loaded
     if (notifier.onboarding) {
-      return "/setup";
+      return "/welcome";
     } else {
       return "/home";
     }

@@ -61,7 +61,7 @@ class SemesterResult {
       return 3;
     } else if (subject.category == SubjectCategory.vk) { // VKs immer nur max. 2 Semester
       return 2;
-    } else if (subject == choice.profil12 || subject == choice.profil13) { // Vom Profilfach dürfen nur 3 Semester eingebracht werden (wenn über 4 Semester belegt)
+    } else if ((subject == choice.profil12 || subject == choice.profil13) && choice.profil12 == choice.profil13) { // Vom Profilfach dürfen nur 3 Semester eingebracht werden (wenn über 4 Semester belegt)
       return 3; // TODO: insgesamt von allen Profilfächern nur 3 Semester?
     } else if (!choice.pug13 && subject == Subject.pug) { // PuG nur in Q12
       return 2;

@@ -62,7 +62,9 @@ class MyApp extends StatelessWidget {
           hintColor: const Color.fromRGBO(143, 143, 147, 1.0),
           dividerColor: const Color.fromRGBO(28, 28, 32, 1.0),
           primaryColor: Colors.white,
+          shadowColor: const Color.fromRGBO(198, 198, 215, 1.0),
           splashColor: const Color.fromRGBO(252, 130, 130, 0.25),
+          indicatorColor: const Color.fromRGBO(252, 130, 130, 1.0),
           textTheme: const TextTheme(
             headlineMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 24),
             bodyMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 18),
@@ -79,7 +81,9 @@ class MyApp extends StatelessWidget {
         hintColor: Colors.white,
         dividerColor: const Color.fromRGBO(228, 233, 240, 1.0),
         primaryColor: Colors.black,
+        shadowColor: const Color.fromRGBO(198, 198, 215, 1.0),
         splashColor: const Color.fromRGBO(252, 130, 130, 0.4),
+        indicatorColor: const Color.fromRGBO(252, 130, 130, 1.0),
         textTheme: const TextTheme(
           headlineMedium: TextStyle(fontWeight: bold, color: Colors.black, fontSize: 24),
           bodyMedium: TextStyle(fontWeight: bold, color: Colors.black, fontSize: 18),

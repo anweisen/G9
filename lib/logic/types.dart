@@ -144,13 +144,13 @@ enum SubjectTaskField {
   none("/"),
 
   @HiveField(1)
-  slk("sprachlich-literarisch-künstlerisch (SLK)"),
+  slk("SLK (sprachlich-literarisch-künstlerisch)"),
 
   @HiveField(2)
-  gpr("gesellschaftswissenschaftlich (GPR)"),
+  gpr("GPR (gesellschaftswissenschaftlich)"),
 
   @HiveField(3)
-  mint("mathematisch-naturwissenschaftlich-technisch (MINT)"),
+  mint("MINT (mathematisch-naturwissenschaftlich-technisch)"),
 
   ;
 

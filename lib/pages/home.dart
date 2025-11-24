@@ -40,6 +40,7 @@ class HomePage extends StatelessWidget {
       if (avgUsed > 0) pastSemestersAvgUsed[semester] = avgUsed;
     }
     var betterGradePoints = SemesterResult.getMinPointsForBetterAbiGrade(flags.pointsTotal);
+    var underscored = _calculateUnderscoredResults(results);
 
     var (admissionHurdleType, admissionHurdleText) = AdmissionHurdle.check(settings.choice!, results, grades);
     var (graduationHurdleType, graduationHurdleText) = GraduationHurdle.check(settings.choice!, results, flags, grades);
@@ -83,6 +84,14 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text("Zulassung", style: theme.textTheme.bodySmall),
+            _buildTextLine(Text("Unterpunktungen", style: theme.textTheme.bodyMedium, overflow: TextOverflow.fade), [
+              Text("${underscored}x", style: theme.textTheme.bodyMedium)
+            ]),
+            const SizedBox(height: 4),
+            _buildHurdleChart(context, underscored),
+            const SizedBox(height: 15),
+
             Text("Abitur Vorhersage", style: theme.textTheme.bodySmall),
             _buildTextLine(Text("Note", style: theme.textTheme.bodyMedium), [
               Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
@@ -92,10 +101,9 @@ class HomePage extends StatelessWidget {
             _buildTextLine(Text("Punkte", style: theme.textTheme.bodyMedium), [
               Text("${flags.pointsTotal}", style: theme.textTheme.bodyMedium),
             ]),
-            if (betterGradePoints < 823)
-              _buildTextLine(Text("Bessere Note", style: theme.textTheme.displayMedium), [
-                Text("${SemesterResult.pointsToAbiGrade(betterGradePoints)} bei $betterGradePoints", style: theme.textTheme.displayMedium),
-              ]),
+            const SizedBox(height: 4),
+            _buildGradeBar(context, flags.pointsTotal),
+
             if (pastSemestersAvg.isNotEmpty) ...[
               const SizedBox(height: 15),
               Text("Semester", style: theme.textTheme.bodySmall),
@@ -118,10 +126,13 @@ class HomePage extends StatelessWidget {
             _buildTextLine(Text("Notenzahl", style: theme.textTheme.bodyMedium), [
               Text("${stats.numberGrades}", style: theme.textTheme.bodyMedium),
             ]),
+            _buildTextLine(Text("Pflichteinbringungen", style: theme.textTheme.bodyMedium), [
+              Text("${flags.forcedSemesters}", style: theme.textTheme.bodyMedium),
+            ]),
             if (!flags.isEmpty && stats.bestSubjects.isNotEmpty) ...[
               const SizedBox(height: 15),
-              Text("Top ${min(5, stats.bestSubjects.length)} Fächer", style: theme.textTheme.bodySmall),
-              for (int i = 0; i < 5 && i < stats.bestSubjects.length; i++)
+              Text("Top ${min(3, stats.bestSubjects.length)} Fächer", style: theme.textTheme.bodySmall),
+              for (int i = 0; i < 3 && i < stats.bestSubjects.length; i++)
                 _buildTextLine(_buildSubject(theme.textTheme, stats.bestSubjects[i].$1), [
                   Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
                   const SizedBox(width: 4),
@@ -226,7 +237,7 @@ class HomePage extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        double maxWidth = constraints.maxWidth * 0.6;
+        double maxWidth = constraints.maxWidth * 0.5;
 
         return Row(
           children: [
@@ -277,6 +288,114 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  Widget _buildHurdleChart(BuildContext context, int underscored) {
+    final ThemeData theme = Theme.of(context);
+
+    return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          double width = (constraints.maxWidth / 8) - max(4, min(10, constraints.maxWidth * 0.02));
+
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (int i = 0; i < 8; i++)
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(3.33),
+                    color: (underscored > i ? (underscored >= 6 ? theme.indicatorColor : theme.primaryColor) : theme.hintColor),
+                  ),
+                  height: 10,
+                  width: width,
+                ),
+            ],
+          );
+        }
+    );
+  }
+
+  Widget _buildGradeBar(BuildContext context, int points) {
+    final ThemeData theme = Theme.of(context);
+
+    int pointsForBetterGrade = SemesterResult.getMinPointsForBetterAbiGrade(points);
+    int pointsForCurrentGrade = SemesterResult.getMinPointsForThisAbiGrade(points);
+
+    String betterGradeText = pointsForBetterGrade == 900 ? "-" : SemesterResult.pointsToAbiGrade(pointsForBetterGrade);
+    String currentGradeText = SemesterResult.pointsToAbiGrade(points);
+    String worseGradeText = pointsForCurrentGrade <= 300 ? "-" : SemesterResult.pointsToAbiGrade(pointsForCurrentGrade - 1);
+
+    double offset = (points - pointsForCurrentGrade) / (pointsForBetterGrade - pointsForCurrentGrade);
+
+    return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final double barWidth = constraints.maxWidth;
+          final double segmentOutsideWidth = barWidth * 0.2;
+          final double segmentInsideWidth = barWidth - (segmentOutsideWidth * 2);
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    height: 20,
+                    width: segmentOutsideWidth,
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(6)),
+                      color: theme.shadowColor,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(betterGradeText, textAlign: TextAlign.center, style: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, height: 1.25, fontWeight: FontWeight.w600)),
+                  ),
+                  const SizedBox(height: 4,),
+                  Text("$pointsForBetterGrade", style: theme.textTheme.bodySmall),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 20,
+                    width: segmentInsideWidth,
+                    decoration: BoxDecoration(
+                      color: theme.hintColor,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(currentGradeText, textAlign: TextAlign.center, style: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, height: 1.25, fontWeight: FontWeight.w600)),
+                  ),
+                  Transform.translate(
+                    offset: Offset(segmentInsideWidth * (1 - offset), 0), // offset = 0 → left, 1 → right
+                    child: Column(
+                      children: [
+                        SizedBox(height: 14, child: Icon(Icons.keyboard_arrow_up_rounded, color: theme.primaryColor, size: 20)),
+                        Text("$points", style: theme.textTheme.bodySmall?.copyWith(color: theme.primaryColor, height: 1.25, fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 20,
+                    width: segmentOutsideWidth,
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(6)),
+                      color: theme.shadowColor,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(worseGradeText, textAlign: TextAlign.center, style: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, height: 1.25, fontWeight: FontWeight.w600)),
+                  ),
+                  const SizedBox(height: 4,),
+                  Text("$pointsForCurrentGrade", style: theme.textTheme.bodySmall),
+                ],
+              ),
+            ],
+          );
+        });
+  }
+
   List<MapEntry<int, int>> _calculateSingleGradesDistribution(SettingsDataProvider settings, Map<SubjectId, GradesList> currentSemesterGrades) {
     Map<int, int> gradesDistribution = {};
     for (int i = 0; i <= 15; i++) {
@@ -304,5 +423,19 @@ class HomePage extends StatelessWidget {
     // sort descending
     return gradesDistribution.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
+  }
+
+  int _calculateUnderscoredResults(Map<Subject, Map<Semester, SemesterResult>> results) {
+    int count = 0;
+
+    for (var subjectResults in results.values) {
+      for (var semesterResult in subjectResults.values) {
+        if (!semesterResult.prediction && semesterResult.useForced && semesterResult.grade < 5) {
+          count++;
+        }
+      }
+    }
+
+    return count;
   }
 }

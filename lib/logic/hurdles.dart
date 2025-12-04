@@ -24,8 +24,6 @@ enum AdmissionHurdle {
   min200in40("Nr. 3", "In den 40 einzubringenden Halbjahresleistungen mindestens 200 Punkte"),
   // 32 Halbjahresleistungen je min. 5 Punkte
   min5je32("Nr. 3", "Mindestens 32 von den 40 einzubringende Halbjahresleistungen mit je mindestens 5 Punkte (max. 8 Unterpunktungen)"),
-  // Seminararbeit (zwei Halbjahresleistungen) min. 9 Punkte
-  min9sem("Nr. 3", "Mindestens 9 Punkte (zwei Halbjahresleistungen) in der Seminararbeit"),
   // jede einzubringende Halbjahresleistung mind. 1 Punkt (=no0)
   min1je("Nr. 4", "Jede einzubringende Halbjahresleistung mit mindestens 1 Punkt bewertet"),
 
@@ -65,10 +63,11 @@ enum AdmissionHurdle {
     }
     sortedUsedResults.sort((a, b) => b.grade.compareTo(a.grade)); // sort descending
     // min5je32: 32 Halbjahresleistungen je min. 5 Punkte
-    for (int i = 0; i < 32; i++) {
-      if (sortedUsedResults[i].grade < 5) {
-        return (AdmissionHurdle.min5je32, "$i von 32");
+    for (int i = 0, min5 = 0; min5 < 32; i++) {
+      if (sortedUsedResults[i].effectiveGrade < 5) {
+        return (AdmissionHurdle.min5je32, "$min5 von 32");
       }
+      min5 += sortedUsedResults[i].qSemesterEquivalent;
     }
     // min200in40: mindestens 200 Punkte in den 40 einzubringenden Halbjahresleistungen
     int pointsIn40 = sortedUsedResults.map((e) => e.grade).reduce((value, element) => value + element);
@@ -103,13 +102,6 @@ enum AdmissionHurdle {
     for (var entry in seminarGrades) {
       if (entry.grade == 0) {
         return (AdmissionHurdle.no0sem, entry.type.name);
-      }
-    }
-    // min9sem: Seminararbeit (2 Halbjahresleistungen) mindestens 9 Punkte
-    if (seminarGrades.isNotEmpty) {
-      final finalSeminarGrade = GradeHelper.average(seminarGrades);
-      if (finalSeminarGrade < 9) {
-        return (AdmissionHurdle.min9sem, "$finalSeminarGrade von 9");
       }
     }
 

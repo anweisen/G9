@@ -353,8 +353,9 @@ class HomePage extends StatelessWidget {
 
     for (var subjectResults in results.values) {
       for (var semesterResult in subjectResults.values) {
-        if (!semesterResult.prediction && semesterResult.useForced && semesterResult.grade < 5) {
-          count++;
+        if (semesterResult.semester == Semester.abi) continue; // nur Q-Phase
+        if (!semesterResult.prediction && semesterResult.used && semesterResult.effectiveGrade < 5) {
+          count += semesterResult.qSemesterEquivalent;
         }
       }
     }

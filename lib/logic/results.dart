@@ -236,7 +236,7 @@ class SemesterResult {
         results.putIfAbsent(subject, () => {});
 
         if (grades.isNotEmpty) {
-          results[subject]![semester] = SemesterResult(GradeHelper.result(grades), grades.length);
+          results[subject]![semester] = SemesterResult(GradeHelper.result(grades), grades.length, semester);
         }
       });
     });
@@ -270,7 +270,7 @@ class SemesterResult {
         }
 
         if (results[subject]![semester] == null) {
-          results[subject]![semester] = SemesterResult(prediction * getQSemesterCountEquivalent(semester), 0);
+          results[subject]![semester] = SemesterResult(prediction * getQSemesterCountEquivalent(semester), 0, semester);
         }
       }
 
@@ -285,14 +285,14 @@ class SemesterResult {
         }
 
         if (results[subject]![semester] == null) {
-          results[subject]![semester] = SemesterResult(totalPrediction * getQSemesterCountEquivalent(semester), 0);
+          results[subject]![semester] = SemesterResult(totalPrediction * getQSemesterCountEquivalent(semester), 0, semester);
         }
       }
     }
 
     int seminarPrediction = totalCount == 0 ? 0 : (2 * totalSum / totalCount).floor();
     if (results[choice.seminar]![Semester.seminar13]?.prediction ?? true) {
-      results[choice.seminar]![Semester.seminar13] = SemesterResult(seminarPrediction, 0);
+      results[choice.seminar]![Semester.seminar13] = SemesterResult(seminarPrediction, 0, Semester.seminar13);
     }
 
     return results;
@@ -374,6 +374,8 @@ class SemesterResult {
   final int grade;
   final int basedOnGradeCount;
 
+  final Semester semester;
+
   bool useForced = false;
   bool useExtra = false;
   bool useJoker = false; // used as joker
@@ -384,10 +386,13 @@ class SemesterResult {
 
   bool replacedByJoker = false;
 
-  SemesterResult(this.grade, this.basedOnGradeCount);
+  int get qSemesterEquivalent => getQSemesterCountEquivalent(semester);
+  int get effectiveGrade => (grade / qSemesterEquivalent).round();
+
+  SemesterResult(this.grade, this.basedOnGradeCount, this.semester);
 
   @override
-  String toString() => "$grade[${used ? "used" : "free"}${prediction ? ", predicted" : ""}]";
+  String toString() => "$grade[${qSemesterEquivalent}x ${used ? "used" : "free"}${prediction ? ", predicted" : ""}]";
 
 }
 

@@ -7,6 +7,7 @@ import '../provider/settings.dart';
 import '../provider/grades.dart';
 import '../logic/grades.dart';
 import '../logic/types.dart';
+import '../widgets/general.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/subpage.dart';
 import 'grade.dart';
@@ -54,57 +55,39 @@ class _SubjectPageState extends State<SubjectPage> {
 
   @override
   Widget build(BuildContext context) {
-    const double leftOffset = PageSkeleton.leftOffset;
     final ThemeData theme = Theme.of(context);
     final Choice? choice = Provider.of<SettingsDataProvider>(context).choice;
     final GradesDataProvider dataProvider = Provider.of<GradesDataProvider>(context);
     final GradesList grades = dataProvider.getGrades(widget.subject.id, semester: _currentSemester);
     final qSemesterCountEquivalent = SemesterResult.getQSemesterCountEquivalent(_currentSemester!);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Column(children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: leftOffset),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: widget.subject.color),
-                width: 24,
-                height: 24,
-              ),
-              const SizedBox(width: 12),
-              Expanded(flex: 100, child: Text(widget.subject.name, softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 2, style: theme.textTheme.headlineMedium),),
-              const Spacer(),
-              if (widget.subject == choice?.lk) Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
-                const SizedBox(width: 8),
-                Text("eA", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 15)),
-              ]) else if (_currentSemester != Semester.abi && choice!.abiSubjects.contains(widget.subject)) ...[
-                const SizedBox(width: 8),
-                Text("ABI", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.start),
-              ],
-
-              const SizedBox(width: 12),
-              Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300, fontSize: 22)),
-              const SizedBox(width: 6),
-              Text(GradeHelper.formatSemesterAverage(grades, decimals: (qSemesterCountEquivalent > 1 ? 1 : 2)), style: theme.textTheme.headlineMedium),
-              if (qSemesterCountEquivalent > 1) ...[
-                const SizedBox(width: 6),
-                Text("(≈ ", style: theme.textTheme.labelSmall),
-                Text(GradeHelper.formatSemesterAverage(grades, decimals: 1, qSemesterCountEquivalent: qSemesterCountEquivalent), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
-                Text(")", style: theme.textTheme.labelSmall),
-              ]
+    return SubpageSkeleton(
+        title: Row(
+          children: [
+            SubjectPageTitle(subject: widget.subject),
+            const Spacer(),
+            if (widget.subject == choice?.lk) Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
+              const SizedBox(width: 8),
+              Text("eA", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 15)),
+            ]) else if (_currentSemester != Semester.abi && choice!.abiSubjects.contains(widget.subject)) ...[
+              const SizedBox(width: 8),
+              Text("ABI", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.start),
             ],
-          ),
+
+            const SizedBox(width: 12),
+            Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300, fontSize: 22)),
+            const SizedBox(width: 6),
+            Text(GradeHelper.formatSemesterAverage(grades, decimals: (qSemesterCountEquivalent > 1 ? 1 : 2)), style: theme.textTheme.headlineMedium),
+            if (qSemesterCountEquivalent > 1) ...[
+              const SizedBox(width: 6),
+              Text("(≈ ", style: theme.textTheme.labelSmall),
+              Text(GradeHelper.formatSemesterAverage(grades, decimals: 1, qSemesterCountEquivalent: qSemesterCountEquivalent), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
+              Text(")", style: theme.textTheme.labelSmall),
+            ]
+          ],
         ),
-        const SizedBox(height: 24),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: leftOffset),
-          child: Container(
+        children: [
+          Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
@@ -117,11 +100,8 @@ class _SubjectPageState extends State<SubjectPage> {
                     _buildSemester(theme, dataProvider, choice, _currentSemester!, semester, setCurrentSemester)
                 ],
               )),
-        ),
-        const SizedBox(height: 36),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: leftOffset),
-          child: Column(
+          const SizedBox(height: 36),
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start, // align info text left
             children: [
               Row(
@@ -150,24 +130,20 @@ class _SubjectPageState extends State<SubjectPage> {
               ],
             ],
           ),
-        ),
-        const SizedBox(height: 10),
-        Expanded(
-          child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(0, 0, 0, 60),
-              itemCount: grades.length,
-              itemBuilder: (context, index) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: leftOffset),
-                  child: TestItem(theme: theme, entry: grades[index], subject: widget.subject,
-                  callback: (result) {
-                    if (result is GradeEditResult) {
-                      _removeGrade(dataProvider, index);
-                      if (!result.remove) _addGrade(dataProvider, result);
-                    }
-                  }, semester: _currentSemester!,))),
-        ),
-      ]),
-    );
+          const SizedBox(height: 10),
+          Expanded(
+            child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 60),
+                itemCount: grades.length,
+                itemBuilder: (context, index) => TestItem(theme: theme, entry: grades[index], subject: widget.subject,
+                callback: (result) {
+                  if (result is GradeEditResult) {
+                    _removeGrade(dataProvider, index);
+                    if (!result.remove) _addGrade(dataProvider, result);
+                  }
+                }, semester: _currentSemester!,)),
+          ),
+    ]);
   }
 
   void _removeGrade(GradesDataProvider dataProvider, int index) {

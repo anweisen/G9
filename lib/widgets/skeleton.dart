@@ -113,3 +113,30 @@ class PageTitle extends StatelessWidget {
     );
   }
 }
+
+class SubpageSkeleton extends StatelessWidget {
+  final Widget? title;
+  final List<Widget> children;
+
+  const SubpageSkeleton({super.key, this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: PageSkeleton.leftOffset),
+        child: Column(
+          children: [
+            if (title != null) ...[
+              title!,
+              const SizedBox(height: 24),
+            ],
+            ...children
+          ],
+        ),
+      ),
+    );
+  }
+}
+

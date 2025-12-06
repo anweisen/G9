@@ -252,7 +252,6 @@ class GradeTypSelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const double leftOffset = PageSkeleton.leftOffset;
     final ThemeData theme = Theme.of(context);
 
     final choice = Provider.of<SettingsDataProvider>(context).choice!;
@@ -267,42 +266,39 @@ class GradeTypSelectionPage extends StatelessWidget {
     }
     final List<GradeType> types = (subject != null && semester != null) ? GradeType.types(choice, subject!, semester!) : List.empty();
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Column(children: [
-        Padding(
-            padding: const EdgeInsets.symmetric(horizontal: leftOffset),
-            child: Row(children: [
-              Text("Prüfungsart wählen", style: theme.textTheme.headlineMedium)
-            ])),
-        const SizedBox(height: 24),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(0, 0, 0, 60),
-            itemCount: types.length,
-            itemBuilder: (context, index) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: leftOffset, vertical: 7),
-              child: GestureDetector(
-                onTap:  () => {
-                  if (types[index].stillPossible(existingTypes)) {
-                    SubpageController.of(context).closeSubpage(types[index])
-                  }
-                },
-                child: Padding(
-                  padding: (index > 0 && types[index - 1].area != types[index].area)
-                      ? const EdgeInsets.only(top: 10)
-                      : const EdgeInsets.all(0),
-                  child: GradeOptionPlaceholderIcon(
-                      textColor: types[index].stillPossible(existingTypes) ? null : theme.textTheme.bodySmall?.color,
-                      text: types[index].name,
-                      icon: getIcon(types[index])),
+    return SubpageSkeleton(
+        title: Row(
+          children: [
+            Text("Prüfungsart wählen", style: theme.textTheme.headlineMedium),
+          ],
+        ),
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 60),
+              itemCount: types.length,
+              itemBuilder: (context, index) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 7),
+                child: GestureDetector(
+                  onTap:  () => {
+                    if (types[index].stillPossible(existingTypes)) {
+                      SubpageController.of(context).closeSubpage(types[index])
+                    }
+                  },
+                  child: Padding(
+                    padding: (index > 0 && types[index - 1].area != types[index].area)
+                        ? const EdgeInsets.only(top: 10)
+                        : const EdgeInsets.all(0),
+                    child: GradeOptionPlaceholderIcon(
+                        textColor: types[index].stillPossible(existingTypes) ? null : theme.textTheme.bodySmall?.color,
+                        text: types[index].name,
+                        icon: getIcon(types[index])),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ]),
-    );
+    ]);
   }
 
   IconData getIcon(GradeType type) {

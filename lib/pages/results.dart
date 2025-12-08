@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../widgets/subpage.dart';
 import '../widgets/skeleton.dart';
 import '../logic/hurdles.dart';
 import '../logic/choice.dart';
@@ -8,6 +9,7 @@ import '../logic/types.dart';
 import '../logic/results.dart';
 import '../provider/grades.dart';
 import '../provider/settings.dart';
+import 'result.dart';
 
 class ResultsPage extends StatelessWidget {
   const ResultsPage({super.key});
@@ -36,14 +38,14 @@ class ResultsPage extends StatelessWidget {
 
           _buildLegendText(theme, "Einbringung: Pflicht", Icons.check_circle),
           _buildLegendText(theme, "Einbringung: Frei", Icons.check_circle_outline),
-          _buildLegendText(theme, "Optionsregel: Gestrichen", Icons.close_rounded),
+          _buildLegendText(theme, "Optionsregel: Gestrichen", Icons.join_inner_rounded),
           _buildLegendText(theme, "Optionsregel: Einbringung", Icons.join_full_rounded),
 
           const SizedBox(height: 40),
 
           ...?settings.choice?.abiSubjects.map((subject) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 10),
-            child: AbiSubjectCard(subject: subject, result: results[subject]![Semester.abi]!),
+            child: AbiSubjectCard(subject: subject, result: results[subject]![Semester.abi]!, results: results[subject]!, choice: settings.choice!,),
           )),
 
           const SizedBox(height: 40),
@@ -96,43 +98,45 @@ class SubjectCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: theme.dividerColor,
+    return GestureDetector(
+      onTap: () => SubpageController.of(context).openSubpage(SubjectResultPage(subject: subject, results: results, choice: choice, key: GlobalKey(),)),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: theme.dividerColor,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: subject.color),
+                  width: 22,
+                  height: 22,
+                ),
+                const SizedBox(width: 10),
+                Text(subject.name, style: theme.textTheme.bodyMedium),
+                const Spacer(),
+                Icon(Icons.info, color: theme.textTheme.bodySmall?.color, size: 12),
+                const SizedBox(width: 4),
+                Text("min. ${SemesterResult.getMinSemestersForSubject(choice, subject)}", style: theme.textTheme.bodySmall),
+              ],
+            ),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: subject.color),
-                width: 22,
-                height: 22,
-              ),
-              const SizedBox(width: 10),
-              Text(subject.name,
-                  style: theme.textTheme.bodyMedium),
-              const Spacer(),
-              Icon(Icons.info, color: theme.textTheme.bodySmall?.color, size: 12),
-              const SizedBox(width: 4),
-              Text("min. ${SemesterResult.getMinSemestersForSubject(choice, subject)}", style: theme.textTheme.bodySmall),
+              for (var semester in Semester.qPhaseEquivalents(subject.category))
+                  _buildSemester(theme, semester, results[semester]),
             ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            for (var semester in Semester.qPhaseEquivalents(subject.category))
-                _buildSemester(theme, semester, results[semester]),
-          ],
-        )
-      ],
+          )
+        ],
+      ),
     );
   }
 
@@ -146,7 +150,7 @@ class SubjectCard extends StatelessWidget {
           children: [
             Text(result?.grade.toString() ?? "-", style: textStyle?.copyWith(decoration: (result?.replacedByJoker ?? false) ? TextDecoration.lineThrough : null)),
             const SizedBox(width: 3),
-            if (result?.replacedByJoker ?? false) Icon(Icons.close_rounded, size: 13, color: textStyle?.color)
+            if (result?.replacedByJoker ?? false) Icon(Icons.join_inner_rounded, size: 13, color: textStyle?.color)
             else if (result?.useForced ?? false) Icon(Icons.check_circle, size: 12, color: textStyle?.color)
             else if (result?.useExtra ?? false) Icon(Icons.check_circle_outline, size: 12, color: textStyle?.color)
             else if (result?.useJoker ?? false) Icon(Icons.join_full_rounded, size: 14, color: textStyle?.color)
@@ -166,44 +170,49 @@ TextStyle? _getTextStyleFor(ThemeData theme, SemesterResult? result) {
 }
 
 class AbiSubjectCard extends StatelessWidget {
-  const AbiSubjectCard({super.key, required this.subject, required this.result});
+  const AbiSubjectCard({super.key, required this.subject, required this.result, required this.results, required this.choice});
 
   final Subject subject;
   final SemesterResult result;
+  final Map<Semester, SemesterResult> results;
+  final Choice choice;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textStyle = _getTextStyleFor(theme, result);
 
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: theme.dividerColor,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: subject.color),
-                width: 22,
-                height: 22,
-              ),
-              const SizedBox(width: 10),
-              Text(subject.name, style: theme.textTheme.bodyMedium),
-              const Spacer(),
-              Text("(≈ ${(result.grade / 4).floor()})", style: theme.textTheme.displayMedium?.copyWith(color: textStyle?.color, height: 1.5)),
-              const SizedBox(width: 4),
-              Text("${result.grade}", style: textStyle),
-            ],
-          ),
-        )
-      ],
+    return GestureDetector(
+      onTap: () => SubpageController.of(context).openSubpage(SubjectResultPage(subject: subject, results: results, choice: choice, key: GlobalKey(),)),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: theme.dividerColor,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: subject.color),
+                  width: 22,
+                  height: 22,
+                ),
+                const SizedBox(width: 10),
+                Text(subject.name, style: theme.textTheme.bodyMedium),
+                const Spacer(),
+                Text("(≈ ${(result.grade / 4).floor()})", style: theme.textTheme.displayMedium?.copyWith(color: textStyle?.color, height: 1.5)),
+                const SizedBox(width: 4),
+                Text("${result.grade}", style: textStyle),
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 }

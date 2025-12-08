@@ -84,13 +84,7 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Zulassung", style: theme.textTheme.bodySmall),
-            _buildTextLine(Text("Unterpunktungen", style: theme.textTheme.bodyMedium, overflow: TextOverflow.fade), [
-              Text("${underscored}x", style: theme.textTheme.bodyMedium)
-            ]),
-            const SizedBox(height: 4),
-            _buildHurdleChart(context, underscored),
-            const SizedBox(height: 30),
+
 
             Text("Abitur Vorhersage", style: theme.textTheme.bodySmall),
             _buildTextLine(Text("Note", style: theme.textTheme.bodyMedium), [
@@ -103,6 +97,14 @@ class HomePage extends StatelessWidget {
             ]),
             const SizedBox(height: 4),
             GradeBarChart(points: flags.pointsTotal),
+            const SizedBox(height: 15),
+
+            Text("Zulassung", style: theme.textTheme.bodySmall),
+            _buildTextLine(Text("Unterpunktungen", style: theme.textTheme.bodyMedium, overflow: TextOverflow.fade), [
+              Text("${underscored}x", style: theme.textTheme.bodyMedium)
+            ]),
+            const SizedBox(height: 4),
+            _buildHurdleChart(context, underscored),
 
             if (pastSemestersAvg.isNotEmpty) ...[
               const SizedBox(height: 20),
@@ -169,9 +171,7 @@ class HomePage extends StatelessWidget {
                           Text("Halbjahr ${grades.currentSemester.detailedDisplay} abschließen", style: theme.textTheme.displayMedium),
                           Row(
                             children: [
-                              Icon(Icons.keyboard_double_arrow_right_rounded, color: theme.textTheme.labelMedium?.color),
-                              const SizedBox(width: 2,),
-                              Text(grades.currentSemester.nextSemester().detailedDisplay, style: theme.textTheme.labelMedium, softWrap: false, overflow: TextOverflow.fade,),
+                              Text("zu ${grades.currentSemester.nextSemester().detailedDisplay}", style: theme.textTheme.labelMedium, softWrap: false, overflow: TextOverflow.fade,),
                             ],
                           ),
                         ],

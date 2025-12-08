@@ -268,7 +268,9 @@ class SemesterResult {
         if (!choice.hasSubjectInSemester(subject, semester)) {
           continue; // subject not taken that semester
         }
-
+        if (semester == Semester.abi && provider.getAbiPrediction(subject.id) != null) {
+          continue; // apply abi prediction later
+        }
         if (results[subject]![semester] == null) {
           results[subject]![semester] = SemesterResult(prediction * getQSemesterCountEquivalent(semester), 0, semester);
         }
@@ -284,7 +286,9 @@ class SemesterResult {
           continue; // subject not taken that semester
         }
 
-        if (results[subject]![semester] == null) {
+        if (semester == Semester.abi && provider.getAbiPrediction(subject.id) != null) {
+          results[subject]![semester] = SemesterResult(provider.getAbiPrediction(subject.id)! * 4, 0, semester);
+        } else if (results[subject]![semester] == null) {
           results[subject]![semester] = SemesterResult(totalPrediction * getQSemesterCountEquivalent(semester), 0, semester);
         }
       }

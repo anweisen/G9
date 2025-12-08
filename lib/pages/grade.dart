@@ -301,7 +301,7 @@ class GradeTypSelectionPage extends StatelessWidget {
     ]);
   }
 
-  IconData getIcon(GradeType type) {
+  static IconData getIcon(GradeType type) {
     switch (type) {
       case GradeType.klausur:
         return Icons.school_rounded;

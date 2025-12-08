@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +10,9 @@ import '../logic/types.dart';
 import '../provider/grades.dart';
 import '../widgets/general.dart';
 import '../widgets/skeleton.dart';
+import '../widgets/subpage.dart';
+import 'subject.dart';
+import 'grade.dart';
 
 class SubjectResultPage extends StatelessWidget {
   const SubjectResultPage({super.key, required this.subject, required this.results, required this.choice});
@@ -52,6 +57,8 @@ class SubjectResultPage extends StatelessWidget {
                 if (choice.hasSubjectInSemester(subject, semester))
                   _buildSemester(semester, theme, gradesProvider),
 
+
+              if (abi) ..._buildAbi(theme, gradesProvider),
             ],
           ))
         ]);
@@ -95,7 +102,9 @@ class SubjectResultPage extends StatelessWidget {
                   width: 36,
                   height: 27,
                   decoration: (result?.used ?? false) ? BoxDecoration(color: (result?.grade ?? 15) >= 5 ? theme.primaryColor : theme.splashColor, borderRadius: BorderRadius.circular(6)) : null,
-                  child: Center(child: Text(result?.grade.toString() ?? "-", style: (result?.used ?? false) ? theme.textTheme.labelMedium?.copyWith(color: (result?.grade ?? 15) < 5 ? theme.indicatorColor : null) : theme.textTheme.bodyMedium,))
+                  child: Center(child: Text(result?.grade.toString() ?? "-",
+                        style: (result?.used ?? false) ? theme.textTheme.labelMedium?.copyWith(color: (result?.grade ?? 15) < 5 ? theme.indicatorColor : null) : theme.textTheme.bodyMedium,)
+                  )
               ),
               const SizedBox(width: 6),
               SizedBox(width: 10, child: Column(
@@ -111,6 +120,16 @@ class SubjectResultPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  List<Widget> _buildAbi(ThemeData theme, GradesDataProvider gradesProvider) {
+    SemesterResult? result = results[Semester.abi];
+    return [
+      const SizedBox(height: 20,),
+      Text("Abiturprüfung", style: theme.textTheme.bodySmall),
+      const SizedBox(height: 6,),
+      SubjectResultAbiPrediction(subject: subject, result: result)
+    ];
   }
 
   List<Widget> _buildInfoWidgets(ThemeData theme) {
@@ -179,7 +198,133 @@ class SubjectResultPage extends StatelessWidget {
         ),
     );
   }
-
-
 }
+
+class SubjectResultAbiPrediction extends StatelessWidget {
+  const SubjectResultAbiPrediction({
+    super.key,
+    required this.subject,
+    required this.result,
+  });
+
+  final Subject subject;
+  final SemesterResult? result;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final gradesProvider = Provider.of<GradesDataProvider>(context);
+
+    bool prediction = result?.prediction ?? true;
+    int predicted = gradesProvider.getAbiPrediction(subject.id) ?? result?.effectiveGrade ?? 1;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: subject.color.withAlpha(theme.brightness == Brightness.dark ? 66 : 120),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(prediction ? "Prognose" : "Prüfungsergebnis", style: theme.textTheme.bodyMedium, overflow: TextOverflow.ellipsis, maxLines: 1,),
+                    Text("in vierfacher Wertung (max. 60 P.)", style: theme.textTheme.bodySmall, softWrap: true, maxLines: 3,),
+                  ],
+                ),
+              ),
+
+              Row(
+                children: [
+                  Row(
+                    children: [
+                      Text("Ø", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w300)),
+                      const SizedBox(width: 4),
+                      Text(GradeHelper.formatSemesterAverage(gradesProvider.getGrades(subject.id, semester: Semester.abi)), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                      width: 36,
+                      height: 27,
+                      decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(6)),
+                      child: Center(child: Text(result?.grade.toString() ?? "-",
+                            style: theme.textTheme.labelMedium?.copyWith(color: theme.scaffoldBackgroundColor),)
+                      )
+                  ),
+                  const SizedBox(width: 6),
+                  Text("(≈ ${result?.effectiveGrade})", style: theme.textTheme.displayMedium?.copyWith(color: null, height: 1.5)),
+                ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16,),
+
+          for (GradeEntry entry in gradesProvider.getGrades(subject.id, semester: Semester.abi))
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(GradeTypSelectionPage.getIcon(entry.type), size: 16, color: theme.textTheme.displayMedium?.color),
+                const SizedBox(width: 8,),
+                Text(entry.type.name, style: theme.textTheme.displayMedium),
+                const SizedBox(width: 8,),
+                Text("${entry.grade} P.", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600)),
+              ],
+            ),
+
+          if (prediction)
+              Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => gradesProvider.setAbiPrediction(subject.id, max(min(predicted + 1, 15), 1)),
+                        child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: theme.textTheme.labelSmall!.color!, width: 1.5))),
+                            child: Icon(Icons.add_rounded, size: 16, color: theme.textTheme.labelSmall?.color)
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: theme.textTheme.labelSmall!.color!, width: 2))),
+                        child: Text("$predicted", style: theme.textTheme.bodyMedium),
+                      ),
+                      const SizedBox(width: 12),
+                      GestureDetector(
+                        onTap: () => gradesProvider.setAbiPrediction(subject.id, max(min(predicted - 1, 15), 1)),
+                        child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: theme.textTheme.labelSmall!.color!, width: 1.5))),
+                            child: Icon(Icons.remove_rounded, size: 16, color: theme.textTheme.labelSmall?.color)
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12,),
+                  GestureDetector(
+                    onTap: () => SubpageController.of(context).openSubpage(SubjectPage(subject: subject, semester: Semester.abi, key: GlobalKey(),)),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(6)),
+                      child: Text("Ergebnisse eintragen", style: theme.textTheme.displayMedium?.copyWith(color: theme.textTheme.labelMedium?.color, height: 1.25), softWrap: true, maxLines: 2,),
+                    ),
+                  )
+                ],
+              )
+        ],
+      ),
+    );
+  }
+}
+
+
 

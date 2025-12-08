@@ -14,8 +14,9 @@ import 'grade.dart';
 
 class SubjectPage extends StatefulWidget {
   final Subject subject;
+  final Semester? semester;
 
-  const SubjectPage({super.key, required this.subject});
+  const SubjectPage({super.key, required this.subject, this.semester});
 
   @override
   State<SubjectPage> createState() => _SubjectPageState();
@@ -29,7 +30,7 @@ class _SubjectPageState extends State<SubjectPage> {
   @override
   void initState() {
     super.initState();
-    final originalSemester = Provider.of<GradesDataProvider>(context, listen: false).currentSemester;
+    final originalSemester = widget.semester ?? Provider.of<GradesDataProvider>(context, listen: false).currentSemester;
     _currentSemester ??= Semester.mapSemesterToDisplaySemester(originalSemester, widget.subject.category);
   }
 

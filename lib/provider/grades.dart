@@ -10,6 +10,7 @@ part "grades.g.dart";
 class GradesDataProvider extends ChangeNotifier {
   static const hiveBoxName = "grades";
   static const hiveSettingsBoxName = "grade_settings";
+  static const hivePredictionsBoxName = "grade_predictions";
 
   GradesDataProvider() {
     load();
@@ -18,6 +19,7 @@ class GradesDataProvider extends ChangeNotifier {
   Semester _currentSemester = Semester.q12_1;
 
   Map<Semester, SubjectGradesMap>? _data;
+  Map<SubjectId, int>? _abiPredictions;
 
   Semester get currentSemester => _currentSemester;
   set currentSemester(Semester value) {
@@ -62,6 +64,18 @@ class GradesDataProvider extends ChangeNotifier {
     return _data ?? {};
   }
 
+  void setAbiPrediction(SubjectId subjectId, int points) {
+    print("Setting ABI prediction for $subjectId to $points");
+    _abiPredictions![subjectId] = points;
+
+    notifyListeners();
+    save();
+  }
+
+  int? getAbiPrediction(SubjectId subjectId) {
+    return _abiPredictions?[subjectId];
+  }
+
   void addGrade(SubjectId subjectId, GradeEntry grade, {Semester? semester}) {
     print("Adding grade $grade to $subjectId in $semester");
     assert (_data != null);
@@ -104,6 +118,10 @@ class GradesDataProvider extends ChangeNotifier {
       _data![semester] = dynamicMap.map((key, value) => MapEntry(key as SubjectId, _mapHiveList<GradeEntry>(value)));
     }
 
+    var predictionsBox = await Hive.openBox<Map>(hivePredictionsBoxName);
+    Map<dynamic, dynamic> dynamicPredictionsMap = predictionsBox.get("abiPredictions", defaultValue: <SubjectId, int>{})!;
+    _abiPredictions = dynamicPredictionsMap.map((key, value) => MapEntry(key as SubjectId, value as int));
+
     notifyListeners();
   }
 
@@ -122,6 +140,9 @@ class GradesDataProvider extends ChangeNotifier {
       print("Saving $semester with $subjectGradesMap");
       box.put(semester.index, subjectGradesMap);
     });
+
+    var predictionsBox = await Hive.openBox<Map>(hivePredictionsBoxName);
+    predictionsBox.put("abiPredictions", _abiPredictions!);
   }
 }
 

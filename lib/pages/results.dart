@@ -205,7 +205,7 @@ class AbiSubjectCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 Text(subject.name, style: theme.textTheme.bodyMedium),
                 const Spacer(),
-                Text("(≈ ${(result.grade / 4).floor()})", style: theme.textTheme.displayMedium?.copyWith(color: textStyle?.color, height: 1.5)),
+                Text("(≈ ${result.effectiveGrade})", style: theme.textTheme.displayMedium?.copyWith(color: textStyle?.color, height: 1.5)),
                 const SizedBox(width: 4),
                 Text("${result.grade}", style: textStyle),
               ],

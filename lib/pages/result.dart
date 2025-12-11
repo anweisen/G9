@@ -152,6 +152,8 @@ class SubjectResultPage extends StatelessWidget {
     }
 
     bool extraVkMintSg2 = (choice.vk != null && (choice.vk == subject || choice.mintSg2 == subject));
+    bool onlySg = choice.lk != subject && subject.category == SubjectCategory.sg && choice.mintSg2.category != SubjectCategory.sg && choice.mintSg2.category != SubjectCategory.sbs;
+    bool onlyNtg = choice.lk != subject && subject.category == SubjectCategory.ntg && choice.mintSg2.category != SubjectCategory.ntg && choice.mintSg2.category != SubjectCategory.info;
 
     return [
       if (minSemesters == 4)
@@ -166,15 +168,20 @@ class SubjectResultPage extends StatelessWidget {
       if (extraVkMintSg2)
         _buildInfoWidget(theme, "+1 verpflichtende Einbringung in ${choice.vk?.name} oder ${choice.mintSg2.name}", null),
 
+      if (onlySg)
+        _buildInfoWidget(theme, "einzige Fremdsprache", null),
+      if (onlyNtg)
+        _buildInfoWidget(theme, "einzige Naturwissenschaft", null),
+
       if (maxSemesters < semesters)
         _buildInfoWidget(theme, "max. $maxSemesters Einbringungen möglich", Icons.lock_open_rounded),
 
       if (jokerUsed != null)
         _buildInfoWidget(theme, "Optionsregel streicht ${jokerUsed.display}", Icons.join_inner_rounded)
-      else if (joker)
-        _buildInfoWidget(theme, "Optionsregel anwendbar", null)
-      else
-        _buildInfoWidget(theme, "Optionsregel nicht anwendbar", Icons.warning_amber_rounded),
+      else if (!joker)
+        _buildInfoWidget(theme, "Optionsregel nicht anwendbar", Icons.warning_amber_rounded)
+      else if (minSemesters != 0)
+        _buildInfoWidget(theme, "Optionsregel anwendbar", null),
 
       if (freeSemestersUsed == 1)
         _buildInfoWidget(theme, "$freeSemestersUsed freie Einbringung genutzt", Icons.check_circle_outline)
@@ -215,8 +222,11 @@ class SubjectResultAbiPrediction extends StatelessWidget {
     final theme = Theme.of(context);
     final gradesProvider = Provider.of<GradesDataProvider>(context);
 
+    Color contrastColor = subject.color.computeLuminance() > 0.80 ? (theme.brightness == Brightness.light ? Colors.black : Colors.black87) : Colors.white;
+
     bool prediction = result?.prediction ?? true;
     int predicted = gradesProvider.getAbiPrediction(subject.id) ?? result?.effectiveGrade ?? 1;
+    print(gradesProvider.getAbiPrediction(subject.id));
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -233,7 +243,7 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(prediction ? "Prognose" : "Prüfungsergebnis", style: theme.textTheme.bodyMedium, overflow: TextOverflow.ellipsis, maxLines: 1,),
+                    Text(prediction ? "Prognose" : "Ergebnis", style: theme.textTheme.bodyMedium, overflow: TextOverflow.ellipsis, maxLines: 1,),
                     Text("in vierfacher Wertung (max. 60 P.)", style: theme.textTheme.bodySmall, softWrap: true, maxLines: 3,),
                   ],
                 ),
@@ -241,7 +251,7 @@ class SubjectResultAbiPrediction extends StatelessWidget {
 
               Row(
                 children: [
-                  Row(
+                  if (!prediction) Row(
                     children: [
                       Text("Ø", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w300)),
                       const SizedBox(width: 4),
@@ -266,17 +276,29 @@ class SubjectResultAbiPrediction extends StatelessWidget {
 
           const SizedBox(height: 16,),
 
-          for (GradeEntry entry in gradesProvider.getGrades(subject.id, semester: Semester.abi))
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(GradeTypSelectionPage.getIcon(entry.type), size: 16, color: theme.textTheme.displayMedium?.color),
-                const SizedBox(width: 8,),
-                Text(entry.type.name, style: theme.textTheme.displayMedium),
-                const SizedBox(width: 8,),
-                Text("${entry.grade} P.", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600)),
-              ],
-            ),
+          Column(
+            children: [
+              for (GradeEntry entry in gradesProvider.getGrades(subject.id, semester: Semester.abi))
+                ... [Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                        height: 22,
+                        width: 26,
+                        decoration: BoxDecoration(
+                          color: subject.color,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Icon(GradeTypSelectionPage.getIcon(entry.type), size: 16, color: contrastColor)
+                    ),
+                    const SizedBox(width: 8,),
+                    Text("${entry.grade}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.primaryColor, height: 1.25)),
+                    const SizedBox(width: 4,),
+                    Flexible(child: Text(entry.type.name, style: theme.textTheme.displayMedium?.copyWith(height: 1.25), softWrap: true, maxLines: 1, overflow: TextOverflow.ellipsis))
+                  ],
+                ), const SizedBox(height: 8,)],
+            ],
+          ),
 
           if (prediction)
               Column(
@@ -309,7 +331,17 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12,),
+                  const SizedBox(height: 6,),
+                  GestureDetector(
+                    onTap: () => gradesProvider.clearAbiPrediction(subject.id),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: theme.textTheme.labelSmall!.color!, width: 2))),
+                      child: Text("Prognose zurücksetzen", style: theme.textTheme.displayMedium?.copyWith(color: gradesProvider.getAbiPrediction(subject.id) != null
+                          ? theme.textTheme.bodyMedium?.color : theme.textTheme.labelSmall?.color, height: 1.25), softWrap: true, maxLines: 2,),
+                    ),
+                  ),
+                  const SizedBox(height: 8,),
                   GestureDetector(
                     onTap: () => SubpageController.of(context).openSubpage(SubjectPage(subject: subject, semester: Semester.abi, key: GlobalKey(),)),
                     child: Container(
@@ -317,7 +349,7 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                       decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(6)),
                       child: Text("Ergebnisse eintragen", style: theme.textTheme.displayMedium?.copyWith(color: theme.textTheme.labelMedium?.color, height: 1.25), softWrap: true, maxLines: 2,),
                     ),
-                  )
+                  ),
                 ],
               )
         ],
@@ -325,6 +357,3 @@ class SubjectResultAbiPrediction extends StatelessWidget {
     );
   }
 }
-
-
-

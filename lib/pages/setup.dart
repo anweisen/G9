@@ -230,7 +230,7 @@ class _SetupPageState extends State<SetupPage> {
         ),
       if (_choiceBuilder.sbs == null && _choiceBuilder.lk != Subject.info)
         SetupStepPage(
-          title: "Vertiefungskurs, ersetzt ${_choiceBuilder.mintSg2?.name ?? ""}",
+          title: "Vertiefungskurs, ersetzt ${_choiceBuilder.mintSg2?.name ?? ""} in Q13",
           pageController: _pageController,
           allowNextStep: allowNextStep,
           subjectsPool: [ if (_choiceBuilder.mintSg2?.category == SubjectCategory.sg) Subject.deutschVk else Subject.matheVk ],
@@ -307,6 +307,24 @@ class _SetupPageState extends State<SetupPage> {
           callback: (subject) => setSubstituteMathe(subject != null),
           currentlySelected: _choiceBuilder.substituteMathe ?? false ? _choiceBuilder.mintSg2 : null,
         ),
+      if (_choiceBuilder.substituteMathe ?? false)
+        SetupStepPage(
+          title: "Weiteres Abiturfach (Fremdsprache)",
+          pageController: _pageController,
+          allowNextStep: allowNextStep,
+          subjectsPool: [_choiceBuilder.sg1!, if (_choiceBuilder.mintSg2 != null && (_choiceBuilder.mintSg2!.category == SubjectCategory.sg)) _choiceBuilder.mintSg2!],
+          callback: (subject) => setAbi5(subject),
+          currentlySelected: _choiceBuilder.abi5,
+        ),
+      if (_choiceBuilder.substituteDeutsch ?? false)
+        SetupStepPage(
+          title: "Weiteres Abiturfach (Naturwissenschaft)",
+          pageController: _pageController,
+          allowNextStep: allowNextStep,
+          subjectsPool: [_choiceBuilder.mint1!, if (_choiceBuilder.mintSg2 != null && (_choiceBuilder.mintSg2!.category == SubjectCategory.ntg)) _choiceBuilder.mintSg2!],
+          callback: (subject) => setAbi5(subject),
+          currentlySelected: _choiceBuilder.abi5,
+        ),
 
       // Abiturprüfung in einem GPR-Fach verpflichtend
       if (_choiceBuilder.lk?.category != SubjectCategory.gpr)
@@ -323,7 +341,8 @@ class _SetupPageState extends State<SetupPage> {
           currentlySelected: _choiceBuilder.abi4,
         ),
       // Abiturprüfung in einer Fremdsprache oder Naturwissenschaft verpflichtend
-      if (_choiceBuilder.lk?.category != SubjectCategory.ntg && _choiceBuilder.lk?.category != SubjectCategory.info && _choiceBuilder.lk?.category != SubjectCategory.sg)
+      if (_choiceBuilder.lk?.category != SubjectCategory.ntg && _choiceBuilder.lk?.category != SubjectCategory.info && _choiceBuilder.lk?.category != SubjectCategory.sg
+          && !(_choiceBuilder.substituteDeutsch ?? false) && !(_choiceBuilder.substituteMathe ?? false))
         SetupStepPage(
           title: "Weiteres Abiturfach (NTG/SG)",
           pageController: _pageController,
@@ -343,7 +362,7 @@ class _SetupPageState extends State<SetupPage> {
       // Sind die verpflichtenden Abiturprüfungsfächer bereits gewählt, kann ein weiteres beliebiges Fach gewählt werden
       // (!) before the check was whether abi5 was still null but led to a glitch when confirming this choice
       if (_choiceBuilder.lk != null && (_choiceBuilder.lk?.category == SubjectCategory.gpr || _choiceBuilder.lk?.category == SubjectCategory.ntg
-          || _choiceBuilder.lk?.category == SubjectCategory.info || _choiceBuilder.lk?.category == SubjectCategory.sg))
+          || _choiceBuilder.lk?.category == SubjectCategory.info || _choiceBuilder.lk?.category == SubjectCategory.sg) && !(_choiceBuilder.substituteDeutsch ?? false) && !(_choiceBuilder.substituteMathe ?? false))
         SetupStepPage(
           title: "Weiteres Abiturfach",
           pageController: _pageController,
@@ -606,7 +625,7 @@ class SubjectWidget extends StatelessWidget {
                   width: 22,
                   height: 22,
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Text(subject.name, style: Theme.of(context).textTheme.bodyMedium),
               ],
             ),

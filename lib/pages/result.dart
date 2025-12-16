@@ -128,7 +128,7 @@ class SubjectResultPage extends StatelessWidget {
       const SizedBox(height: 20,),
       Text("Abiturprüfung", style: theme.textTheme.bodySmall),
       const SizedBox(height: 6,),
-      SubjectResultAbiPrediction(subject: subject, result: result)
+      SubjectResultAbiPrediction(subject: subject, result: result, choice: choice,)
     ];
   }
 
@@ -208,12 +208,9 @@ class SubjectResultPage extends StatelessWidget {
 }
 
 class SubjectResultAbiPrediction extends StatelessWidget {
-  const SubjectResultAbiPrediction({
-    super.key,
-    required this.subject,
-    required this.result,
-  });
+  const SubjectResultAbiPrediction({super.key, required this.subject, required this.result, required this.choice,});
 
+  final Choice choice;
   final Subject subject;
   final SemesterResult? result;
 
@@ -236,6 +233,21 @@ class SubjectResultAbiPrediction extends StatelessWidget {
       ),
       child: Column(
         children: [
+          Row(
+            children: [
+              Container(
+                  padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 9),
+                  decoration: BoxDecoration(
+                    color: subject.color,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(_buildAbiAreaWidget(theme), style: theme.textTheme.displayMedium?.copyWith(color: contrastColor, height: 1.25))
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 4,),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -355,5 +367,31 @@ class SubjectResultAbiPrediction extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _buildAbiAreaWidget(ThemeData theme) {
+    if (subject.category == SubjectCategory.abi) {
+      return "Pflichtprüfung";
+    }
+    if (choice.substituteMathe && choice.mintSg2 == subject) {
+      return "Substituiert Mathe";
+    }
+    if (choice.substituteDeutsch && choice.mintSg2 == subject) {
+      return "Substituiert Deutsch";
+    }
+    if (choice.substituteMathe && subject.category == SubjectCategory.sg) {
+      return "Fremdsprache verpflichtend";
+    }
+    if (choice.substituteDeutsch && subject.category == SubjectCategory.ntg) {
+      return "Naturwissenschaft verpflichtend";
+    }
+    if ((choice.lk.category != SubjectCategory.sg && choice.lk.category != SubjectCategory.ntg || subject == choice.lk)
+        && (subject.category == SubjectCategory.sg || subject.category == SubjectCategory.ntg)) {
+      return "Naturwissenschaft / Fremdsprache";
+    }
+    if ((choice.lk.category != SubjectCategory.gpr || subject == choice.lk) && subject.category == SubjectCategory.gpr) {
+      return "Gesellschaftswissenschaft";
+    }
+    return "Freie Wahl";
   }
 }

@@ -76,6 +76,14 @@ class GradesDataProvider extends ChangeNotifier {
     return _abiPredictions?[subjectId];
   }
 
+  void clearAbiPrediction(SubjectId subjectId) {
+    print("Clearing ABI prediction for $subjectId");
+    _abiPredictions!.remove(subjectId);
+
+    notifyListeners();
+    save();
+  }
+
   void addGrade(SubjectId subjectId, GradeEntry grade, {Semester? semester}) {
     print("Adding grade $grade to $subjectId in $semester");
     assert (_data != null);
@@ -169,6 +177,7 @@ enum Semester {
   abi(4, "Abi", "Abi Prüfungsphase");
 
   static const qPhase = [q12_1, q12_2, q13_1, q13_2];
+  static const qPhaseSeminar = [q12_1, q12_2, q13_1, q13_2, seminar13];
   static const normal = [...qPhase, abi];
   static const seminarPhase = [q12_1, q12_2, seminar13];
 

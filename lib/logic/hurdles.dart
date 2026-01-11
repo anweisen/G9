@@ -41,7 +41,7 @@ enum AdmissionHurdle {
   static (AdmissionHurdle?, String?) check(Choice choice, Map<Subject, Map<Semester, SemesterResult>> result, GradesDataProvider provider) {
     List<SemesterResult> sortedUsedResults = [];
     for (Subject subject in choice.subjects) {
-      for (Semester semester in Semester.qPhase) {
+      for (Semester semester in Semester.qPhaseSeminar) {
         if (result[subject]?[semester] == null) {
           continue; // Fach in diesem Semester nicht gewählt
         }

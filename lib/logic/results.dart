@@ -29,9 +29,9 @@ class SemesterResult {
       return 4;
     } else if (subject == choice.mintSg2 && (choice.substituteDeutsch || choice.substituteMathe)) { // Deutsch/Mathe Substitut wird Abifach
       return 4;
-    } else if (subject.category == SubjectCategory.sg && choice.mintSg2.category != SubjectCategory.sg && choice.mintSg2.category != SubjectCategory.sbs) { // einzige Fremdsprache
+    } else if (subject.category == SubjectCategory.sg && choice.mintSg2.category != SubjectCategory.sg && choice.mintSg2.category != SubjectCategory.sbs) { // einzige Fremdsprache (spät beginnende zählt hier schon!)
       return 4;
-    } else if (subject.category == SubjectCategory.ntg && choice.mintSg2.category != SubjectCategory.ntg && choice.mintSg2.category != SubjectCategory.info) { // einzige Naturwissenschaft
+    } else if (subject.category == SubjectCategory.ntg && choice.mintSg2.category != SubjectCategory.ntg) { // einzige Naturwissenschaft (Informatik zählt hier nicht!)
       return 4;
     }
 

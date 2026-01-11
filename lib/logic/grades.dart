@@ -155,8 +155,8 @@ class GradeHelper {
   }
 
   static double averageNormal(GradesList grades) {
-    double klausuren = averageOf(grades.where((e) => e.type == GradeType.klausur).toList());
-    double rest = averageOf(grades.where((e) => e.type != GradeType.klausur).toList());
+    double klausuren = unweightedAverageOf(grades.where((e) => e.type == GradeType.klausur).toList());
+    double rest = unweightedAverageOf(grades.where((e) => e.type != GradeType.klausur).toList());
     return averageWeighted(klausuren, rest, 1);
   }
 
@@ -168,30 +168,30 @@ class GradeHelper {
   }
 
   static double averageSportGk(GradesList grades) {
-    double praktisch = averageOf(grades.where((e) => e.type != GradeType.theorie).toList());
-    double test = averageOf(grades.where((e) => e.type == GradeType.theorie).toList());
+    double praktisch = unweightedAverageOf(grades.where((e) => e.type != GradeType.theorie).toList());
+    double test = unweightedAverageOf(grades.where((e) => e.type == GradeType.theorie).toList());
     return averageWeighted(praktisch, test, 2);
   }
 
   static double averageKunstLk(GradesList grades) {
-    double klausur = averageOf(grades.where((e) => e.type == GradeType.klausur).toList());
-    double projekt = averageOf(grades.where((e) => e.type == GradeType.kunstprojekt).toList());
-    double rest = averageOf(grades.where((e) => e.type != GradeType.klausur && e.type != GradeType.kunstprojekt).toList());
+    double klausur = unweightedAverageOf(grades.where((e) => e.type == GradeType.klausur).toList());
+    double projekt = unweightedAverageOf(grades.where((e) => e.type == GradeType.kunstprojekt).toList());
+    double rest = unweightedAverageOf(grades.where((e) => e.type != GradeType.klausur && e.type != GradeType.kunstprojekt).toList());
     return averageOfThree(klausur, projekt, rest);
   }
 
   static double averageMusikLk(GradesList grades) {
-    double klausur = averageOf(grades.where((e) => e.type == GradeType.klausur).toList());
-    double praxis = averageOf(grades.where((e) => e.type == GradeType.musikpruefung).toList());
-    double rest = averageOf(grades.where((e) => e.type != GradeType.klausur && e.type != GradeType.musikpruefung).toList());
+    double klausur = unweightedAverageOf(grades.where((e) => e.type == GradeType.klausur).toList());
+    double praxis = unweightedAverageOf(grades.where((e) => e.type == GradeType.musikpruefung).toList());
+    double rest = unweightedAverageOf(grades.where((e) => e.type != GradeType.klausur && e.type != GradeType.musikpruefung).toList());
     return averageOfThree(klausur, praxis, rest);
   }
 
   // (!) 2x HJ => Bis zu 30 Punkte
   static double averageSeminar(GradesList grades) {
     // Seminararbeit wird 3x gewichtet
-    double seminararbeit = averageOf(grades.where((e) => e.type == GradeType.seminar).toList());
-    double seminarreferat = averageOf(grades.where((e) => e.type == GradeType.seminarreferat).toList());
+    double seminararbeit = unweightedAverageOf(grades.where((e) => e.type == GradeType.seminar).toList());
+    double seminarreferat = unweightedAverageOf(grades.where((e) => e.type == GradeType.seminarreferat).toList());
     return averageWeighted(seminararbeit, seminarreferat, 3) * 2;
   }
 
@@ -203,12 +203,12 @@ class GradeHelper {
     // Fachprüfung ohne Zusatzprüfung;  1:1 - schriftlich/mündlich : fach
     // Fachprüfung mit Zusatzprüfung;   1:1:1 - schriftlich : fach : zusatz (kryptisch formuliert in BayGSO-52(2)2.)
 
-    double normal = averageOf(grades.where((e) => e.type == GradeType.schriftlich || e.type == GradeType.muendlich).toList());
-    double zusatz = averageOf(grades.where((e) => e.type == GradeType.zusatz).toList());
+    double normal = unweightedAverageOf(grades.where((e) => e.type == GradeType.schriftlich || e.type == GradeType.muendlich).toList());
+    double zusatz = unweightedAverageOf(grades.where((e) => e.type == GradeType.zusatz).toList());
 
     final types = grades.map((e) => e.type).toSet();
     if (types.contains(GradeType.fach)) {
-      double fach = averageOf(grades.where((e) => e.type == GradeType.fach).toList());
+      double fach = unweightedAverageOf(grades.where((e) => e.type == GradeType.fach).toList());
 
       if (types.contains(GradeType.zusatz)) {
         return ((normal + fach) * 4 + zusatz * 4) / 3; // 1:1:1
@@ -221,7 +221,7 @@ class GradeHelper {
   }
 
   // ! GradeType will be ignored !
-  static double averageOf(List<GradeEntry> grades) {
+  static double unweightedAverageOf(List<GradeEntry> grades) {
     if (grades.isEmpty) {
       return -1;
     }

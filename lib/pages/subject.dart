@@ -60,7 +60,6 @@ class _SubjectPageState extends State<SubjectPage> {
     final Choice? choice = Provider.of<SettingsDataProvider>(context).choice;
     final GradesDataProvider dataProvider = Provider.of<GradesDataProvider>(context);
     final GradesList grades = dataProvider.getGrades(widget.subject.id, semester: _currentSemester);
-    final qSemesterCountEquivalent = SemesterResult.getQSemesterCountEquivalent(_currentSemester!);
 
     return SubpageSkeleton(
         title: Row(
@@ -78,11 +77,11 @@ class _SubjectPageState extends State<SubjectPage> {
             const SizedBox(width: 12),
             Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300, fontSize: 22)),
             const SizedBox(width: 6),
-            Text(GradeHelper.formatSemesterAverage(grades, decimals: (qSemesterCountEquivalent > 1 ? 1 : 2)), style: theme.textTheme.headlineMedium),
-            if (qSemesterCountEquivalent > 1) ...[
+            Text(GradeHelper.formatSemesterAverage(grades, decimals: (_currentSemester!.semesterCountEquivalent > 1 ? 1 : 2)), style: theme.textTheme.headlineMedium),
+            if (_currentSemester!.semesterCountEquivalent > 1) ...[
               const SizedBox(width: 6),
               Text("(≈ ", style: theme.textTheme.labelSmall),
-              Text(GradeHelper.formatSemesterAverage(grades, decimals: 1, qSemesterCountEquivalent: qSemesterCountEquivalent), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
+              Text(GradeHelper.formatSemesterAverage(grades, decimals: 1, semesterCountEquivalent: _currentSemester!.semesterCountEquivalent), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
               Text(")", style: theme.textTheme.labelSmall),
             ]
           ],

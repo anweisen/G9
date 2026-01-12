@@ -67,7 +67,7 @@ enum AdmissionHurdle {
       if (sortedUsedResults[i].effectiveGrade < 5) {
         return (AdmissionHurdle.min5je32, "$min5 von 32");
       }
-      min5 += sortedUsedResults[i].qSemesterEquivalent;
+      min5 += sortedUsedResults[i].semester.semesterCountEquivalent;
     }
     // min200in40: mindestens 200 Punkte in den 40 einzubringenden Halbjahresleistungen
     int pointsIn40 = sortedUsedResults.map((e) => e.grade).reduce((value, element) => value + element);

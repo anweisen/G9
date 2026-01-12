@@ -76,7 +76,7 @@ class SubjectResultPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(semester.display, style: theme.textTheme.bodyMedium,),
-              if (SemesterResult.getQSemesterCountEquivalent(semester) == 2)
+              if (semester.semesterCountEquivalent == 2)
                 Text("doppelte Einbringung (30 P.)", style: theme.textTheme.bodySmall),
             ],
           ),
@@ -91,7 +91,7 @@ class SubjectResultPage extends StatelessWidget {
                       Text(GradeHelper.formatSemesterAverage(gradesProvider.getGrades(subject.id, semester: semester)), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
                     ],
                   ),
-                  if (SemesterResult.getQSemesterCountEquivalent(semester) > 1)
+                  if (semester.semesterCountEquivalent > 1)
                     Text("(≈ ${result?.effectiveGrade})", style: theme.textTheme.bodySmall),
                   if (result?.prediction ?? true)
                     Text("Prognose", style: theme.textTheme.bodySmall),

@@ -109,14 +109,6 @@ class SemesterResult {
     return true;
   }
 
-  static int getQSemesterCountEquivalent(Semester semester) {
-    switch (semester) {
-      case Semester.abi: return 4;
-      case Semester.seminar13: return 2;
-      default: return 1;
-    }
-  }
-
   static ResultsFlags applyUseFlags(Choice choice, Map<Subject, Map<Semester, SemesterResult>> result) {
     List<MapEntry<Subject, SemesterResult>> freeSemesterGrades = [];
     List<MapEntry<Subject, SemesterResult>> usedSemesterGrades = [];
@@ -192,6 +184,8 @@ class SemesterResult {
       if (forcedSemesters <= 40) {
         var bestFree = freeSemesterGrades.removeAt(0);
         bestFree.value.useJoker = true;
+        bestFree.value.jokerResult = (entry.key, entry.value);
+        entry.value.jokerResult = (bestFree.key, bestFree.value);
         // usedSemesterGrades.add(bestFree);
       }
 
@@ -272,7 +266,7 @@ class SemesterResult {
           continue; // apply abi prediction later
         }
         if (results[subject]![semester] == null) {
-          results[subject]![semester] = SemesterResult(prediction * getQSemesterCountEquivalent(semester), 0, semester);
+          results[subject]![semester] = SemesterResult(prediction * semester.semesterCountEquivalent, 0, semester);
         }
       }
 
@@ -289,7 +283,7 @@ class SemesterResult {
         if (semester == Semester.abi && provider.getAbiPrediction(subject.id) != null) {
           results[subject]![semester] = SemesterResult(provider.getAbiPrediction(subject.id)! * 4, 0, semester);
         } else if (results[subject]![semester] == null) {
-          results[subject]![semester] = SemesterResult(totalPrediction * getQSemesterCountEquivalent(semester), 0, semester);
+          results[subject]![semester] = SemesterResult(totalPrediction * semester.semesterCountEquivalent, 0, semester);
         }
       }
     }
@@ -390,13 +384,12 @@ class SemesterResult {
 
   bool replacedByJoker = false;
 
-  int get qSemesterEquivalent => getQSemesterCountEquivalent(semester);
-  int get effectiveGrade => (grade / qSemesterEquivalent).round();
+  int get effectiveGrade => (grade / semester.semesterCountEquivalent).round();
 
   SemesterResult(this.grade, this.basedOnGradeCount, this.semester);
 
   @override
-  String toString() => "$grade[${qSemesterEquivalent}x ${used ? "used" : "free"}${prediction ? ", predicted" : ""}]";
+  String toString() => "$grade[${semester.semesterCountEquivalent}x ${used ? "used" : "free"}${prediction ? ", predicted" : ""}]";
 
 }
 

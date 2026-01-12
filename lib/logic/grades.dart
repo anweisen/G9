@@ -78,10 +78,9 @@ class GradeHelper {
     double sum = 0;
     int count = 0;
 
-    final qSemesterCountEquivalent = semester != null ? SemesterResult.getQSemesterCountEquivalent(semester) : 1;
     grades.forEach((subjectId, grades) {
       if (grades.isNotEmpty) {
-        sum += result(grades) / qSemesterCountEquivalent;
+        sum += result(grades) / (semester?.semesterCountEquivalent ?? 1);
         count++;
       }
     });
@@ -97,12 +96,11 @@ class GradeHelper {
     double sum = 0;
     int count = 0;
 
-    final qSemesterCountEquivalent = SemesterResult.getQSemesterCountEquivalent(semester);
     results.forEach((subject, semesters) {
       var result = semesters[semester];
       if (result == null || result.prediction) return; // only use real results
       if (!result.used) return; // only use used results
-      sum += result.grade / qSemesterCountEquivalent;
+      sum += result.grade / semester.semesterCountEquivalent;
       count++;
     });
 
@@ -118,12 +116,12 @@ class GradeHelper {
     return avg < 1 ? 0 : avg.round();
   }
 
-  static String formatSemesterAverage(GradesList grades, {int decimals = 1, int qSemesterCountEquivalent = 1}) {
+  static String formatSemesterAverage(GradesList grades, {int decimals = 1, int semesterCountEquivalent = 1}) {
     if (grades.isEmpty) {
       return "-";
     }
 
-    return formatNumber(average(grades) / qSemesterCountEquivalent, decimals: decimals, allowZero: true);
+    return formatNumber(average(grades) / semesterCountEquivalent, decimals: decimals, allowZero: true);
   }
 
   // Für Q-Semester: 0-15

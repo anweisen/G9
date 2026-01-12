@@ -159,22 +159,22 @@ class GradesDataProvider extends ChangeNotifier {
 @HiveType(typeId: 4)
 enum Semester {
   @HiveField(0)
-  q12_1(0, "12/1", "Q12/1"),
+  q12_1(0, "12/1", "Q12/1", 1),
 
   @HiveField(1)
-  q12_2(1, "12/2", "Q12/2"),
+  q12_2(1, "12/2", "Q12/2", 1),
 
   @HiveField(2)
-  q13_1(2, "13/1", "Q13/1"),
+  q13_1(2, "13/1", "Q13/1", 1),
 
   @HiveField(3)
-  q13_2(3, "13/2", "Q13/2"),
+  q13_2(3, "13/2", "Q13/2", 1),
 
   @HiveField(5)
-  seminar13(3, "Seminararbeit", "Seminararbeit Q13"),
+  seminar13(3, "Seminararbeit", "Seminararbeit Q13", 2),
 
   @HiveField(4)
-  abi(4, "Abi", "Abi Prüfungsphase");
+  abi(4, "Abi", "Abi Prüfungsphase", 4);
 
   static const qPhase = [q12_1, q12_2, q13_1, q13_2];
   static const qPhaseSeminar = [q12_1, q12_2, q13_1, q13_2, seminar13];
@@ -184,8 +184,9 @@ enum Semester {
   final int order;
   final String display;
   final String detailedDisplay;
+  final int semesterCountEquivalent;
 
-  const Semester(this.order, this.display, this.detailedDisplay);
+  const Semester(this.order, this.display, this.detailedDisplay, this.semesterCountEquivalent);
 
   Semester nextSemester() {
     // error: for the last semester (abi) ! no next semester

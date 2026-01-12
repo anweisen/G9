@@ -84,8 +84,6 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-
             Text("Abitur Vorhersage", style: theme.textTheme.bodySmall),
             _buildTextLine(Text("Note", style: theme.textTheme.bodyMedium), [
               Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
@@ -101,7 +99,7 @@ class HomePage extends StatelessWidget {
 
             Text("Zulassung", style: theme.textTheme.bodySmall),
             _buildTextLine(Text("Unterpunktungen", style: theme.textTheme.bodyMedium, overflow: TextOverflow.fade), [
-              Text("${underscored}x", style: theme.textTheme.bodyMedium)
+              Text("${underscored} / 8", style: theme.textTheme.bodyMedium)
             ]),
             const SizedBox(height: 4),
             _buildHurdleChart(context, underscored),
@@ -136,9 +134,22 @@ class HomePage extends StatelessWidget {
               Text("Top ${min(3, stats.bestSubjects.length)} Fächer", style: theme.textTheme.bodySmall),
               for (int i = 0; i < 3 && i < stats.bestSubjects.length; i++)
                 _buildTextLine(_buildSubject(theme.textTheme, stats.bestSubjects[i].$1), [
+                  Row(children: [
+                    for (Semester semester in Semester.values)
+                      if (!(results[stats.bestSubjects[i].$1]?[semester]?.prediction ?? true)) Container(
+                        margin: const EdgeInsets.fromLTRB(0, 0, 4, 0),
+                        width: 24,
+                        height: 20,
+                        decoration: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(4)) : null,
+                        child: Center(child: Text(results[stats.bestSubjects[i].$1]?[semester]?.grade.toString() ?? "-",
+                          style: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false ? theme.textTheme.labelMedium : theme.textTheme.bodyMedium)?.copyWith(fontSize: 13, fontWeight: FontWeight.bold),)
+                        )
+                      ),
+                  ],),
+                  const SizedBox(width: 6),
                   Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
                   const SizedBox(width: 4),
-                  Text("${GradeHelper.formatNumber(stats.bestSubjects[i].$2, decimals: 2)}", style: theme.textTheme.bodyMedium),
+                  Text("${GradeHelper.formatNumber(stats.bestSubjects[i].$2, decimals: 1)}", style: theme.textTheme.bodyMedium),
                 ]),
             ]
 

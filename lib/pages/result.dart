@@ -84,7 +84,7 @@ class SubjectResultPage extends StatelessWidget {
             children: [
               Column(
                 children: [
-                  Row(
+                  if (!(result?.prediction ?? true)) Row(
                     children: [
                       Text("Ø", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w300)),
                       const SizedBox(width: 4),
@@ -200,7 +200,7 @@ class SubjectResultPage extends StatelessWidget {
           children: [
             Icon(icon ?? Icons.info_outline_rounded, size: 16, color: theme.textTheme.displayMedium?.color),
             const SizedBox(width: 6),
-            Flexible(child: Text(text, style: theme.textTheme.displayMedium?.copyWith(height: 1.25), softWrap: true, maxLines: 3,)),
+            Flexible(child: Text(text, style: theme.textTheme.displayMedium?.copyWith(height: 1.25), softWrap: true, maxLines: 3, textWidthBasis: TextWidthBasis.longestLine,)),
           ],
         ),
     );
@@ -223,7 +223,6 @@ class SubjectResultAbiPrediction extends StatelessWidget {
 
     bool prediction = result?.prediction ?? true;
     int predicted = gradesProvider.getAbiPrediction(subject.id) ?? result?.effectiveGrade ?? 1;
-    print(gradesProvider.getAbiPrediction(subject.id));
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -327,26 +326,27 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       GestureDetector(
-                        onTap: () => gradesProvider.setAbiPrediction(subject.id, max(min(predicted + 1, 15), 1)),
+                        onTap: () => gradesProvider.setAbiPrediction(subject.id, max(min(predicted + 1, 15), 0)),
                         child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: theme.textTheme.labelSmall!.color!, width: 1.5))),
-                            child: Icon(Icons.add_rounded, size: 16, color: theme.textTheme.labelSmall?.color)
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: predicted >= 15 ? Colors.transparent : theme.textTheme.labelSmall!.color!, width: 1.5))),
+                            child: Icon(Icons.add_rounded, size: 16, color: predicted >= 15 ? Colors.transparent : theme.textTheme.labelSmall?.color)
                         ),
                       ),
                       const SizedBox(width: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                        width: 48,
                         decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: theme.textTheme.labelSmall!.color!, width: 2))),
-                        child: Text("$predicted", style: theme.textTheme.bodyMedium),
+                        child: Text("$predicted", style: theme.textTheme.bodyMedium, textAlign: TextAlign.center),
                       ),
                       const SizedBox(width: 12),
                       GestureDetector(
-                        onTap: () => gradesProvider.setAbiPrediction(subject.id, max(min(predicted - 1, 15), 1)),
+                        onTap: () => gradesProvider.setAbiPrediction(subject.id, max(min(predicted - 1, 15), 0)),
                         child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: theme.textTheme.labelSmall!.color!, width: 1.5))),
-                            child: Icon(Icons.remove_rounded, size: 16, color: theme.textTheme.labelSmall?.color)
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: predicted <= 0 ? Colors.transparent : theme.textTheme.labelSmall!.color!, width: 1.5))),
+                            child: Icon(Icons.remove_rounded, size: 16, color: predicted <= 0 ? Colors.transparent : theme.textTheme.labelSmall?.color)
                         ),
                       ),
                     ],
@@ -377,9 +377,9 @@ class SubjectResultAbiPrediction extends StatelessWidget {
     );
   }
 
-  String _buildAbiAreaWidget(ThemeData theme) {
+  String _buildAbiAreaWidget() {
     if (subject.category == SubjectCategory.abi) {
-      return "Pflichtprüfung";
+      return subject.name;
     }
     if (choice.substituteMathe && choice.mintSg2 == subject) {
       return "Substituiert Mathe";
@@ -388,10 +388,10 @@ class SubjectResultAbiPrediction extends StatelessWidget {
       return "Substituiert Deutsch";
     }
     if (choice.substituteMathe && subject.category == SubjectCategory.sg) {
-      return "Fremdsprache verpflichtend";
+      return "Fremdsprache";
     }
     if (choice.substituteDeutsch && subject.category == SubjectCategory.ntg) {
-      return "Naturwissenschaft verpflichtend";
+      return "Naturwissenschaft";
     }
     if ((choice.lk.category != SubjectCategory.sg && choice.lk.category != SubjectCategory.ntg || subject == choice.lk)
         && (subject.category == SubjectCategory.sg || subject.category == SubjectCategory.ntg)) {

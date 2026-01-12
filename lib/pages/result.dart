@@ -41,7 +41,7 @@ class SubjectResultPage extends StatelessWidget {
           ),
         ]),
         children: [
-          Expanded(child: Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
@@ -60,7 +60,7 @@ class SubjectResultPage extends StatelessWidget {
 
               if (abi) ..._buildAbi(theme, gradesProvider),
             ],
-          ))
+          )
         ]);
   }
 
@@ -235,13 +235,21 @@ class SubjectResultAbiPrediction extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                  padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 9),
-                  decoration: BoxDecoration(
-                    color: subject.color,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(_buildAbiAreaWidget(theme), style: theme.textTheme.displayMedium?.copyWith(color: contrastColor, height: 1.25))
+              Flexible(
+                child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: subject.color,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Wrap(
+                      children: [
+                        Text(_buildAbiAreaWidget(), style: theme.textTheme.displayMedium?.copyWith(color: contrastColor, height: 1.25), softWrap: true, maxLines: 3, overflow: TextOverflow.ellipsis,),
+                        const SizedBox(width: 4),
+                        Icon(Icons.check_rounded, size: 16, color: contrastColor)
+                      ],
+                    )
+                ),
               ),
             ],
           ),

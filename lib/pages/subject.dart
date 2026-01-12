@@ -132,18 +132,19 @@ class _SubjectPageState extends State<SubjectPage> {
             ],
           ),
           const SizedBox(height: 10),
-          Expanded(
-            child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 60),
-                itemCount: grades.length,
-                itemBuilder: (context, index) => TestItem(theme: theme, entry: grades[index], subject: widget.subject,
-                callback: (result) {
-                  if (result is GradeEditResult) {
-                    _removeGrade(dataProvider, index);
-                    if (!result.remove) _addGrade(dataProvider, result);
-                  }
-                }, semester: _currentSemester!,)),
-          ),
+
+          for (int index = 0; index < grades.length; index++)
+            TestItem(theme: theme,
+              entry: grades[index],
+              subject: widget.subject,
+              semester: _currentSemester!,
+              callback: (result) {
+                if (result is GradeEditResult) {
+                  _removeGrade(dataProvider, index);
+                  if (!result.remove) _addGrade(dataProvider, result);
+                }
+              },
+            )
     ]);
   }
 

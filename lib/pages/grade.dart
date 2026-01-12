@@ -273,31 +273,27 @@ class GradeTypSelectionPage extends StatelessWidget {
           ],
         ),
         children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(0, 0, 0, 60),
-              itemCount: types.length,
-              itemBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 7),
-                child: GestureDetector(
-                  onTap:  () => {
-                    if (types[index].stillPossible(existingTypes)) {
-                      SubpageController.of(context).closeSubpage(types[index])
-                    }
-                  },
-                  child: Padding(
-                    padding: (index > 0 && types[index - 1].area != types[index].area)
-                        ? const EdgeInsets.only(top: 10)
-                        : const EdgeInsets.all(0),
-                    child: GradeOptionPlaceholderIcon(
-                        textColor: types[index].stillPossible(existingTypes) ? null : theme.textTheme.bodySmall?.color,
-                        text: types[index].name,
-                        icon: getIcon(types[index])),
-                  ),
+          for (int index = 0; index < types.length; index++)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 7),
+              child: GestureDetector(
+                onTap:  () => {
+                  if (types[index].stillPossible(existingTypes)) {
+                    SubpageController.of(context).closeSubpage(types[index])
+                  }
+                },
+                child: Padding(
+                  padding: (index > 0 && types[index - 1].area != types[index].area)
+                      ? const EdgeInsets.only(top: 10)
+                      : const EdgeInsets.all(0),
+                  child: GradeOptionPlaceholderIcon(
+                      textColor: types[index].stillPossible(existingTypes) ? null : theme.textTheme.bodySmall?.color,
+                      text: types[index].name,
+                      icon: getIcon(types[index])),
                 ),
               ),
-            ),
-          ),
+            )
+
     ]);
   }
 

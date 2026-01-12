@@ -193,7 +193,7 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
                     color: Theme.of(context).cardColor,
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                   ),
-                  padding: const EdgeInsets.only(top: 36),
+                  padding: const EdgeInsets.only(top: 16),
                   child: content,
                 ),
               ),

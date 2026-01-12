@@ -81,7 +81,7 @@ class _PageSkeletonState extends State<PageSkeleton> {
                       ),
                   ),
 
-                  const SliverToBoxAdapter(child: SizedBox(height: 60))
+                  const SliverToBoxAdapter(child: SizedBox(height: 80))
 
                 ],
               ),
@@ -122,19 +122,55 @@ class SubpageSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: PageSkeleton.leftOffset),
-        child: Column(
-          children: [
-            if (title != null) ...[
-              title!,
-              const SizedBox(height: 24),
-            ],
-            ...children
+      body: CustomScrollView(
+        slivers: [
+          if (title != null) ...[
+            SliverAppBar(
+              backgroundColor: Colors.transparent,
+              pinned: true,
+              centerTitle: true,
+              automaticallyImplyLeading: false,
+              titleSpacing: 0,
+              leadingWidth: 0,
+              toolbarHeight: 64,
+              primary: true,
+              shadowColor: Colors.transparent,
+              floating: true,
+              flexibleSpace: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Container(
+                      constraints: constraints,
+                      padding: const EdgeInsets.symmetric(horizontal: PageSkeleton.leftOffset),
+                      child: ClipRRect(
+                          child: Container(
+                            color: theme.cardColor.withOpacity(.6),
+                            child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                                child: Padding(padding: const EdgeInsets.fromLTRB(0, 16, 0, 10), child: title!)),
+                          )
+                      ),
+                    );
+                  }
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 8,))
           ],
-        ),
+
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: PageSkeleton.leftOffset),
+            sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  childCount: children.length, (context, index) => children[index],
+                )
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 40,))
+        ],
       ),
     );
   }

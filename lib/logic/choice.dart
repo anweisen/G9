@@ -174,7 +174,7 @@ class Choice extends HiveObject {
   ];
 
   List<Subject> get abiSubjects => [
-    if (!substituteMathe) Subject.mathe else mintSg2,
+    if (!substituteMathe) Subject.mathe else if (lk.category == SubjectCategory.ntg) mintSg2 else ntg1,
     if (!substituteDeutsch) Subject.deutsch else mintSg2,
     lk,
     abi4,

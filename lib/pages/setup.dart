@@ -285,6 +285,17 @@ class _SetupPageState extends State<SetupPage> {
       // Abiturprüfungsfächer
       //
 
+      // https://www.gesetze-bayern.de/Content/Document/BayGSO-48
+      // (1) 1. Die Abiturprüfung erstreckt sich auf fünf verschiedene Fächer.
+      //     2. Verpflichtende Abiturprüfungsfächer sind Deutsch, Mathematik und das Leistungsfach.
+      //     3. Sie werden auf erhöhtem Anforderungsniveau geprüft.
+      //     4. Unter den fünf Abiturprüfungsfächern müssen mindestens eine fortgeführte Fremdsprache oder eine Naturwissenschaft
+      //        sowie mindestens ein Fach aus dem gesellschaftswissenschaftlichen Aufgabenfeld als Abiturprüfungsfächer gewählt werden.
+      //     5. Deutsch kann durch die Wahl zweier fortgeführter Fremdsprachen als Abiturprüfungsfächer, eines davon als Leistungsfach,
+      //        Mathematik durch die Wahl zweier Naturwissenschaften oder einer Naturwissenschaft und der Informatik als Abiturprüfungsfächer,
+      //        jeweils eines davon als Leistungsfach, nach Wahl der Schülerinnen und Schüler ersetzt werden (Substitution).
+      //     6. Bei Substitution von Mathematik ist die Abiturprüfung in einer Fremdsprache verpflichtend
+
       if (_choiceBuilder.lk?.category == SubjectCategory.sg && _choiceBuilder.mintSg2?.category == SubjectCategory.sg && _choiceBuilder.vk == null)
         SetupStepPage(
           title: "Deutsch Abi substituieren",
@@ -295,33 +306,25 @@ class _SetupPageState extends State<SetupPage> {
           callback: (subject) => setSubstituteDeutsch(subject != null),
           currentlySelected: _choiceBuilder.substituteDeutsch ?? false ? _choiceBuilder.mintSg2 : null,
         ),
-      if ((_choiceBuilder.lk?.category == SubjectCategory.ntg || _choiceBuilder.lk?.category == SubjectCategory.info)
-          && (_choiceBuilder.mintSg2?.category == SubjectCategory.ntg || _choiceBuilder.mintSg2?.category == SubjectCategory.info)
+      if ((_choiceBuilder.lk?.category == SubjectCategory.ntg && (_choiceBuilder.mintSg2?.category == SubjectCategory.ntg || _choiceBuilder.mintSg2?.category == SubjectCategory.info)
+          || _choiceBuilder.lk?.category == SubjectCategory.info && _choiceBuilder.mint1?.category == SubjectCategory.ntg)
           && _choiceBuilder.vk == null)
         SetupStepPage(
           title: "Mathe Abi substituieren",
           pageController: _pageController,
           allowNextStep: allowNextStep,
-          subjectsPool: [_choiceBuilder.mintSg2!],
+          subjectsPool: [_choiceBuilder.lk?.category == SubjectCategory.ntg ? _choiceBuilder.mintSg2! : _choiceBuilder.mint1!],
           canSkip: true,
           callback: (subject) => setSubstituteMathe(subject != null),
           currentlySelected: _choiceBuilder.substituteMathe ?? false ? _choiceBuilder.mintSg2 : null,
         ),
+      // Bei Substitution von Mathe ist eine weitere Fremdsprache verpflichtend (bei Deutsch ist keine Naturwissenschaft verpflichtend)
       if (_choiceBuilder.substituteMathe ?? false)
         SetupStepPage(
           title: "Weiteres Abiturfach (Fremdsprache)",
           pageController: _pageController,
           allowNextStep: allowNextStep,
           subjectsPool: [_choiceBuilder.sg1!, if (_choiceBuilder.mintSg2 != null && (_choiceBuilder.mintSg2!.category == SubjectCategory.sg)) _choiceBuilder.mintSg2!],
-          callback: (subject) => setAbi5(subject),
-          currentlySelected: _choiceBuilder.abi5,
-        ),
-      if (_choiceBuilder.substituteDeutsch ?? false)
-        SetupStepPage(
-          title: "Weiteres Abiturfach (Naturwissenschaft)",
-          pageController: _pageController,
-          allowNextStep: allowNextStep,
-          subjectsPool: [_choiceBuilder.mint1!, if (_choiceBuilder.mintSg2 != null && (_choiceBuilder.mintSg2!.category == SubjectCategory.ntg)) _choiceBuilder.mintSg2!],
           callback: (subject) => setAbi5(subject),
           currentlySelected: _choiceBuilder.abi5,
         ),
@@ -340,8 +343,8 @@ class _SetupPageState extends State<SetupPage> {
           callback: setAbi4,
           currentlySelected: _choiceBuilder.abi4,
         ),
-      // Abiturprüfung in einer Fremdsprache oder Naturwissenschaft verpflichtend
-      if (_choiceBuilder.lk?.category != SubjectCategory.ntg && _choiceBuilder.lk?.category != SubjectCategory.info && _choiceBuilder.lk?.category != SubjectCategory.sg
+      // Abiturprüfung in einer Fremdsprache oder Naturwissenschaft verpflichtend (Informatik zählt nicht als Naturwissenschaft)
+      if (_choiceBuilder.lk?.category != SubjectCategory.ntg && _choiceBuilder.lk?.category != SubjectCategory.sg
           && !(_choiceBuilder.substituteDeutsch ?? false) && !(_choiceBuilder.substituteMathe ?? false))
         SetupStepPage(
           title: "Weiteres Abiturfach (NTG/SG)",
@@ -361,8 +364,8 @@ class _SetupPageState extends State<SetupPage> {
 
       // Sind die verpflichtenden Abiturprüfungsfächer bereits gewählt, kann ein weiteres beliebiges Fach gewählt werden
       // (!) before the check was whether abi5 was still null but led to a glitch when confirming this choice
-      if (_choiceBuilder.lk != null && (_choiceBuilder.lk?.category == SubjectCategory.gpr || _choiceBuilder.lk?.category == SubjectCategory.ntg
-          || _choiceBuilder.lk?.category == SubjectCategory.info || _choiceBuilder.lk?.category == SubjectCategory.sg) && !(_choiceBuilder.substituteDeutsch ?? false) && !(_choiceBuilder.substituteMathe ?? false))
+      if (_choiceBuilder.lk != null && (_choiceBuilder.lk?.category == SubjectCategory.gpr || _choiceBuilder.lk?.category == SubjectCategory.ntg || _choiceBuilder.lk?.category == SubjectCategory.sg)
+          &&  !(_choiceBuilder.substituteMathe ?? false))
         SetupStepPage(
           title: "Weiteres Abiturfach",
           pageController: _pageController,

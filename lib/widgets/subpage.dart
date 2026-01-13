@@ -53,12 +53,13 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
   }
 
   void closeSubpage([dynamic result]) {
+    final toRemove = _stack.lastOrNull;
+    toRemove?.callback?.call(result);
     _controller.reverse().then((_) {
       if (!mounted) return;
       setState(() {
         _isOpened = _stack.length > 1;
-        var removed = _stack.removeLast();
-        removed.callback?.call(result);
+        _stack.remove(toRemove);
         if (_isOpened) _controller.value = 1;
       });
     });
@@ -149,7 +150,7 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
 
 
             // current subpage
-            if (_isOpened)
+            if (_isOpened && _stack.isNotEmpty)
               AnimatedBuilder(
                 animation: _controller,
                 builder: (context, child) => Transform.translate(

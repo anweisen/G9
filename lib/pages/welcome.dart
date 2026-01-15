@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 
-import 'settings.dart';
+import '../provider/settings.dart';
 import '../widgets/skeleton.dart';
+import 'settings.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -10,6 +12,8 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final choice = Provider.of<SettingsDataProvider>(context).choice;
+
     const double leftOffset = PageSkeleton.leftOffset;
 
     print(theme.primaryColor.toString());
@@ -27,7 +31,7 @@ class WelcomePage extends StatelessWidget {
 
                       LayoutBuilder(builder: (context, constraints) => _buildTitleBar(theme, context, constraints)),
                       const SizedBox(height: 25),
-                      SettingsPage.buildButton(theme, "Starten", Icons.chevron_right_rounded, () => Navigator.of(context).pushNamed("/setup")),
+                      SettingsPage.buildButton(theme, "Starten", Icons.chevron_right_rounded, () => Navigator.of(context).pushNamed(choice == null ? "/setup" : "/home")),
                       const SizedBox(height: 40),
 
                       Expanded(

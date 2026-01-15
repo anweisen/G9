@@ -526,7 +526,9 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
                                       ? _fadeAnimation.value : 1,
                                   child: GestureDetector(
                                     onTap: () => selectSubject(_subjects[index]),
-                                    child: Padding(
+                                    child: Container(
+                                      width: double.infinity,
+                                      color: Colors.transparent,
                                       padding: const EdgeInsets.symmetric(vertical: 7, horizontal: leftOffset + 5),
                                       child: SubjectWidget(subject: _subjects[index], selected: _selected == _subjects[index]),
                                     ),

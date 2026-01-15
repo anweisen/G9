@@ -304,12 +304,12 @@ class SemesterResult {
       int points = 0;
       int semesters = 0;
 
-      for (var semester in Semester.qPhase) {
+      for (var semester in Semester.values) {
         if (result[subject]![semester] == null) continue;
         if (result[subject]![semester]!.prediction) continue;
 
         numberGrades += result[subject]![semester]!.basedOnGradeCount;
-        points += result[subject]![semester]!.grade;
+        points += result[subject]![semester]!.effectiveGrade;
         semesters++;
       }
 

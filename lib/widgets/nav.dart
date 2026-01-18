@@ -27,59 +27,65 @@ class Nav extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
         child: Container(
-          color: theme.cardColor.withOpacity(.6),
+          color: theme.scaffoldBackgroundColor.withOpacity(.4),
           child: SafeArea(
             minimum: const EdgeInsets.fromLTRB(6, 0, 6, 10),
             bottom: true,
             right: true,
             left: true,
             top: false,
-            child: BottomNavigationBar(
-              showSelectedLabels: false,
-              showUnselectedLabels: false,
-              type: BottomNavigationBarType.fixed,
-              currentIndex: _getCurrentIndex(context),
-              backgroundColor: Colors.transparent,
-              fixedColor: theme.primaryColor,
-              iconSize: 28,
-              elevation: 0,
-              selectedLabelStyle: const TextStyle(fontSize: 1),
-              unselectedLabelStyle: const TextStyle(fontSize: 1),
-              onTap: (int index) {
-                var currentIndex = _getCurrentIndex(context);
-                if (index == currentIndex) return;
-                if (index == 0) {
-                  Navigator.pushNamed(context, '/home');
-                } else if (index == 1) {
-                  Navigator.pushNamed(context, '/subjects');
-                } else if (index == 2) {
-                  Navigator.pushNamed(context, '/results');
-                } else if (index == 3) {
-                  Navigator.pushNamed(context, '/settings');
-                }
-              },
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home_outlined),
-                  activeIcon: Icon(Icons.home),
-                  label: '',
+            child: Center(
+              heightFactor: 1,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 860),
+                child: BottomNavigationBar(
+                  showSelectedLabels: false,
+                  showUnselectedLabels: false,
+                  type: BottomNavigationBarType.fixed,
+                  currentIndex: _getCurrentIndex(context),
+                  backgroundColor: Colors.transparent,
+                  fixedColor: theme.primaryColor,
+                  iconSize: 28,
+                  elevation: 0,
+                  selectedLabelStyle: const TextStyle(fontSize: 1),
+                  unselectedLabelStyle: const TextStyle(fontSize: 1),
+                  onTap: (int index) {
+                    var currentIndex = _getCurrentIndex(context);
+                    if (index == currentIndex) return;
+                    if (index == 0) {
+                      Navigator.pushNamed(context, '/home');
+                    } else if (index == 1) {
+                      Navigator.pushNamed(context, '/subjects');
+                    } else if (index == 2) {
+                      Navigator.pushNamed(context, '/results');
+                    } else if (index == 3) {
+                      Navigator.pushNamed(context, '/settings');
+                    }
+                  },
+                  items: const [
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.home_outlined),
+                      activeIcon: Icon(Icons.home),
+                      label: '',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.library_books_outlined),
+                      activeIcon: Icon(Icons.library_books),
+                      label: '',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.table_chart_outlined),
+                      activeIcon: Icon(Icons.table_chart),
+                      label: '',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.settings_outlined),
+                      activeIcon: Icon(Icons.settings),
+                      label: '',
+                    ),
+                  ],
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.library_books_outlined),
-                  activeIcon: Icon(Icons.library_books),
-                  label: '',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.table_chart_outlined),
-                  activeIcon: Icon(Icons.table_chart),
-                  label: '',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.settings_outlined),
-                  activeIcon: Icon(Icons.settings),
-                  label: '',
-                ),
-              ],
+              ),
             ),
           ),
         ),

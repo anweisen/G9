@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'skeleton.dart';
+
 class SubpageController extends StatefulWidget {
   final Widget child;
 
@@ -96,82 +98,91 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
       onKey: _handleKeyEvent,
       autofocus: true,
       child: Scaffold(
-        body: Stack(
-          children: [
+        appBar: const WindowTitleBar(), // to reserve space for title bar (scroll thumb)
+        extendBodyBehindAppBar: true,
+        extendBody: true,
+        body: MediaQuery.removePadding( // remove weird padding set be the scaffold because of the appbar
+          context: context,
+          removeTop: true,
+          removeBottom: true,
+          child: Stack(
+            children: [
 
-            // the pages underneath the current one
-            AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: 1 - (_animation.value * 0.05),
-                    child: Stack(children: [
-
-                      // the root page
-                      if (_stack.length > 1)
-                        Transform.scale(
-                            scale: 1 + (_animation.value * 0.05) - 0.05,
-                            child: widget.child)
-                      else widget.child,
-
-                      if (_stack.length > 1)
-                        Transform.scale(
-                          scale: 1 + (_animation.value * 0.05),
-                          child: Container(
-                            color: Colors.black.withOpacity((1 - _animation.value) * 0.8),
-                            height: MediaQuery.sizeOf(context).height,
-                            width: MediaQuery.sizeOf(context).width,
-                          ),
-                        ),
-
-                      ..._stack
-                          .sublist(0, (_stack.length - 1).clamp(0, 100))
-                          .map((element) => _buildSubpage(context, element.content))
-                    ]),
-                  );
-                }),
-
-            // opaque background
-            GestureDetector(
-              onTap: closeSubpage,
-              behavior: HitTestBehavior.deferToChild,
-              child: AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) => IgnorePointer(
-                    ignoring: !_isOpened || _animation.value < 0.5,
-                    child: Container(
-                      color: Colors.black.withOpacity(_animation.value * 0.8),
-                      height: MediaQuery.sizeOf(context).height,
-                      width: MediaQuery.sizeOf(context).width,
-                    ),
-                  )
-              ),
-            ),
-
-
-            // current subpage
-            if (_isOpened && _stack.isNotEmpty)
+              // the pages underneath the current one
               AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) => Transform.translate(
-                  offset: Offset(0, MediaQuery.sizeOf(context).height * (1 - _animation.value)),
-                  child: _buildSubpage(context, _stack.lastOrNull!.content),
+                  animation: _controller,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: 1 - (_animation.value * 0.05),
+                      child: Stack(children: [
+
+                        // the root page
+                        if (_stack.length > 1)
+                          Transform.scale(
+                              scale: 1 + (_animation.value * 0.05) - 0.05,
+                              child: widget.child)
+                        else widget.child,
+
+                        if (_stack.length > 1)
+                          Transform.scale( // counter zoom out effect
+                            scale: 1 + (_animation.value * 0.06), // theoretically 0.05 but because of floating point numbers there would be a tiny gap
+                            child: Container(
+                              color: Colors.black.withOpacity((0.8 - _animation.value * 0.8) / (1 - _animation.value * 0.8)), // correct opacity "addition"
+                              height: MediaQuery.sizeOf(context).height,
+                              width: MediaQuery.sizeOf(context).width,
+                            ),
+                          ),
+
+                        ..._stack
+                            .sublist(0, (_stack.length - 1).clamp(0, 100))
+                            .map((element) => _buildSubpage(context, element.content))
+                      ]),
+                    );
+                  }),
+
+              // opaque background
+              GestureDetector(
+                onTap: closeSubpage,
+                behavior: HitTestBehavior.deferToChild,
+                child: AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) => IgnorePointer(
+                      ignoring: !_isOpened || _animation.value < 0.5,
+                      child: Container(
+                        color: Colors.black.withOpacity(_animation.value * 0.8),
+                        height: MediaQuery.sizeOf(context).height,
+                        width: MediaQuery.sizeOf(context).width,
+                      ),
+                    )
                 ),
-              )
-          ],
+              ),
+
+
+              // current subpage
+              if (_isOpened && _stack.isNotEmpty && _stack.lastOrNull != null)
+                AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) => Transform.translate(
+                    offset: Offset(0, MediaQuery.sizeOf(context).height * (1 - _animation.value)),
+                    child: _buildSubpage(context, _stack.isNotEmpty ? _stack.lastOrNull!.content : Container()),
+                  ),
+                )
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildSubpage(BuildContext context, Widget content) {
-    return Center(
+    return Align(
+      alignment: Alignment.bottomCenter,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 860),
         child: Stack(
           children: [
             Positioned(
-                top: 50 - 4 - 4,
+                top: 50 + WindowTitleBar.height - 4 - 4,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -185,7 +196,7 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
                   ),
                 )),
             Padding(
-              padding: const EdgeInsets.only(top: 50),
+              padding: EdgeInsets.only(top: 50 + WindowTitleBar.height),
               child: GestureDetector(
                 onVerticalDragUpdate: _handleDragUpdate,
                 onVerticalDragEnd: _handleDragEnd,

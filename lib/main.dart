@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 import 'pages/welcome.dart';
 import 'logic/choice.dart';
@@ -30,6 +31,13 @@ void main() async {
     ChangeNotifierProvider<SettingsDataProvider>(create: (context) => SettingsDataProvider()),
     ChangeNotifierProvider<GradesDataProvider>(create: (context) => GradesDataProvider()),
   ], child: const MyApp()));
+
+  if (WindowTitleBar.isWindows) {
+    doWhenWindowReady(() {
+      appWindow.title = "G9 Notenapp";
+      appWindow.show();
+    });
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -49,7 +57,7 @@ class MyApp extends StatelessWidget {
     const FontWeight normal = FontWeight.w500;
 
     return MaterialApp(
-      title: 'G9: Notenapp',
+      title: 'G9 Notenapp',
       debugShowCheckedModeBanner: false,
       themeMode: settings.theme,
       // themeMode: ThemeMode.light,

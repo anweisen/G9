@@ -42,8 +42,8 @@ class HomePage extends StatelessWidget {
     var betterGradePoints = SemesterResult.getMinPointsForBetterAbiGrade(flags.pointsTotal);
     var underscored = _calculateUnderscoredResults(results);
 
-    var (admissionHurdleType, admissionHurdleText) = AdmissionHurdle.check(settings.choice!, results, grades);
-    var (graduationHurdleType, graduationHurdleText) = GraduationHurdle.check(settings.choice!, results, flags, grades);
+    var admissionHurdleCheckResults = AdmissionHurdle.check(settings.choice!, results, flags, grades);
+    var graduationHurdleCheckResults = GraduationHurdle.check(settings.choice!, results, flags, grades);
 
     return PageSkeleton(title: const PageTitle(title: "Übersicht"), children: [
       _buildTextLine(Text(grades.currentSemester.detailedDisplay, style: theme.textTheme.bodyMedium), [
@@ -69,10 +69,10 @@ class HomePage extends StatelessWidget {
       ),
       const SizedBox(height: 36),
 
-      if (!flags.isEmpty && admissionHurdleType != null && admissionHurdleText != null)
-        ..._buildHurdleInfo(theme, "Zulassungshürde", admissionHurdleType.paragraph, admissionHurdleType.desc, admissionHurdleText)
-      else if (!flags.isEmpty && graduationHurdleType != null && graduationHurdleText != null)
-        ..._buildHurdleInfo(theme, "Anerkennungshürde", graduationHurdleType.paragraph, graduationHurdleType.desc, graduationHurdleText),
+      if (!flags.isEmpty && admissionHurdleCheckResults.isNotEmpty)
+        ..._buildHurdleInfo(theme, "Zulassungshürde", admissionHurdleCheckResults)
+      else if (!flags.isEmpty && graduationHurdleCheckResults.isNotEmpty)
+        ..._buildHurdleInfo(theme, "Anerkennungshürde", graduationHurdleCheckResults),
 
       // Abitur Vorhersage
       Container(
@@ -86,6 +86,10 @@ class HomePage extends StatelessWidget {
           children: [
             Text("Abitur Vorhersage", style: theme.textTheme.bodySmall),
             _buildTextLine(Text("Note", style: theme.textTheme.bodyMedium), [
+              if (graduationHurdleCheckResults.isNotEmpty || admissionHurdleCheckResults.isNotEmpty) ...[
+                Icon(Icons.warning_amber_rounded, size: 14, color: theme.indicatorColor),
+                const SizedBox(width: 10),
+              ],
               Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
               const SizedBox(width: 4),
               Text(SemesterResult.pointsToAbiGrade(flags.pointsTotal), style: theme.textTheme.bodyMedium),
@@ -198,22 +202,67 @@ class HomePage extends StatelessWidget {
     ]);
   }
 
-  List<Widget> _buildHurdleInfo(ThemeData theme, String title, String paragraph, String desc, String text) {
+  List<Widget> _buildHurdleInfo(ThemeData theme, String title, List<HurdleCheckResult> checkResults) {
     return [
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: theme.splashColor,
+      SubpageTrigger(
+        createSubpage: () => HurdlesPage(checkResults: checkResults),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: theme.splashColor,
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(
+              children: [
+                Icon(Icons.gavel_rounded, size: 16, color: theme.textTheme.bodySmall?.color,),
+                const SizedBox(width: 4,),
+                Text(title, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(checkResults.first.hurdle.paragraph, style: theme.textTheme.bodySmall),
+            const SizedBox(height: 6),
+            Text(checkResults.first.hurdle.desc, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500, height: 1.1)),
+            const SizedBox(height: 6),
+            Text(checkResults.first.text, style: theme.textTheme.displayMedium),
+          ]),
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: theme.textTheme.bodySmall),
-          Text(paragraph, style: theme.textTheme.bodySmall),
-          Text(desc, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
-          Text(text, style: theme.textTheme.displayMedium),
-        ]),
       ),
-      const SizedBox(height: 30),
+      const SizedBox(height: 24),
+    ];
+  }
+
+  List<Widget> _buildHurdlePassingInfo(ThemeData theme) {
+    return [
+      const SizedBox(height: 24),
+      SubpageTrigger(
+        createSubpage: () => const HurdlesPage(checkResults: []),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: theme.dividerColor,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(
+                  children: [
+                    Icon(Icons.gavel_rounded, size: 16, color: theme.textTheme.bodySmall?.color,),
+                    const SizedBox(width: 5,),
+                    Text("Zulassungs- & Anerkennungshürde", style: theme.textTheme.bodySmall),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text("Alle nötigen Hürden erfüllt", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500, height: 1.1)),
+              ]),
+              Icon(Icons.check_circle_rounded, size: 20, color: theme.primaryColor,),
+            ],
+          ),
+        ),
+      ),
     ];
   }
 
@@ -318,10 +367,10 @@ class HomePage extends StatelessWidget {
               for (int i = 0; i < 8; i++)
                 Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(3.33),
+                    borderRadius: BorderRadius.circular(3),
                     color: (underscored > i ? (underscored >= 6 ? theme.indicatorColor : theme.primaryColor) : theme.hintColor),
                   ),
-                  height: 10,
+                  height: 9,
                   width: width,
                 ),
             ],

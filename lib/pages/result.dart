@@ -133,22 +133,22 @@ class SubjectResultPage extends StatelessWidget {
   }
 
   List<Widget> _buildInfoWidgets(ThemeData theme) {
+    int semesters = choice.numberOfSemestersFor(subject);
     int minSemesters = SemesterResult.getMinSemestersForSubject(choice, subject);
     int maxSemesters = SemesterResult.getMaxSemesterForSubject(choice, subject);
-    int semesters = choice.numberOfSemestersFor(subject);
     bool joker = SemesterResult.canUseJokerForSubject(choice, subject);
 
     int freeSemestersUsed = 0;
-    Semester? jokerUsed;
+    Semester? jokerUsed; // this semester is replaced
+    Semester? usedVkExtra;
+    (Subject, SemesterResult)? jokerReplacesSemester; // this semester is used as a replacement for
     for (Semester semester in Semester.qPhaseEquivalents(subject.category)) {
       SemesterResult? result = results[semester];
       if (result == null) continue;
-      if (result.replacedByJoker) {
-        jokerUsed = semester;
-      }
-      if (result.useExtra || result.useJoker) {
-        freeSemestersUsed += 1;
-      }
+      if (result.replacedByJoker) jokerUsed = semester;
+      if (result.useExtra) freeSemestersUsed += 1;
+      if (result.useJoker) jokerReplacesSemester = result.jokerResult;
+      if (result.useVk) usedVkExtra = semester;
     }
 
     bool extraVkMintSg2 = (choice.vk != null && (choice.vk == subject || choice.mintSg2 == subject));
@@ -167,6 +167,8 @@ class SubjectResultPage extends StatelessWidget {
 
       if (extraVkMintSg2)
         _buildInfoWidget(theme, "+1 verpflichtende Einbringung in ${choice.vk?.name} oder ${choice.mintSg2.name}", null),
+      if (usedVkExtra != null)
+        _buildInfoWidget(theme, "verpflichtende Einbringung von ${usedVkExtra.display} für Vertiefungskurs genutzt", Icons.stars_rounded),
 
       if (onlySg)
         _buildInfoWidget(theme, "einzige Fremdsprache", null),
@@ -188,6 +190,8 @@ class SubjectResultPage extends StatelessWidget {
       else if (freeSemestersUsed > 1)
         _buildInfoWidget(theme, "$freeSemestersUsed freie Einbringungen genutzt", Icons.check_circle_outline),
 
+      if (jokerReplacesSemester != null)
+        _buildInfoWidget(theme, "Einbringung per Optionsregel ersetzt ${jokerReplacesSemester.$1.name} ${jokerReplacesSemester.$2.semester.display}", Icons.join_full_rounded),
     ];
   }
 

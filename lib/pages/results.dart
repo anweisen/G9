@@ -34,13 +34,6 @@ class ResultsPage extends StatelessWidget {
               child: SubjectCard(subject: entry.key, results: entry.value, choice: settings.choice!,))
           ),
 
-          const SizedBox(height: 20),
-
-          _buildLegendText(theme, "Einbringung: Pflicht", Icons.check_circle),
-          _buildLegendText(theme, "Einbringung: Frei", Icons.check_circle_outline),
-          _buildLegendText(theme, "Optionsregel: Gestrichen", Icons.join_inner_rounded),
-          _buildLegendText(theme, "Optionsregel: Einbringung", Icons.join_full_rounded),
-
           const SizedBox(height: 40),
 
           ...?settings.choice?.abiSubjects.map((subject) => Padding(
@@ -154,6 +147,7 @@ class SubjectCard extends StatelessWidget {
             else if (result?.useForced ?? false) Icon(Icons.check_circle, size: 12, color: textStyle?.color)
             else if (result?.useExtra ?? false) Icon(Icons.check_circle_outline, size: 12, color: textStyle?.color)
             else if (result?.useJoker ?? false) Icon(Icons.join_full_rounded, size: 14, color: textStyle?.color)
+            else if (result?.useVk ?? false) Icon(Icons.stars_rounded, size: 12, color: textStyle?.color)
           ]
         ),
       ],

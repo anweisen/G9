@@ -161,7 +161,7 @@ class SemesterResult {
 
       for (var entry in freeSemesterGrades) {
         if (entry.key == choice.vk || entry.key == choice.mintSg2) {
-          entry.value.useForced = true;
+          entry.value.useVk = true;
           freeSemesterGrades.remove(entry);
           usedSemesterGrades.add(entry);
           break;
@@ -377,13 +377,12 @@ class SemesterResult {
   bool useForced = false;
   bool useExtra = false;
   bool useJoker = false; // used as joker
+  bool useVk = false; // extra from VK rule
+  bool replacedByJoker = false;
+  (Subject, SemesterResult)? jokerResult; // cross reference (original<->replacement)
 
   bool get prediction => basedOnGradeCount == 0;
-
-  bool get used => (useForced || useExtra || useJoker) && !replacedByJoker;
-
-  bool replacedByJoker = false;
-
+  bool get used => (useForced || useExtra || useJoker || useVk) && !replacedByJoker;
   int get effectiveGrade => (grade / semester.semesterCountEquivalent).round();
 
   SemesterResult(this.grade, this.basedOnGradeCount, this.semester);

@@ -223,3 +223,20 @@ class _SubpageEntry {
 
   _SubpageEntry(this.content, this.callback);
 }
+
+class SubpageTrigger extends StatelessWidget {
+  const SubpageTrigger({super.key, required this.child, required this.createSubpage, this.callback});
+
+  final Widget child;
+  final Widget Function() createSubpage;
+  final Function(dynamic result)? callback;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => SubpageController.of(context).openSubpage(createSubpage(), callback: callback),
+      child: child,
+    );
+  }
+}
+

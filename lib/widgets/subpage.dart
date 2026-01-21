@@ -164,7 +164,7 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
                   animation: _controller,
                   builder: (context, child) => Transform.translate(
                     offset: Offset(0, MediaQuery.sizeOf(context).height * (1 - _animation.value)),
-                    child: _buildSubpage(context, _stack.isNotEmpty ? _stack.lastOrNull!.content : Container()),
+                    child: RepaintBoundary(child: _buildSubpage(context, _stack.isNotEmpty ? _stack.lastOrNull!.content : Container())),
                   ),
                 )
             ],

@@ -62,8 +62,220 @@ class GradeEntry {
 // 1. Das Prüfungsergebnis ist mit folgender Formel zu berechnen:
 //    P = (2s+m)/3 * 4.
 //    (P = Prüfungsergebnis, s = Punktzahl der schriftlichen Prüfung, m = Punktzahl der mündlichen Prüfung).
-// 2. Das Prüfungsergebnis wird gerundet. 3Bei einem Ergebnis (vierfache Wertung) von unter 4 Punkten ist die Abiturprüfung nicht bestanden.
+// 2. Das Prüfungsergebnis wird gerundet.
+// 3. Bei einem Ergebnis (vierfache Wertung) von unter 4 Punkten ist die Abiturprüfung nicht bestanden.
+class GradeWeighting {
+  final List<GradeWeightingComponent> components;
+  final int semesterCountEquivalent;
+
+  GradeWeighting(this.semesterCountEquivalent, this.components);
+
+  double calculateAverage(GradesList grades) {
+    return GradeWeightingComponent.calculateSubComponentsAverage(grades, components) * semesterCountEquivalent;
+  }
+
+  int _calculateDepth(List<GradeWeightingComponent>? components) {
+    if (components != null && components.isNotEmpty) {
+      int maxSubDepth = 0;
+      for (var subcomponent in components) {
+        int subDepth = 1 + _calculateDepth(subcomponent.subcomponents);
+        if (subDepth > maxSubDepth) {
+          maxSubDepth = subDepth;
+        }
+      }
+      return maxSubDepth;
+    }
+    return 0;
+  }
+
+  int calculateComponentTreeDepth() {
+    return _calculateDepth(components);
+  }
+
+  String generateInfoText() {
+    String text = "";
+
+    if (components.length > 1) {
+      text += "Gewichtung ";
+      text += generateInfoTextLineForComponents(components);
+
+      for (GradeWeightingComponent component in components) {
+        if (component.subcomponents != null && component.subcomponents!.length > 1) {
+          text += "\n";
+          text += "für ${component.title} ${generateInfoTextLineForComponents(component.subcomponents!)}";
+        }
+      }
+    } else {
+      text += "Ergebnis = ";
+      text += "(${components[0].singleGrade ? "" : "⌀ "}${components[0].title})";
+    }
+
+    text += "\n";
+    text += "Das Ergebnis wird gerundet (auf 1 wird nicht aufgerundet)\n";
+    text += "max. ${semesterCountEquivalent * 15} Punkte (x$semesterCountEquivalent Halbjahresleistung)";
+    return text;
+  }
+
+  static String generateInfoTextLineForComponents(List<GradeWeightingComponent> components) {
+    String text = "";
+    text += generateWeightingTextForComponents(components);
+    text += " ≙ ";
+    for (int i = 0; i < components.length; i++) {
+      text += "${components[i].weight}×(${components[i].singleGrade ? "" : "⌀ "}${components[i].title})";
+      if (i < components.length - 1) {
+        text += " : ";
+      }
+    }
+    return text;
+  }
+
+  static String generateWeightingTextForComponents(List<GradeWeightingComponent> components) {
+    String text = "";
+    for (int i = 0; i < components.length; i++) {
+      text += "${components[i].weight}";
+      if (i < components.length - 1) {
+        text += ":";
+      }
+    }
+    return text;
+  }
+
+  static GradeWeighting normal = GradeWeighting(1, [
+    GradeWeightingComponent(title: "Klausur", weight: 1, singleGrade: true, filterTypes: {GradeType.klausur},),
+    GradeWeightingComponent(title: "kl. Leistungsnachweise", weight: 1, filterAreas: {GradeTypeArea.muendlich},),
+  ]);
+
+  static GradeWeighting normalNoK = GradeWeighting(1, [
+    GradeWeightingComponent(title: "kl. Leistungsnachweise", weight: 1, filterAreas: {GradeTypeArea.muendlich},),
+  ]);
+
+  static GradeWeighting sportGk = GradeWeighting(1, [
+    GradeWeightingComponent(title: "praktische Leistungen", weight: 2, filterTypes: {GradeType.praxis, GradeType.technik},),
+    GradeWeightingComponent(title: "schriftl. Leistungen", weight: 1, filterTypes: {GradeType.theorie},),
+  ]);
+
+  static GradeWeighting sportLk = GradeWeighting(1, [
+    GradeWeightingComponent(title: "Sporttheorie", weight: 1, fromWeighting: normal,),
+    GradeWeightingComponent(title: "Sportpraxis", weight: 1, fromWeighting: sportGk,),
+  ]);
+
+  static GradeWeighting kunstLk = GradeWeighting(1, [
+    GradeWeightingComponent(title: "Klausur", weight: 1, singleGrade: true, filterTypes: {GradeType.klausur},),
+    GradeWeightingComponent(title: "künstlerisches Projekt", weight: 1, singleGrade: true, filterTypes: {GradeType.kunstprojekt},),
+    GradeWeightingComponent(title: "kl. Leistungsnachweise", weight: 1, filterAreas: {GradeTypeArea.muendlich},),
+  ]);
+
+  static GradeWeighting musikLk = GradeWeighting(1, [
+    GradeWeightingComponent(title: "Klausur", weight: 1, singleGrade: true, filterTypes: {GradeType.klausur},),
+    GradeWeightingComponent(title: "praktische Prüfung", weight: 1, singleGrade: true, filterTypes: {GradeType.musikpruefung},),
+    GradeWeightingComponent(title: "kl. Leistungsnachweise", weight: 1, filterAreas: {GradeTypeArea.muendlich},),
+  ]);
+
+  static GradeWeighting seminar = GradeWeighting(2, [
+    GradeWeightingComponent(title: "Seminararbeit", weight: 3, singleGrade: true, filterTypes: {GradeType.seminar},),
+    GradeWeightingComponent(title: "Präsentation", weight: 1, singleGrade: true, filterTypes: {GradeType.seminarreferat},),
+  ]);
+
+  // https://www.gesetze-bayern.de/Content/Document/BayGSO-52
+  // https://www.gesetze-bayern.de/Content/Document/BayGSO-ANL_21
+
+  static GradeWeighting abi = GradeWeighting(4, [
+    GradeWeightingComponent(title: "mündl./schriftl. Prüfung", weight: 1, singleGrade: true, filterTypes: {GradeType.schriftlich, GradeType.muendlich},),
+  ]);
+
+  // Normal mit Zusatzprüfung;        2:1 - schriftlich : zusatz
+  static GradeWeighting abiZusatz = GradeWeighting(4, [
+    GradeWeightingComponent(title: "schriftl. Prüfung", weight: 2, singleGrade: true, filterTypes: {GradeType.schriftlich, GradeType.muendlich},),
+    GradeWeightingComponent(title: "mündl. Zusatzprüfung", weight: 1, singleGrade: true, filterTypes: {GradeType.zusatz},),
+  ]);
+
+  // Fachprüfung ohne Zusatzprüfung;  1:1 - schriftlich/mündlich : fach
+  static GradeWeighting abiFach = GradeWeighting(4, [
+    GradeWeightingComponent(title: "mündl./schriftl. Prüfung", weight: 1, singleGrade: true, filterTypes: {GradeType.schriftlich, GradeType.muendlich},),
+    GradeWeightingComponent(title: "bes. Fachprüfung", weight: 1, singleGrade: true, filterTypes: {GradeType.fach},),
+  ]);
+
+  // Fachprüfung mit Zusatzprüfung;   1:1:1 - schriftlich : fach : zusatz (kryptisch formuliert in BayGSO-52(2)2.)
+  static GradeWeighting abiFachZusatz = GradeWeighting(4, [
+    GradeWeightingComponent(title: "schriftl. Prüfung", weight: 1, singleGrade: true, filterTypes: {GradeType.schriftlich, GradeType.muendlich},),
+    GradeWeightingComponent(title: "bes. Fachprüfung", weight: 1, singleGrade: true, filterTypes: {GradeType.fach},),
+    GradeWeightingComponent(title: "mündl. Zusatzprüfung", weight: 1, singleGrade: true, filterTypes: {GradeType.zusatz},),
+  ]);
+
+}
+
+class GradeWeightingComponent {
+  final String title;
+  final int weight;
+  final bool singleGrade;
+  late List<GradeWeightingComponent>? subcomponents;
+  final Set<GradeType>? filterTypes;
+  final Set<GradeTypeArea>? filterAreas;
+
+  bool get hasSubComponents => subcomponents != null && subcomponents!.isNotEmpty;
+
+  GradeWeightingComponent({required this.title, required this.weight, this.singleGrade = false, this.subcomponents, this.filterTypes, this.filterAreas, GradeWeighting? fromWeighting}) {
+    assert (subcomponents != null || filterTypes != null || filterAreas != null || fromWeighting != null);
+    assert (subcomponents == null || (filterTypes == null && filterAreas == null) || fromWeighting == null);
+
+    if (fromWeighting != null) subcomponents = fromWeighting.components;
+  }
+
+  GradesList filter(GradesList grades) {
+    if (filterAreas != null) {
+      grades = grades.where((e) => filterAreas!.contains(e.type.area)).toList();
+    }
+    if (filterTypes != null) {
+      grades = grades.where((e) => filterTypes!.contains(e.type)).toList();
+    }
+    return grades;
+  }
+
+  double calculateAverage(GradesList grades) {
+    final filteredGrades = filter(grades);
+    if (subcomponents == null) return GradeHelper.unweightedAverageOf(filteredGrades);
+    return calculateSubComponentsAverage(filteredGrades, subcomponents!);
+  }
+
+  static double calculateSubComponentsAverage(GradesList grades, List<GradeWeightingComponent> components) {
+    double sum = 0;
+    int totalWeight = 0;
+
+    for (var component in components) {
+      double componentAvg = component.calculateAverage(grades);
+      if (componentAvg != -1) {
+        sum += componentAvg * component.weight;
+        totalWeight += component.weight;
+      }
+    }
+
+    if (totalWeight == 0) return -1;
+    return sum / totalWeight;
+  }
+}
+
 class GradeHelper {
+  static GradeWeighting getWeightingFor(Subject subject, Semester semester, Choice choice, GradesList grades) {
+    if (semester == Semester.abi) {
+      final types = grades.map((e) => e.type).toSet();
+      if (subject == choice.lk && (subject == Subject.sport || subject == Subject.musik)) {
+        if (types.contains(GradeType.muendlich)) return GradeWeighting.abiFach;
+        return GradeWeighting.abiFachZusatz;
+      }
+
+      if (types.contains(GradeType.schriftlich)) return GradeWeighting.abiZusatz;
+      return GradeWeighting.abi;
+    }
+    if (subject == choice.seminar && semester == Semester.seminar13) return GradeWeighting.seminar;
+    if (subject == choice.seminar) return GradeWeighting.normalNoK;
+    if (subject == Subject.sport && subject != choice.lk) return GradeWeighting.sportGk;
+    if (subject == Subject.sport && subject == choice.lk) return GradeWeighting.sportLk;
+    if (subject == Subject.kunst && subject == choice.lk) return GradeWeighting.kunstLk;
+    if (subject == Subject.musik && subject == choice.lk) return GradeWeighting.musikLk;
+    if (semester == Semester.q13_2 && !(subject == choice.lk || subject == Subject.mathe || subject == Subject.deutsch)) return GradeWeighting.normalNoK;
+    return GradeWeighting.normal;
+  }
+
   static formatNumber(double avg, {int decimals = 1, bool allowZero = false}) {
     if (avg < 0 || (!allowZero && avg == 0)) {
       return "-";
@@ -72,6 +284,14 @@ class GradeHelper {
     num factor = pow(10, decimals);
     double trimmed = (avg * factor).truncate() / factor;
     return trimmed.toStringAsFixed(decimals).replaceFirst(".", ",");
+  }
+
+  static formatResult(double avg, {bool allowZero = true}) {
+    if (avg < 0 || (!allowZero && avg == 0)) {
+      return "-";
+    }
+
+    return roundResult(avg).toString();
   }
 
   static double averageOfSubjects(SubjectGradesMap grades, {Semester? semester}) {
@@ -85,10 +305,7 @@ class GradeHelper {
       }
     });
 
-    if (count == 0) {
-      return 0;
-    }
-
+    if (count == 0) return 0;
     return sum / count;
   }
 
@@ -104,15 +321,15 @@ class GradeHelper {
       count++;
     });
 
-    if (count == 0) {
-      return 0;
-    }
-
+    if (count == 0) return 0;
     return sum / count;
   }
 
   static int result(GradesList grades) {
-    final avg = average(grades);
+    return roundResult(average(grades));
+  }
+
+  static int roundResult(double avg) {
     return avg < 1 ? 0 : avg.round();
   }
 
@@ -307,56 +524,6 @@ class GradeHelper {
         return "$month. ";
     }
   }
-
-  // TODO extract; not very elegant
-  static String getWeightingExplanation(Subject subject, Semester semester, Choice choice) {
-    if (semester == Semester.seminar13 && subject == choice.seminar) {
-      return "Gewichtung 3:1 ≙ 3×(Seminararbeit) : 1×(Seminarpräsentation)\n"
-          "max. 30 Punkte (x2 Halbjahresleistungen)";
-    }
-    if (semester == Semester.abi) {
-      if (subject == choice.lk && (subject == Subject.sport || subject == Subject.musik)) {
-        return "Gewichtung (ohne Nachprüfung) 1:1 ≙ 1×(schriftl. Prüfung) : 1×(bes. Fachprüfung)\n"
-            "Gewichtung (mit Nachprüfung) 1:1:1 ≙ 1×(schriftl. Prüfung) : 1×(bes. Fachprüfung) : 1×(mündl. Zusatzprüfung)\n"
-            "max. 60 Punkte (x4 Halbjahresleistungen)";
-      }
-      return "Ergebnis (ohne Nachprüfung) = (mündl./schrift. Prüfung)\n"
-          "Gewichtung (mit Nachprüfung) 2:1 ≙ 2×(schriftl. Prüfung) : 1×(mündl. Zusatzprüfung)\n"
-          "max. 60 Punkte (x4 Halbjahresleistungen)";
-    }
-    if (subject == Subject.sport) {
-      if (choice.lk == Subject.sport) {
-        return "Gewichtung 1:1 ≙ 1×(Sportpraxis 'gA') : 1×(Sporttheorie 'eA')\n"
-            "Sportpraxis: Gewichtung 2:1 ≙ 2×(⌀ prakt. Leistungen) : 1×(⌀ kl. Leistungsnachweise gA/Praxis)\n"
-            "Sporttheorie: Gewichtung 1:1 ≙ 1×(⌀ kl. Leistungsnachweise eA/Theorie) : 1×(Klausur)\n"
-            "Das Ergebnis wird gerundet (auf 1 wird nicht aufgerundet)\n"
-            "max. 15 Punkte (x1 Halbjahresleistung)";
-      }
-      return "Gewichtung 2:1 ≙ 2×(⌀ praktische Leistungen) : 1×(⌀ kl. Leistungsnachweise)\n"
-          "Das Ergebnis wird gerundet (auf 1 wird nicht aufgerundet)\n"
-          "max. 15 Punkte (x1 Halbjahresleistung)";
-    }
-    if (subject == Subject.kunst && choice.lk == subject) {
-      return "Gewichtung 1:1:1 ≙ 1×(Klausur) : 1×(künstlerisches Projekt) : 1×(⌀ kl. Leistungsnachweise)\n"
-          "Das Ergebnis wird gerundet (auf 1 wird nicht aufgerundet)\n"
-          "max. 15 Punkte (x1 Halbjahresleistung)";
-    }
-    if (subject == Subject.musik && choice.lk == subject) {
-      return "Gewichtung 1:1:1 ≙ 1×(Klausur) : 1×(praktische Prüfung) : 1×(⌀ kl. Leistungsnachweise)\n"
-          "Das Ergebnis wird gerundet (auf 1 wird nicht aufgerundet)\n"
-          "max. 15 Punkte (x1 Halbjahresleistung)";
-    }
-
-    if (semester == Semester.q13_2 && !choice.abiSubjects.contains(subject)
-        || (semester == Semester.q12_1 || semester == Semester.q12_2) && subject == choice.seminar) {
-      return "Ergebnis = ⌀ kl. Leistungsnachweise\n"
-          "Das Ergebnis wird gerundet (auf 1 wird nicht aufgerundet)\n"
-          "max. 15 Punkte (x1 Halbjahresleistung)";
-    }
-    return "Gewichtung 1:1 ≙ 1×(⌀ kl. Leistungsnachweise) : 1×(Klausur)\n"
-        "Das Ergebnis wird gerundet (auf 1 wird nicht aufgerundet)\n"
-        "max. 15 Punkte (x1 Halbjahresleistung)";
-  }
 }
 
 @HiveType(typeId: 21)
@@ -454,7 +621,7 @@ enum GradeType {
       return [...listNormal, musikpruefung];
     }
 
-    if (semester == Semester.q13_2 && !choice.abiSubjects.contains(subject)) {
+    if (semester == Semester.q13_2 && !(subject == choice.lk || subject == Subject.mathe || subject == Subject.deutsch)) {
       return listNormalNoK;
     }
 

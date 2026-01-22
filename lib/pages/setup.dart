@@ -343,7 +343,7 @@ class _SetupPageState extends State<SetupPage> {
           callback: setAbi4,
           currentlySelected: _choiceBuilder.abi4,
         ),
-      // Abiturprüfung in einer Fremdsprache oder Naturwissenschaft verpflichtend (Informatik zählt nicht als Naturwissenschaft)
+      // Abiturprüfung in einer fortgeführten Fremdsprache oder Naturwissenschaft verpflichtend (Informatik zählt nicht als Naturwissenschaft)
       if (_choiceBuilder.lk?.category != SubjectCategory.ntg && _choiceBuilder.lk?.category != SubjectCategory.sg
           && !(_choiceBuilder.substituteDeutsch ?? false) && !(_choiceBuilder.substituteMathe ?? false))
         SetupStepPage(
@@ -353,9 +353,7 @@ class _SetupPageState extends State<SetupPage> {
           subjectsPool: _filter([
             _choiceBuilder.mint1,
             _choiceBuilder.sg1,
-            if (_choiceBuilder.sbs != null)
-              _choiceBuilder.sbs
-            else if (_choiceBuilder.vk == null && !(_choiceBuilder.substituteDeutsch ?? false) && !(_choiceBuilder.substituteMathe ?? false))
+            if (_choiceBuilder.vk == null && !(_choiceBuilder.substituteDeutsch ?? false) && !(_choiceBuilder.substituteMathe ?? false))
               _choiceBuilder.mintSg2,
           ]),
           callback: _choiceBuilder.lk?.category == SubjectCategory.gpr ? setAbi4 : setAbi5,
@@ -377,6 +375,10 @@ class _SetupPageState extends State<SetupPage> {
                 _choiceBuilder.sg1,
                 if (_choiceBuilder.vk == null && !(_choiceBuilder.substituteDeutsch ?? false) && !(_choiceBuilder.substituteMathe ?? false))
                   _choiceBuilder.mintSg2,
+                if (_choiceBuilder.pug13 ?? false)
+                  Subject.pug
+                else
+                  _choiceBuilder.geoWr,
                 _choiceBuilder.musikKunst,
               ]), _choiceBuilder.abi4, _choiceBuilder.lk),
           callback: setAbi5,

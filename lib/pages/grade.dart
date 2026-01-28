@@ -196,7 +196,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
               ),
 
               // Semester
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
               SubpageTrigger(
                 createSubpage: () => SemesterSelectionPage(subject: _subject),
                 callback: (semester) {
@@ -211,7 +211,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
 
               // GradeType
               // on subject/semester change: reset GradeType if needed
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
               SubpageTrigger(
                   createSubpage: () => GradeTypSelectionPage(semester: _semester, subject: _subject, originalType: _type),
                   callback: (type) => {
@@ -224,7 +224,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
                           icon: Icon(Icons.label_rounded, color: theme.primaryColor, size: 24))),
 
               // Date
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
               if (_date == null)
                 const GradeOptionPlaceholder(text: "Wähle ein Datum")
               else
@@ -515,12 +515,12 @@ class SaveButton extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: theme.primaryColor),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 18),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(text, style: theme.textTheme.labelMedium),
-                  Icon(icon, color: theme.textTheme.labelMedium?.color),
+                  Icon(icon, color: theme.textTheme.labelMedium?.color, size: 24),
                 ],
               ),
             ),
@@ -541,7 +541,7 @@ class GradeGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return SizedBox(
-      height: 4 * (26 + 10), // height + spacing*2
+      height: 4 * (28 + 10), // height + spacing*2
       child: Column(
           children: [
             for (int indexI = 0; indexI < 4; indexI++)
@@ -567,7 +567,7 @@ class GradeGrid extends StatelessWidget {
     final int grade = 15 - index;
     return Container(
       width: 48,
-      height: 26,
+      height: 28,
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           color: selectedGrade == grade ? theme.primaryColor : theme.cardColor),
@@ -624,13 +624,15 @@ class _GradeSliderState extends State<GradeSlider> with SingleTickerProviderStat
     super.dispose();
   }
 
+  double _calculateTargetForGrade(int grade) {
+    return (grade + 1) / 16.0 - (1 / 16) / 2;
+  }
+
   void _handleDragUpdate(DragUpdateDetails details, BoxConstraints constraints) {
-    // _controller.value += (details.primaryDelta ?? 0) / constraints.maxWidth;
     _controller.value += (details.primaryDelta ?? 0) / 550;
-    print(_controller.value);
 
     for (int i = 0; i <= 15; i++) {
-      final target = (i + 1) / 16.0 - (1 / 16) / 2;
+      final target = _calculateTargetForGrade(i);
       final distance = (target - _controller.value).abs();
       if (distance < (1.0 / 16.0) / 2) {
         widget.onGradeChanged(i);
@@ -638,16 +640,41 @@ class _GradeSliderState extends State<GradeSlider> with SingleTickerProviderStat
     }
   }
 
-  void _handleDragEnd(DragEndDetails details) {
+  void _handleDragEnd(DragEndDetails details, BoxConstraints constraints) {
     for (int i = 0; i <= 15; i++) {
-      final target = (i + 1) / 16.0 - (1 / 16) / 2;
-      print("target $target");
-      final distance = (target - _controller.value ).abs();
+      final target = _calculateTargetForGrade(i);
+      final distance = (target - _controller.value - (details.velocity.pixelsPerSecond.dx / constraints.maxWidth / 16 / 2)).abs();
       if (distance < (1.0 / 16.0) / 2) {
         widget.onGradeChanged(i);
         _controller.animateTo(target, duration: const Duration(milliseconds: 300));
         return;
       }
+    }
+    if (_controller.value < _calculateTargetForGrade(0)) {
+      _controller.animateTo(_calculateTargetForGrade(0), duration: const Duration(milliseconds: 200));
+    }
+    if (_controller.value > _calculateTargetForGrade(15)) {
+      _controller.animateTo(_calculateTargetForGrade(15), duration: const Duration(milliseconds: 200));
+    }
+  }
+
+  void _handleTapDown(TapDownDetails details, BoxConstraints constraints) {
+    if (widget.grade == null) return;
+
+    final localPosition = details.localPosition;
+    final relativePosition = localPosition.dx / constraints.maxWidth;
+
+    if (relativePosition > 0.5 && widget.grade! > 0) {
+      _controller.animateTo(_calculateTargetForGrade(widget.grade! - 1), duration: const Duration(milliseconds: 150));
+      Future.delayed(const Duration(milliseconds: 75), () {
+        widget.onGradeChanged(widget.grade! - 1);
+      });
+    }
+    if (relativePosition < 0.5 && widget.grade! < 15) {
+      _controller.animateTo(_calculateTargetForGrade(widget.grade! + 1), duration: const Duration(milliseconds: 150));
+      Future.delayed(const Duration(milliseconds: 75), () {
+        widget.onGradeChanged(widget.grade! + 1);
+      });
     }
   }
 
@@ -657,7 +684,8 @@ class _GradeSliderState extends State<GradeSlider> with SingleTickerProviderStat
     return LayoutBuilder(
       builder: (context, constraints) => GestureDetector(
           onHorizontalDragUpdate: (details) => _handleDragUpdate(details, constraints),
-          onHorizontalDragEnd: _handleDragEnd,
+          onHorizontalDragEnd: (details) => _handleDragEnd(details, constraints),
+          onTapDown: (details) => _handleTapDown(details, constraints),
           child: Container(
             width: constraints.maxWidth,
             height: 80,
@@ -681,7 +709,7 @@ class _GradeSliderState extends State<GradeSlider> with SingleTickerProviderStat
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                for (int i = 0; i <= 15; i++)
+                                for (int i = 15; i >= 0; i--)
                                   Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -691,15 +719,15 @@ class _GradeSliderState extends State<GradeSlider> with SingleTickerProviderStat
                                         height: 28,
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(6),
-                                          color: (widget.grade == (15 - i)) ? theme.primaryColor : Colors.transparent,
+                                          color: (widget.grade == i) ? theme.primaryColor : Colors.transparent,
                                         ),
-                                        child: Text((15 - i).toString(),
-                                          style: (widget.grade == (15 - i)) ? theme.textTheme.labelMedium : theme.textTheme.labelSmall,
+                                        child: Text(i.toString(),
+                                          style: (widget.grade == i) ? theme.textTheme.labelMedium : theme.textTheme.labelSmall,
                                           textAlign: TextAlign.center,
                                         )
                                       ),
                                       const SizedBox(height: 8),
-                                      Text(SemesterResult.getDefaultGradeForPoints(15 - i),
+                                      Text(SemesterResult.getDefaultGradeForPoints(i),
                                         style: theme.textTheme.bodySmall,
                                         textAlign: TextAlign.center,
                                       )
@@ -713,19 +741,42 @@ class _GradeSliderState extends State<GradeSlider> with SingleTickerProviderStat
                   ),
                 ),
 
+                Transform.translate(
+                  offset: Offset(constraints.maxWidth / 2 - 50, 7),
+                  child: Container(
+                    width: 100,
+                    height: 63,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: theme.primaryColor.withOpacity(0.1),
+                    ),
+                  ),
+                ),
+
                 Container(
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       gradient: LinearGradient(
                           colors: [
                             theme.dividerColor,
+                            theme.dividerColor,
                             theme.dividerColor.withOpacity(0),
                             theme.dividerColor.withOpacity(0),
                             theme.dividerColor,
+                            theme.dividerColor,
                           ],
-                          stops: const [0.0, 0.2, 0.8, 1.0]
+                          stops: const [0.0, 0.05, 0.2, 0.8, 0.95, 1.0]
                       )
                   ),
+                ),
+
+                Transform.translate(
+                  offset: const Offset(8, 40 - 24/2),
+                  child: Icon(Icons.chevron_left_rounded, color: theme.shadowColor, size: 24,),
+                ),
+                Transform.translate(
+                  offset: Offset(constraints.maxWidth - 24 - 8, 40 - 24/2),
+                  child: Icon(Icons.chevron_right_rounded, color: theme.shadowColor, size: 24,),
                 ),
               ],
             ),

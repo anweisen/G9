@@ -296,6 +296,41 @@ class SemesterResult {
     return results;
   }
 
+  static int calculatePrediction(Subject? subject, Map<Subject, Map<Semester, SemesterResult>> results) {
+    int count = 0;
+    int sum = 0;
+
+    if (subject != null) {
+      for (var semester in Semester.qPhase) {
+        if (results[subject]![semester] != null) {
+          sum += results[subject]![semester]!.grade;
+          count++;
+        }
+      }
+    }
+
+    if (count > 0) {
+      return (sum / count).floor();
+    }
+
+    int totalCount = 0;
+    int totalSum = 0;
+    results.forEach((subject, semesterResultMap) {
+      semesterResultMap.forEach((semester, result) {
+        if (Semester.qPhase.contains(semester)) {
+          totalSum += result.grade;
+          totalCount++;
+        }
+      });
+    });
+
+    if (totalCount > 0) {
+      return (totalSum / totalCount).floor();
+    }
+
+    return 7;
+  }
+
   static Statistics calculateStatistics(Choice choice, Map<Subject, Map<Semester, SemesterResult>> result) {
     List<(Subject, double)> bestSubjects = [];
     int numberGrades = 0;
@@ -367,6 +402,28 @@ class SemesterResult {
       }
     }
     return 0;
+  }
+
+  static String getDefaultGradeForPoints(int points) {
+    return switch (points) {
+      15 => "1+",
+      14 => "1",
+      13 => "1-",
+      12 => "2+",
+      11 => "2",
+      10 => "2-",
+      9 => "3+",
+      8 => "3",
+      7 => "3-",
+      6 => "4+",
+      5 => "4",
+      4 => "4-",
+      3 => "5+",
+      2 => "5",
+      1 => "5-",
+      0 => "6",
+      _ => "-"
+    };
   }
 
   final int grade;

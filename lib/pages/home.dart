@@ -9,7 +9,9 @@ import '../logic/results.dart';
 import '../provider/grades.dart';
 import '../provider/settings.dart';
 import '../widgets/skeleton.dart';
+import '../widgets/subpage.dart';
 import '../logic/grades.dart';
+import 'hurdles.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -67,7 +69,8 @@ class HomePage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(2, 0, 2, 0),
         child: _buildChart(context, gradesDistribution),
       ),
-      const SizedBox(height: 36),
+
+      const SizedBox(height: 20),
 
       if (!flags.isEmpty && admissionHurdleCheckResults.isNotEmpty)
         ..._buildHurdleInfo(theme, "Zulassungshürde", admissionHurdleCheckResults)
@@ -161,7 +164,8 @@ class HomePage extends StatelessWidget {
         ),
       ),
 
-      const SizedBox(height: 30),
+      if (graduationHurdleCheckResults.isEmpty && admissionHurdleCheckResults.isEmpty)
+        ..._buildHurdlePassingInfo(theme),
 
       if (grades.currentSemester != Semester.abi)
         Material(
@@ -235,7 +239,7 @@ class HomePage extends StatelessWidget {
 
   List<Widget> _buildHurdlePassingInfo(ThemeData theme) {
     return [
-      const SizedBox(height: 24),
+      const SizedBox(height: 20),
       SubpageTrigger(
         createSubpage: () => const HurdlesPage(checkResults: []),
         child: Container(
@@ -252,11 +256,11 @@ class HomePage extends StatelessWidget {
                   children: [
                     Icon(Icons.gavel_rounded, size: 16, color: theme.textTheme.bodySmall?.color,),
                     const SizedBox(width: 5,),
-                    Text("Zulassungs- & Anerkennungshürde", style: theme.textTheme.bodySmall),
+                    Text("Zulassungs- & Anerkennungshürden", style: theme.textTheme.bodySmall),
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text("Alle nötigen Hürden erfüllt", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500, height: 1.1)),
+                Text("Alle nötigen Hürden erfüllt", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1)),
               ]),
               Icon(Icons.check_circle_rounded, size: 20, color: theme.primaryColor,),
             ],
@@ -271,8 +275,7 @@ class HomePage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         front ?? const SizedBox.shrink(),
-        Row(
-            verticalDirection: VerticalDirection.down,
+        Row(verticalDirection: VerticalDirection.down,
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: back)

@@ -33,7 +33,7 @@ enum AdmissionHurdle implements HurdleType {
   // mind. 200 Punkte in den 40 einzubringenden Halbjahresleistungen
   min200in40("Nr. 3", "In den 40 einzubringenden Halbjahresleistungen mindestens 200 Punkte"),
   // 32 Halbjahresleistungen je min. 5 Punkte
-  min5je32("Nr. 3", "Mindestens 32 von den 40 einzubringende Halbjahresleistungen mit je mindestens 5 Punkte (max. 8 Unterpunktungen)"),
+  min5je32("Nr. 3", "Mindestens 32 von den 40 einzubringenden Halbjahresleistungen mit je mindestens 5 Punkte (max. 8 Unterpunktungen)"),
   // jede einzubringende Halbjahresleistung mind. 1 Punkt (=no0)
   min1je("Nr. 4", "Jede einzubringende Halbjahresleistung mit mindestens 1 Punkt bewertet"),
 
@@ -173,7 +173,7 @@ enum GraduationHurdle implements HurdleType {
   ;
 
   static List<GraduationHurdle> display(Choice? choice) => [
-    min1je, min100, min5je3, min10dmns,
+    min1je, min100, min5je3,
     choice == null ? max1u4dmns : choice.substituteDeutsch ? max1u4dmns_b : choice.substituteMathe ? max1u4dmns_c : max1u4dmns,
     choice == null ? min10dmns : choice.substituteDeutsch ? min10dmns_b : choice.substituteMathe ? min10dmns_c : min10dmns,
     max1u4fields, min300

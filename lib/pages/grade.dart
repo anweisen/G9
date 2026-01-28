@@ -1,7 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../logic/choice.dart';
+import '../logic/results.dart';
 import '../provider/grades.dart';
 import '../provider/settings.dart';
 import '../logic/grades.dart';
@@ -30,15 +31,26 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
   GradeType? _type;
   DateTime? _date;
 
+  late bool _usesSlider;
+
   @override
   void initState() {
     super.initState();
+
+    final gradesProvider = Provider.of<SettingsDataProvider>(context, listen: false);
 
     _subject = widget.subject;
     _semester = widget.semester;
     _grade = widget.entry?.grade;
     _type = widget.entry?.type;
     _date = widget.entry?.date ?? DateTime.now();
+    _usesSlider = gradesProvider.usesSlider ?? kIsWeb;
+
+    final choice = gradesProvider.choice;
+    if (choice != null) {
+      final results = SemesterResult.calculateResultsWithPredictions(choice, Provider.of<GradesDataProvider>(context, listen: false));
+      _grade = SemesterResult.calculatePrediction(_subject, results);
+    }
   }
 
   GradeEntry get entry => GradeEntry(_grade!, _type!, _date!);
@@ -118,8 +130,24 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
     return SubpageSkeleton(
       title: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
         Text("Note ${isFromExisting ? "ändern" : "hinzufügen"}", style: theme.textTheme.headlineMedium),
+        const Spacer(),
+
+        GestureDetector(
+          child: Icon(!_usesSlider ? Icons.tune_rounded : Icons.grid_view_rounded, color: theme.primaryColor, size: 22,),
+          onTap: () => setState(() {
+            _usesSlider = Provider.of<SettingsDataProvider>(context, listen: false).usesSlider = !_usesSlider;
+          }),
+        )
       ]),
       actions: [
+        if (_usesSlider)
+          Positioned(
+            bottom: 24 + PageSkeleton.leftOffset + 66,
+            left: PageSkeleton.leftOffset,
+            right: PageSkeleton.leftOffset,
+            child: GradeSlider(grade: _grade, onGradeChanged: setGrade),
+          ),
+
         SaveButtonContainer(
           btn1: SaveButton(
             onTap: () {
@@ -148,28 +176,10 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
         Stack(
           children: [
             Column(children: [
-              SizedBox(
-                height: 4 * (26 + 10), // height + spacing*2
-                child: Column(
-                    children: [
-                      for (int indexI = 0; indexI < 4; indexI++)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            for (int indexJ = 4 * indexI; indexJ < 4 * indexI + 4; indexJ++)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 5),
-                                child: GestureDetector(
-                                  onTap: () => setGrade(15 - indexJ),
-                                  child: _buildGradeButton(indexJ, theme, _grade),
-                                ),
-                              ),
-                          ],
-                        ),
-                    ]
-                ),
-              ),
-              const SizedBox(height: 50),
+              if (!_usesSlider) ...[
+                GradeGrid(grade: _grade, onGradeChanged: setGrade),
+                const SizedBox(height: 32),
+              ],
 
               // Subject
               SubpageTrigger(
@@ -199,13 +209,6 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
                       icon: Icon(Icons.account_tree_rounded, color: theme.primaryColor, size: 24),)
                 ),
 
-              // if (_semester == null)
-              //   const GradeOptionPlaceholder(text: "Wähle ein Semester")
-              // else
-              //   GradeOptionPlaceholder(
-              //       text: _semester!.detailedDisplay,
-              //       icon: Icon(Icons.account_tree_rounded, color: theme.primaryColor, size: 24)),
-
               // GradeType
               // on subject/semester change: reset GradeType if needed
               const SizedBox(height: 20),
@@ -232,24 +235,6 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
           ],
         )
       ],
-    );
-  }
-
-  Widget _buildGradeButton(int index, ThemeData theme, int? selectedGrade) {
-    final int grade = 15 - index;
-    return Container(
-      width: 48,
-      height: 26,
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: selectedGrade == grade ? theme.primaryColor : theme.cardColor),
-      child: Center(
-        child: Text(
-          grade.toString(),
-          style: theme.textTheme.bodyMedium?.copyWith(
-              color: selectedGrade == grade ? theme.scaffoldBackgroundColor : theme.primaryColor),
-        ),
-      ),
     );
   }
 
@@ -313,13 +298,14 @@ class GradeTypSelectionPage extends StatelessWidget {
       }
     }
     final List<GradeType> types = (subject != null && semester != null) ? GradeType.types(choice, subject!, semester!) : GradeType.values;
+    final Set<GradeTypeArea> areas = types.map((e) => e.area).toSet();
 
     return SubpageSkeleton(
         title: Text("Prüfungsart wählen", style: theme.textTheme.headlineMedium),
         children: [
           for (int index = 0; index < types.length; index++)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 7),
+              padding: const EdgeInsets.symmetric(vertical: 6),
               child: GestureDetector(
                 onTap:  () => {
                   if (types[index].stillPossible(existingTypes)) {
@@ -328,12 +314,28 @@ class GradeTypSelectionPage extends StatelessWidget {
                 },
                 child: Padding(
                   padding: (index > 0 && types[index - 1].area != types[index].area)
-                      ? const EdgeInsets.only(top: 10)
+                      ? const EdgeInsets.only(top: 12)
                       : const EdgeInsets.all(0),
-                  child: GradeOptionPlaceholderIcon(
-                      textColor: types[index].stillPossible(existingTypes) ? null : theme.textTheme.bodySmall?.color,
-                      text: types[index].name,
-                      icon: getIcon(types[index])),
+                  child: Column(
+                    children: [
+                      if (areas.length > 1 && (index > 0 ? types[index - 1].area != types[index].area : GradeType.only(types[index].area).length > 1)) ...[
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            types[index].area.name,
+                            style: theme.textTheme.bodySmall,
+                            textAlign: TextAlign.left,
+                          ),
+                        ),
+                        const SizedBox(height: 8,)
+                      ],
+
+                      GradeOptionPlaceholderIcon(
+                          textColor: types[index].stillPossible(existingTypes) ? null : theme.textTheme.bodySmall?.color,
+                          text: types[index].name,
+                          icon: getIcon(types[index])),
+                    ],
+                  ),
                 ),
               ),
             )
@@ -470,9 +472,7 @@ class SaveButtonContainer extends StatelessWidget {
       left: PageSkeleton.leftOffset,
       right: PageSkeleton.leftOffset,
       child: Row(
-        children: [
-          ..._buildContent(),
-        ],
+        children: _buildContent(),
       ),
     );
   }
@@ -530,6 +530,212 @@ class SaveButton extends StatelessWidget {
     );
   }
 }
+
+class GradeGrid extends StatelessWidget {
+  const GradeGrid({super.key, required this.grade, required this.onGradeChanged});
+
+  final int? grade;
+  final Function(int) onGradeChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SizedBox(
+      height: 4 * (26 + 10), // height + spacing*2
+      child: Column(
+          children: [
+            for (int indexI = 0; indexI < 4; indexI++)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  for (int indexJ = 4 * indexI; indexJ < 4 * indexI + 4; indexJ++)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      child: GestureDetector(
+                        onTap: () => onGradeChanged(15 - indexJ),
+                        child: _buildGradeButton(indexJ, theme, grade),
+                      ),
+                    ),
+                ],
+              ),
+          ]
+      ),
+    );
+  }
+
+  Widget _buildGradeButton(int index, ThemeData theme, int? selectedGrade) {
+    final int grade = 15 - index;
+    return Container(
+      width: 48,
+      height: 26,
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: selectedGrade == grade ? theme.primaryColor : theme.cardColor),
+      child: Center(
+        child: Text(
+          grade.toString(),
+          style: theme.textTheme.bodyMedium?.copyWith(
+              color: selectedGrade == grade ? theme.scaffoldBackgroundColor : theme.primaryColor),
+        ),
+      ),
+    );
+  }
+}
+
+
+class GradeSlider extends StatefulWidget {
+  const GradeSlider({super.key, required this.grade, required this.onGradeChanged});
+
+  final int? grade;
+  final Function(int) onGradeChanged;
+
+  @override
+  State<GradeSlider> createState() => _GradeSliderState();
+}
+
+class _GradeSliderState extends State<GradeSlider> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+    _animation = Tween<double>(begin: -1.0, end: 1.0).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.linear,
+    ));
+
+    if (widget.grade != null) {
+      final target = (widget.grade!) / 16.0 + (1 / 16) / 2;
+      _controller.value = target;
+    } else {
+      _controller.value = 0.5;
+    }
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleDragUpdate(DragUpdateDetails details, BoxConstraints constraints) {
+    // _controller.value += (details.primaryDelta ?? 0) / constraints.maxWidth;
+    _controller.value += (details.primaryDelta ?? 0) / 550;
+    print(_controller.value);
+
+    for (int i = 0; i <= 15; i++) {
+      final target = (i + 1) / 16.0 - (1 / 16) / 2;
+      final distance = (target - _controller.value).abs();
+      if (distance < (1.0 / 16.0) / 2) {
+        widget.onGradeChanged(i);
+      }
+    }
+  }
+
+  void _handleDragEnd(DragEndDetails details) {
+    for (int i = 0; i <= 15; i++) {
+      final target = (i + 1) / 16.0 - (1 / 16) / 2;
+      print("target $target");
+      final distance = (target - _controller.value ).abs();
+      if (distance < (1.0 / 16.0) / 2) {
+        widget.onGradeChanged(i);
+        _controller.animateTo(target, duration: const Duration(milliseconds: 300));
+        return;
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) => GestureDetector(
+          onHorizontalDragUpdate: (details) => _handleDragUpdate(details, constraints),
+          onHorizontalDragEnd: _handleDragEnd,
+          child: Container(
+            width: constraints.maxWidth,
+            height: 80,
+            decoration: BoxDecoration(
+              color: theme.dividerColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Stack(
+              children: [
+                ClipRect(
+                  child: AnimatedBuilder(
+                    animation: _animation,
+                    builder: (context, snapshot) => OverflowBox(
+                      minWidth: 0,
+                      maxWidth: double.infinity,
+                      alignment: Alignment.centerLeft,
+                      child: Transform.translate(
+                          offset: Offset(constraints.maxWidth / 2 + (16*(44+40)/2 * -(1-_animation.value)) , 0),
+                          child: SizedBox(
+                            width: 16*(44+40),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                for (int i = 0; i <= 15; i++)
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                                        width: 44,
+                                        height: 28,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(6),
+                                          color: (widget.grade == (15 - i)) ? theme.primaryColor : Colors.transparent,
+                                        ),
+                                        child: Text((15 - i).toString(),
+                                          style: (widget.grade == (15 - i)) ? theme.textTheme.labelMedium : theme.textTheme.labelSmall,
+                                          textAlign: TextAlign.center,
+                                        )
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(SemesterResult.getDefaultGradeForPoints(15 - i),
+                                        style: theme.textTheme.bodySmall,
+                                        textAlign: TextAlign.center,
+                                      )
+                                    ],
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    )
+                  ),
+                ),
+
+                Container(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                          colors: [
+                            theme.dividerColor,
+                            theme.dividerColor.withOpacity(0),
+                            theme.dividerColor.withOpacity(0),
+                            theme.dividerColor,
+                          ],
+                          stops: const [0.0, 0.2, 0.8, 1.0]
+                      )
+                  ),
+                ),
+              ],
+            ),
+          )
+        ),
+      );
+  }
+
+}
+
 
 class GradeEditResult {
   final GradeEntry entry;

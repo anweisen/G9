@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
@@ -16,14 +17,20 @@ class SettingsDataProvider extends ChangeNotifier {
   SettingsData? _data;
 
   ThemeMode get theme => _data?.theme != null ? ThemeMode.values[_data!.theme] : ThemeMode.system;
-
   set theme(value) {
     _data?.theme = value;
     notifyListeners();
+    save();
+  }
+
+  bool? get usesSlider => _data?.usesSlider;
+  set usesSlider(bool? value) {
+    _data?.usesSlider = value;
+    notifyListeners();
+    save();
   }
 
   Choice? get choice => _data?.choice;
-
   set choice(Choice? value) {
     _data?.choice = value;
     notifyListeners();
@@ -33,7 +40,7 @@ class SettingsDataProvider extends ChangeNotifier {
   bool get onboarding => _data?.choice == null;
 
   Future<void> load() async {
-    final defaultData = SettingsData(theme: ThemeMode.system.index);
+    final defaultData = SettingsData(theme: ThemeMode.system.index, usesSlider: kIsWeb);
 
     print("Loading settings data");
 
@@ -68,5 +75,8 @@ class SettingsData {
   @HiveField(1)
   Choice? choice;
 
-  SettingsData({required this.theme, this.choice});
+  @HiveField(2)
+  bool? usesSlider;
+
+  SettingsData({required this.theme, this.choice, this.usesSlider});
 }

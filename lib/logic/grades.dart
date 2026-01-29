@@ -656,17 +656,21 @@ enum GradeType {
 
 enum GradeTypeArea {
   /// Klausur / Schulaufgabe
-  klausur,
+  klausur("Klausur"),
   /// Mündliche Noten in einem Fach
-  muendlich,
+  muendlich("kl. Leistungsnachweise"),
   /// Die beiden letzten Halbjahreseinbringungen setzen sich aus der Seminararbeit und dem Referat dazu zusammen
-  seminar,
+  seminar("W-Seminar"),
   /// Das Fach Sport(GK) hat keine üblichen Noten(sondern Praxis & Theorie) (= Praxisteil im LK)
-  sport,
+  sport("Sportpraxis"),
   /// Im Kunst LK wird ein künstlerisches Projekt benotet
-  kunstLk,
+  kunstLk("Leistungsfach Kunst"),
   /// Im Musik LK wird eine praktische Prüfung benotet
-  musikLk,
+  musikLk("Leistungsfach Musik"),
   /// Abiturprüfungen: schriftliche / mündliche Prüfungen, Fachprüfungen, Zusatzprüfungen, etc.
-  abi,
+  abi("Abiturprüfungen");
+
+  const GradeTypeArea(this.name);
+
+  final String name;
 }

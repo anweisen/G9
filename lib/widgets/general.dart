@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../logic/types.dart';
+import '../pages/customize.dart';
+import 'subpage.dart';
 
 class SubjectPageTitle extends StatelessWidget {
   final Subject subject;
@@ -13,17 +15,20 @@ class SubjectPageTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Expanded(flex: 100, child: Row(children: [
-      Container(
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            color: subject.color),
-        width: 24,
-        height: 24,
-      ),
-      const SizedBox(width: 12),
-      Expanded(flex: 100, child: Text(subject.name, softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1, style: theme.textTheme.headlineMedium)),
-    ],));
+    return Expanded(flex: 100, child: SubpageTrigger(
+      createSubpage: () => CustomizeSubjectPage(subject: subject),
+      child: Row(children: [
+        Container(
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: subject.color),
+          width: 24,
+          height: 24,
+        ),
+        const SizedBox(width: 12),
+        Expanded(flex: 100, child: Text(subject.name, softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1, style: theme.textTheme.headlineMedium)),
+      ],),
+    ));
   }
 }
 
@@ -81,5 +86,29 @@ class _SafeBackdropFilterState extends State<SafeBackdropFilter> {
         widget.child,
       ],
     );
+  }
+}
+
+class CustomLineBreakText extends StatelessWidget {
+  const CustomLineBreakText(this.text, {super.key, this.style});
+
+  final String text;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = text.split('\n');
+
+    return
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (int i = 0; i < parts.length; i++) ...[
+            Text(parts[i], style: style ?? DefaultTextStyle.of(context).style),
+            if (i < parts.length - 1)
+              const SizedBox(height: 5)
+          ],
+        ],
+      );
   }
 }

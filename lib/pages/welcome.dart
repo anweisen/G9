@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../provider/settings.dart';
+import '../widgets/general.dart';
 import '../widgets/skeleton.dart';
 import 'settings.dart';
 
@@ -12,7 +13,7 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final choice = Provider.of<SettingsDataProvider>(context).choice;
+    final provider = Provider.of<SettingsDataProvider>(context);
 
     const double leftOffset = PageSkeleton.leftOffset;
 
@@ -20,6 +21,7 @@ class WelcomePage extends StatelessWidget {
     print(theme.brightness);
 
     return Scaffold(
+      appBar: const WindowTitleBar(),
       body: Center(
           child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 860, maxHeight: 1200),
@@ -28,16 +30,15 @@ class WelcomePage extends StatelessWidget {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
                       LayoutBuilder(builder: (context, constraints) => _buildTitleBar(theme, context, constraints)),
                       const SizedBox(height: 25),
-                      SettingsPage.buildButton(theme, "Starten", Icons.chevron_right_rounded, () => Navigator.of(context).pushNamed(choice == null ? "/setup" : "/home")),
+                      SettingsPage.buildButton(theme, "Starten", Icons.chevron_right_rounded, () => Navigator.of(context).pushNamed(provider.onboarding ? "/setup" : "/home")),
                       const SizedBox(height: 40),
 
                       Expanded(
                         child: Column(
                           children: [
-                            Text(
+                            CustomLineBreakText(
                               """Hier entsteht die Startseite deiner Notenapp. Bald findest du hier alle wichtigen Infos und Funktionen auf einen Blick.
 Schon jetzt kannst du deinen Notendurchschnitt berechnen, Prognosen erstellen und die besten Einbringungen automatisch bestimmen – perfekt abgestimmt auf das neue G9 in Bayern.
 Tippe auf Start, um direkt loszulegen.""",
@@ -58,6 +59,7 @@ Tippe auf Start, um direkt loszulegen.""",
     return Row(
       children: [
         SvgPicture.asset("assets/icons/logo.svg",
+            key: ValueKey(theme.primaryColor),
             color: theme.primaryColor,
             clipBehavior: Clip.hardEdge,
             colorFilter: ColorFilter.mode(theme.primaryColor, BlendMode.srcIn),
@@ -72,8 +74,7 @@ Tippe auf Start, um direkt loszulegen.""",
                 textHeightBehavior: const TextHeightBehavior(
                     applyHeightToFirstAscent: false,
                     applyHeightToLastDescent: false)),
-            Text(
-              "fürs Abitur in Bayern",
+            Text("fürs Abitur in Bayern",
               // style: isWide ? theme.textTheme.labelSmall : theme.textTheme.displayMedium,
               style: theme.textTheme.displayMedium,
               textHeightBehavior: const TextHeightBehavior(

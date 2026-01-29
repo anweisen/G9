@@ -183,42 +183,6 @@ class _SubjectPageState extends State<SubjectPage> {
   }
 }
 
-class CustomLineBreakText extends StatelessWidget {
-  final String text;
-  final TextStyle? style;
-
-  const CustomLineBreakText(this.text, {super.key, this.style});
-
-  @override
-  Widget build(BuildContext context) {
-    final parts = text.split('\n');
-
-    // return RichText(
-    //   text: TextSpan(
-    //     style: style ?? DefaultTextStyle.of(context).style,
-    //     children: [
-    //       for (int i = 0; i < parts.length; i++) ...[
-    //         TextSpan(text: parts[i]),
-    //         if (i < parts.length - 1)
-    //           WidgetSpan(child: SizedBox(height: (style!.fontSize!) * 0.05, width: double.infinity)),
-    //       ],
-    //     ],
-    //   ),
-    // );
-    return
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (int i = 0; i < parts.length; i++) ...[
-            Text(parts[i], style: style ?? DefaultTextStyle.of(context).style),
-            if (i < parts.length - 1)
-              const SizedBox(height: 5)
-          ],
-        ],
-    );
-  }
-}
-
 class TestItem extends StatelessWidget {
   const TestItem({
     super.key,

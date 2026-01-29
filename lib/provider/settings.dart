@@ -40,7 +40,8 @@ class SettingsDataProvider extends ChangeNotifier {
   bool get onboarding => _data?.choice == null;
 
   Future<void> load() async {
-    final defaultData = SettingsData(theme: ThemeMode.system.index, usesSlider: kIsWeb);
+    final defaultUsesSlider = kIsWeb || defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android;
+    final defaultData = SettingsData(theme: ThemeMode.system.index, usesSlider: defaultUsesSlider);
 
     print("Loading settings data");
 

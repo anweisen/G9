@@ -108,6 +108,11 @@ class _SubjectPageState extends State<SubjectPage> {
                 children: [
                   Text("Noten", style: theme.textTheme.headlineMedium),
                   const SizedBox(width: 8),
+                  SubpageTrigger(
+                      createSubpage: () => WeightingPage(subject: widget.subject, semester: _currentSemester!,),
+                      child: const Icon(Icons.help_outline_rounded, size: 20),
+                  ),
+                  const SizedBox(width: 8),
                   GestureDetector(
                       onTap: toggleInfo,
                       child: Icon(showInfo ? Icons.help_rounded : Icons.help_outline_rounded, size: 20)

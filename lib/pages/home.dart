@@ -11,7 +11,9 @@ import '../provider/settings.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/subpage.dart';
 import '../logic/grades.dart';
+import 'grade.dart';
 import 'hurdles.dart';
+import 'switcher.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -48,13 +50,37 @@ class HomePage extends StatelessWidget {
     var graduationHurdleCheckResults = GraduationHurdle.check(settings.choice!, results, flags, grades);
 
     return PageSkeleton(title: const PageTitle(title: "Übersicht"), children: [
-      _buildTextLine(Text(grades.currentSemester.detailedDisplay, style: theme.textTheme.bodyMedium), [
+      SubpageTrigger(createSubpage: () => const SemesterSwitcherPage(), callback: (result) => {
+        if (result is Semester) {
+          grades.currentSemester = result
+        }
+      }, child: _buildTextLine(Row(
+        children: [
+          Text(grades.currentSemester.detailedDisplay, style: theme.textTheme.bodyMedium),
+          const SizedBox(width: 12,),
+          if (grades.currentSemester != Semester.abi) SubpageTrigger(
+              createSubpage: () => GradePage(semester: grades.currentSemester, key: GlobalKey(),),
+              callback: (result) {
+                if (result is GradeEditResult) {
+                  grades.addGrade(result.subject.id, result.entry, semester: result.semester);
+                }
+              },
+              child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+                  decoration: BoxDecoration(
+                      color: theme.dividerColor,
+                      borderRadius: BorderRadius.circular(6)
+                  ),
+                  child: Icon(Icons.add_rounded, size: 22, color: theme.shadowColor,))
+          ),
+        ],
+      ), [
         Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
         const SizedBox(width: 6),
         Text(GradeHelper.formatNumber(currentSemesterAvg, decimals: 2), style: theme.textTheme.bodyMedium),
         const SizedBox(width: 6),
         Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(currentSemesterAvg))})", style: theme.textTheme.bodySmall),
-      ]),
+      ])),
       if (grades.currentSemester != Semester.abi) _buildTextLine(null, [
         Text("Einbringungen", style: theme.textTheme.bodySmall),
         const SizedBox(width: 6),

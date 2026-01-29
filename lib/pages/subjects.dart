@@ -9,6 +9,7 @@ import '../widgets/skeleton.dart';
 import '../logic/types.dart';
 import '../widgets/subpage.dart';
 import 'subject.dart';
+import 'switcher.dart';
 
 class SubjectsPage extends StatelessWidget {
   const SubjectsPage({super.key});
@@ -17,28 +18,37 @@ class SubjectsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final settings = Provider.of<SettingsDataProvider>(context);
-    final semester = Provider.of<GradesDataProvider>(context).currentSemester;
-    final grades = Provider.of<GradesDataProvider>(context).getGradesForSemester(settings.choice!, semester: semester);
+    final gradesProvider = Provider.of<GradesDataProvider>(context);
+    final semester = gradesProvider.currentSemester;
+    final grades = gradesProvider.getGradesForSemester(settings.choice!, semester: semester);
     final avg = GradeHelper.averageOfSubjects(grades, semester: semester);
     final subjects = settings.choice?.subjectsToDisplayForSemester(semester);
 
     print("Building subjects page with choice: ${settings.choice}");
 
     return PageSkeleton(
-        title: PageTitle(
-            title: "Fächer – ${semester.display}",
-            info: Row(
-                verticalDirection: VerticalDirection.down,
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300, fontSize: 22)),
-                  const SizedBox(width: 8),
-                  Text(GradeHelper.formatNumber(avg, decimals: 2), style: theme.textTheme.headlineMedium),
-                  const SizedBox(width: 8),
-                  Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(avg))})", style: theme.textTheme.bodySmall),
-                ]
-              )),
+        title: SubpageTrigger(
+            createSubpage: () => const SemesterSwitcherPage(),
+            callback: (result) => {
+              if (result != null && result is Semester) {
+                gradesProvider.currentSemester = result
+              }
+            },
+            child: PageTitle(
+              title: "Fächer  ${semester.display}",
+              info: Row(
+                  verticalDirection: VerticalDirection.down,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300, fontSize: 22)),
+                    const SizedBox(width: 8),
+                    Text(GradeHelper.formatNumber(avg, decimals: 2), style: theme.textTheme.headlineMedium),
+                    const SizedBox(width: 8),
+                    Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(avg))})", style: theme.textTheme.bodySmall),
+                  ]
+                )),
+        ),
         children: [
           for (Subject subject in subjects!)
             Padding(

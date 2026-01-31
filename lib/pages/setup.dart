@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../widgets/skeleton.dart';
+import '../widgets/general.dart';
 import '../provider/settings.dart';
 import '../logic/choice.dart';
 import '../logic/types.dart';
@@ -135,6 +138,10 @@ class _SetupPageState extends State<SetupPage> {
     return list.where((element) => element != null).map((e) => e!).toList();
   }
 
+  List<Widget> sublistSteps(List<Widget> list) {
+    return list.sublist(0, min(list.length, _step + 1));
+  }
+
   SubjectCategory? getLkCategory () => _choiceBuilder.lk?.category;
 
   Subject? getGeoWr() {
@@ -153,21 +160,22 @@ class _SetupPageState extends State<SetupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        appBar: const WindowTitleBar(),
         body: PageView(
           controller: _pageController,
-          physics: SetupConstraintsScrollPhysics(getMaxAllowedPage: () => _step, pageController: _pageController),
-          children: [
+          physics: const BouncingScrollPhysics(),
+          children: sublistSteps([
             ..._buildSteps(),
-
             SetupFinishPage(choiceSupplier: () => _choiceBuilder.build()),
-          ],
+          ]),
         ));
   }
 
   List<SetupStepPage> _buildSteps() {
     return [
       SetupStepPage(
-        title: "Dein Leistungsfach",
+        key: const ValueKey("lk"),
+        title: "Leistungsfach",
         pageController: _pageController,
         allowNextStep: allowNextStep,
         subjectsPool: Subject.lks,
@@ -176,6 +184,7 @@ class _SetupPageState extends State<SetupPage> {
       ),
       if (getLkCategory() != SubjectCategory.kumu)
         SetupStepPage(
+          key: const ValueKey("kumu"),
           title: "Musik oder Kunst",
           subjectsPool: [Subject.kunst, Subject.musik],
           pageController: _pageController,
@@ -188,6 +197,7 @@ class _SetupPageState extends State<SetupPage> {
       // gesetzt durch LK NTG/SG
       if (getLkCategory() != SubjectCategory.sg)
         SetupStepPage(
+          key: const ValueKey("sg1"),
           title: "1. Fremdsprache",
           pageController: _pageController,
           allowNextStep: allowNextStep,
@@ -197,6 +207,7 @@ class _SetupPageState extends State<SetupPage> {
         ),
       if (getLkCategory() != SubjectCategory.ntg)
         SetupStepPage(
+          key: const ValueKey("mint1"),
           title: "1. Naturwissenschaft",
           pageController: _pageController,
           allowNextStep: allowNextStep,
@@ -208,6 +219,7 @@ class _SetupPageState extends State<SetupPage> {
       // spät beginnende Fremdsprache als 2. Fremdsprache
       if (_choiceBuilder.lk != Subject.info)
         SetupStepPage(
+          key: const ValueKey("sbs"),
           pageController: _pageController,
           allowNextStep: allowNextStep,
           subjectsPool: Subject.allOf(SubjectCategory.sbs),
@@ -221,6 +233,7 @@ class _SetupPageState extends State<SetupPage> {
       // gesetzt durch spät beginnende Fremdsprache oder Informatik als LK
       if (_choiceBuilder.sbs == null && _choiceBuilder.lk != Subject.info)
         SetupStepPage(
+          key: const ValueKey("mintSg2"),
           title: "2. Fremdsprache / Naturwissenschaft / Informatik",
           pageController: _pageController,
           allowNextStep: allowNextStep,
@@ -230,7 +243,8 @@ class _SetupPageState extends State<SetupPage> {
         ),
       if (_choiceBuilder.sbs == null && _choiceBuilder.lk != Subject.info)
         SetupStepPage(
-          title: "Vertiefungskurs, ersetzt ${_choiceBuilder.mintSg2?.name ?? ""} in Q13",
+          key: const ValueKey("vk"),
+          title: "Vertiefungskurs, ersetzt ${_choiceBuilder.mintSg2?.name} in Q13",
           pageController: _pageController,
           allowNextStep: allowNextStep,
           subjectsPool: [ if (_choiceBuilder.mintSg2?.category == SubjectCategory.sg) Subject.deutschVk else Subject.matheVk ],
@@ -241,6 +255,7 @@ class _SetupPageState extends State<SetupPage> {
 
       if (_choiceBuilder.lk != Subject.wr && _choiceBuilder.lk != Subject.geo)
         SetupStepPage(
+          key: const ValueKey("geowr"),
           title: "Geo oder WR",
           pageController: _pageController,
           allowNextStep: allowNextStep,
@@ -251,6 +266,7 @@ class _SetupPageState extends State<SetupPage> {
 
       if (_choiceBuilder.lk != Subject.wr && _choiceBuilder.lk != Subject.geo && _choiceBuilder.lk != Subject.pug)
         SetupStepPage(
+          key: const ValueKey("pug13"),
           title: "Weiterführung in Q13",
           pageController: _pageController,
           allowNextStep: allowNextStep,
@@ -261,6 +277,7 @@ class _SetupPageState extends State<SetupPage> {
 
       // Profilfach in Q13 (Wahlfach, Vertiefungskurse wenn noch nicht gewählt, bisher unbelegte Kurse)
       SetupStepPage(
+        key: const ValueKey("profil12"),
         title: "Profilfach Q12",
         pageController: _pageController,
         allowNextStep: allowNextStep,
@@ -272,6 +289,7 @@ class _SetupPageState extends State<SetupPage> {
 
       // Profilfach in Q13 (Wahlfach, bisher unbelegte Kurse), Vertiefungskurse nur in Q12 möglich
       SetupStepPage(
+        key: const ValueKey("profil13"),
         title: "Profilfach Q13",
         pageController: _pageController,
         allowNextStep: allowNextStep,
@@ -298,6 +316,7 @@ class _SetupPageState extends State<SetupPage> {
 
       if (_choiceBuilder.lk?.category == SubjectCategory.sg && _choiceBuilder.mintSg2?.category == SubjectCategory.sg && _choiceBuilder.vk == null)
         SetupStepPage(
+          key: const ValueKey("subD"),
           title: "Deutsch Abi substituieren",
           pageController: _pageController,
           allowNextStep: allowNextStep,
@@ -310,6 +329,7 @@ class _SetupPageState extends State<SetupPage> {
           || _choiceBuilder.lk?.category == SubjectCategory.info && _choiceBuilder.mint1?.category == SubjectCategory.ntg)
           && _choiceBuilder.vk == null)
         SetupStepPage(
+          key: const ValueKey("subM"),
           title: "Mathe Abi substituieren",
           pageController: _pageController,
           allowNextStep: allowNextStep,
@@ -321,7 +341,9 @@ class _SetupPageState extends State<SetupPage> {
       // Bei Substitution von Mathe ist eine weitere Fremdsprache verpflichtend (bei Deutsch ist keine Naturwissenschaft verpflichtend)
       if (_choiceBuilder.substituteMathe ?? false)
         SetupStepPage(
-          title: "Weiteres Abiturfach (Fremdsprache)",
+          key: const ValueKey("abi5sg"),
+          title: "Weiteres Abiturfach",
+          infobox: "Bei Substitution von Mathematik muss eine fortgeführte Fremdsprache als Abiturprüfungsfach gewählt werden",
           pageController: _pageController,
           allowNextStep: allowNextStep,
           subjectsPool: [_choiceBuilder.sg1!, if (_choiceBuilder.mintSg2 != null && (_choiceBuilder.mintSg2!.category == SubjectCategory.sg)) _choiceBuilder.mintSg2!],
@@ -332,7 +354,9 @@ class _SetupPageState extends State<SetupPage> {
       // Abiturprüfung in einem GPR-Fach verpflichtend
       if (_choiceBuilder.lk?.category != SubjectCategory.gpr)
         SetupStepPage(
-          title: "Weiteres Abiturfach (GPR)",
+          key: const ValueKey("abi4gpr"),
+          title: "Weiteres Abiturfach",
+          infobox: "Es muss mindestens eine Gesellschaftswissenschaft als Abiturprüfungsfach gewählt werden",
           pageController: _pageController,
           allowNextStep: allowNextStep,
           subjectsPool: _filter([
@@ -347,13 +371,16 @@ class _SetupPageState extends State<SetupPage> {
       if (_choiceBuilder.lk?.category != SubjectCategory.ntg && _choiceBuilder.lk?.category != SubjectCategory.sg
           && !(_choiceBuilder.substituteDeutsch ?? false) && !(_choiceBuilder.substituteMathe ?? false))
         SetupStepPage(
-          title: "Weiteres Abiturfach (NTG/SG)",
+          key: const ValueKey("abi45mintsg"),
+          title: "Weiteres Abiturfach",
+          infobox: "Es muss mindestens eine fortgeführte Fremdsprache oder eine Naturwissenschaft als Abiturprüfungsfach gewählt werden",
           pageController: _pageController,
           allowNextStep: allowNextStep,
           subjectsPool: _filter([
             _choiceBuilder.mint1,
             _choiceBuilder.sg1,
-            if (_choiceBuilder.vk == null && !(_choiceBuilder.substituteDeutsch ?? false) && !(_choiceBuilder.substituteMathe ?? false))
+            if (_choiceBuilder.vk == null && _choiceBuilder.mintSg2?.category != SubjectCategory.info
+                && !(_choiceBuilder.substituteDeutsch ?? false) && !(_choiceBuilder.substituteMathe ?? false))
               _choiceBuilder.mintSg2,
           ]),
           callback: _choiceBuilder.lk?.category == SubjectCategory.gpr ? setAbi4 : setAbi5,
@@ -365,6 +392,7 @@ class _SetupPageState extends State<SetupPage> {
       if (_choiceBuilder.lk != null && (_choiceBuilder.lk?.category == SubjectCategory.gpr || _choiceBuilder.lk?.category == SubjectCategory.ntg || _choiceBuilder.lk?.category == SubjectCategory.sg)
           &&  !(_choiceBuilder.substituteMathe ?? false))
         SetupStepPage(
+          key: const ValueKey("abi5any"),
           title: "Weiteres Abiturfach",
           pageController: _pageController,
           allowNextStep: allowNextStep,
@@ -396,6 +424,7 @@ class SetupStepPage extends StatefulWidget {
   final void Function() allowNextStep;
   final List<Subject> subjectsPool;
   final String title;
+  final String? infobox;
   final bool canSkip;
   final Subject? currentlySelected;
 
@@ -407,6 +436,7 @@ class SetupStepPage extends StatefulWidget {
     required this.title,
     required this.currentlySelected,
     required this.allowNextStep,
+    this.infobox,
     this.canSkip = false,
   });
 
@@ -415,16 +445,18 @@ class SetupStepPage extends StatefulWidget {
 }
 
 class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateMixin {
-  late List<Subject> _subjects;
   Subject? _selected;
+  late List<Subject> _subjects;
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _slideAnimation;
   late Animation<double> _buttonAnimation;
+  late ScrollController _scrollController;
 
   void onSearchChanged(String value) {
     setState(() {
       _selected = null;
+      _controller.reverse();
 
       if (value.isEmpty) {
         _resetSubjectPool();
@@ -438,17 +470,19 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
   }
 
   void selectSubject(Subject? subject) {
-    if (_selected != null) {
+    _scrollController.animateTo(0, duration: const Duration(milliseconds: 500), curve: const Interval(0.3, 1, curve: Curves.ease));
+
+    if (subject == null || _selected != null) {
       setState(() {
         _selected = null;
-        _controller.reset();
+        _controller.reverse();
       });
       return;
     }
 
     setState(() {
       _selected = subject;
-      _controller.forward(from: 0.0);
+      _controller.forward();
     });
   }
 
@@ -465,6 +499,9 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
     _fadeAnimation = Tween<double>(begin: 1, end: 0).animate(CurvedAnimation(parent: _controller, curve: const Interval(0, 0.45, curve: Curves.easeIn)));
     _slideAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _controller, curve: const Interval(0.3, 1, curve: Curves.ease)));
     _buttonAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _controller, curve: const Interval(0.3, 0.8, curve: Curves.easeOut)));
+    _scrollController = ScrollController();
+
+    if (_selected != null) _controller.value = 1;
   }
 
   @override
@@ -484,14 +521,30 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 25,),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 25, horizontal: leftOffset),
-              child: Text(widget.title,
-                  style: theme.textTheme.headlineMedium,
-                  textAlign: TextAlign.left),
+              padding: const EdgeInsets.symmetric(horizontal: leftOffset),
+              child: Text(widget.title, style: theme.textTheme.headlineMedium, textAlign: TextAlign.left),
             ),
+            if (widget.infobox != null) Container(
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(leftOffset, 8, leftOffset, 20),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: const BorderRadius.all(Radius.circular(8))
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(Icons.info_outline_rounded, color: theme.textTheme.displayMedium?.color, size: 16),
+                  const SizedBox(width: 12),
+                  Expanded(child: CustomLineBreakText(widget.infobox!, style: theme.textTheme.bodySmall?.copyWith(height: 1.25))),
+                ],
+              ),
+            ) else const SizedBox(height: 20,),
             Padding(
-              padding: const EdgeInsets.fromLTRB(leftOffset, 0, leftOffset, 20),
+              padding: const EdgeInsets.fromLTRB(leftOffset, 0, leftOffset, 22),
               child: TextField(
                 style: theme.textTheme.labelMedium,
                 onChanged: onSearchChanged,
@@ -499,112 +552,102 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
                 decoration: InputDecoration(
                     hintText: "Suche ein Fach...",
                     hintStyle: theme.textTheme.labelMedium,
-                    suffixIcon: const Icon(Icons.search),
                     filled: true,
                     fillColor: theme.primaryColor,
+                    suffixIcon: const Padding(
+                      padding: EdgeInsets.only(right: 20),
+                      child: Icon(Icons.search),
+                    ),
                     suffixIconColor: theme.scaffoldBackgroundColor,
-                    contentPadding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 24),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10))),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
               ),
             ),
             Expanded(
                 child: Stack(
                   children: [
-                    ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(0, 0, 0, 60),
-                        itemCount: _subjects.length,
-                        itemBuilder: (context, index) =>
-                            AnimatedBuilder(
-                              animation: _controller,
-                              builder: (context, child) => Transform(
-                                transform: _selected == _subjects[index]
-                                    ? Matrix4.translationValues(0, -(27.0 + 7*2) * index * _slideAnimation.value, 0) : Matrix4.identity(),
-                                child: Opacity(
-                                  opacity: _selected != null && _selected != _subjects[index]
-                                      ? _fadeAnimation.value : 1,
-                                  child: GestureDetector(
-                                    onTap: () => selectSubject(_subjects[index]),
-                                    child: Container(
-                                      width: double.infinity,
-                                      color: Colors.transparent,
-                                      padding: const EdgeInsets.symmetric(vertical: 7, horizontal: leftOffset + 5),
-                                      child: SubjectWidget(subject: _subjects[index], selected: _selected == _subjects[index]),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            )),
-
-                const SizedBox(height: 50, width: 50),
-
-                if (_selected != null)
-                  AnimatedBuilder(
+                    if (_selected != null) AnimatedBuilder(
                       animation: _controller,
-                      builder: (context, child) => NextButton(
-                          text: "Nächster Schritt",
-                          icon: Icons.chevron_right_rounded,
-                          callback: () => {
-                            widget.allowNextStep(),
-                            if (widget.canSkip) {
-                              widget.callback(_selected == SetupStepPage.skipSubject ? null : _selected!)
-                            } else {
-                              widget.callback(_selected!)
+                      builder: (context, child) => Transform(
+                        transform: Matrix4.translationValues(0,
+                            ((27.0 + 7*2) * _subjects.indexOf(_selected!) + (widget.canSkip && _selected != SetupStepPage.skipSubject ? 8 : 0)) * (1 - _slideAnimation.value)
+                            - (_scrollController.positions.isNotEmpty ? _scrollController.offset : 0), 0),
+                        child: GestureDetector(
+                          onTap: () => selectSubject(_selected),
+                          child: Container(
+                            width: double.infinity,
+                            color: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: leftOffset + 5),
+                            child: SubjectWidget(subject: _selected!, selected: true),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    ListView.builder(
+                        physics: _selected == null
+                            ? const AlwaysScrollableScrollPhysics()
+                            : const NeverScrollableScrollPhysics(),
+                      controller: _scrollController,
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 120),
+                      itemCount: _subjects.length,
+                      itemBuilder: (context, index) =>
+                        AnimatedBuilder(
+                          animation: _controller,
+                          builder: (context, child) => Opacity(
+                            opacity: _selected != null ? _subjects[index] == _selected ? 0 : _fadeAnimation.value : 1,
+                            child: GestureDetector(
+                              onTap: () => selectSubject(_subjects[index]),
+                              child: Container(
+                                width: double.infinity,
+                                color: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(vertical: 7, horizontal: leftOffset + 5),
+                                child: SubjectWidget(subject: _subjects[index], selected: _selected == _subjects[index]),
+                              ),
+                            ),
+                          ),
+                        )
+                    ),
+
+                    const SizedBox(height: 50, width: 50),
+
+                    AnimatedBuilder(
+                        animation: _controller,
+                        builder: (context, child) => BackButton(
+                            icon: Icons.chevron_left_rounded,
+                            callback: () {
+                              // 375 = 500 * (24 / leftOffset)
+                              widget.pageController.previousPage(duration: const Duration(milliseconds: 375), curve: Curves.ease);
                             },
-                            widget.pageController.nextPage(duration: const Duration(milliseconds: 500), curve: Curves.ease)
-                          },
-                          leftOffset: leftOffset,
-                          animationProgress: _buttonAnimation.value))
+                            leftOffset: leftOffset,
+                            animationProgress: 1 - _buttonAnimation.value)),
+                    AnimatedBuilder(
+                        animation: _controller,
+                        builder: (context, child) => NextButton(
+                            text: "Nächster Schritt",
+                            icon: Icons.chevron_right_rounded,
+                            callback: () {
+                              if (!widget.canSkip && _selected == null) return;
+                              widget.allowNextStep();
+                              if (widget.canSkip) {
+                                widget.callback(_selected == SetupStepPage.skipSubject ? null : _selected!);
+                              } else {
+                                widget.callback(_selected!);
+                              }
+                              // 375 = 500 * (24 / leftOffset)
+                              widget.pageController.nextPage(duration: const Duration(milliseconds: 375), curve: Curves.ease);
+                            },
+                            leftOffset: leftOffset,
+                            animationProgress: _buttonAnimation.value)
+                    ),
               ],
             )),
           ],
         ),
       ),
     );
-  }
-}
-
-class SetupConstraintsScrollPhysics extends BouncingScrollPhysics {
-  final PageController pageController;
-  final int Function() getMaxAllowedPage;
-
-  const SetupConstraintsScrollPhysics({
-    required this.getMaxAllowedPage,
-    required this.pageController, ScrollPhysics? parent
-  }) : super(parent: parent);
-
-  @override
-  SetupConstraintsScrollPhysics applyTo(ScrollPhysics? ancestor) {
-    return SetupConstraintsScrollPhysics(
-      getMaxAllowedPage: getMaxAllowedPage,
-      pageController: pageController,
-      parent: buildParent(ancestor),
-    );
-  }
-
-  @override
-  double applyBoundaryConditions(ScrollMetrics position, double offset) {
-    final currentPage = (pageController.page?.floor() ?? 0);
-
-    print("currentPage $currentPage, maxPage ${getMaxAllowedPage()}, pixels ${position.pixels}, offset $offset");
-
-    // final currentPage = pageController.page?.round() ?? 0;
-
-    // Allow bounce-like behavior if scrolling forward beyond maxAllowedPage
-    if (offset > 0 && currentPage >= getMaxAllowedPage()) {
-      final excess = offset - (getMaxAllowedPage() - currentPage) * position.viewportDimension;
-      return excess > 0 ? excess : 0.0;
-    }
-
-    // Allow scrolling normally backward
-    if (offset < 0) {
-      return super.applyBoundaryConditions(position, offset);
-    }
-
-    return super.applyBoundaryConditions(position, offset);
   }
 }
 
@@ -626,13 +669,14 @@ class SubjectWidget extends StatelessWidget {
             Row(
               children: [
                 if (subject == SetupStepPage.skipSubject)
-                    Icon(Icons.close_rounded, size: 22, color: Theme.of(context).textTheme.bodyMedium?.color, weight: 800,)
-                  else Container(
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: subject.color),
-                  width: 22,
-                  height: 22,
-                ),
-                const SizedBox(width: 12),
+                  Icon(Icons.close_rounded, size: 22, color: Theme.of(context).textTheme.bodyMedium?.color, weight: 800,)
+                else
+                  Container(
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: subject.color),
+                    width: 22,
+                    height: 22,
+                  ),
+                const SizedBox(width: 10),
                 Text(subject.name, style: Theme.of(context).textTheme.bodyMedium),
               ],
             ),
@@ -666,18 +710,19 @@ class NextButton extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
 
     return Positioned(
-      right: leftOffset,
       left: leftOffset,
-      bottom: (leftOffset / 2 + 28) * animationProgress - 28,
+      right: leftOffset,
+      bottom: (leftOffset + 24) * animationProgress,
       child: Opacity(
         opacity: animationProgress,
         child: Material(
           color: Colors.transparent,
-          child: InkWell(
-            onTap: callback,
-            child: Container(
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: theme.primaryColor),
-              child: Padding(
+          child: IgnorePointer(
+            ignoring: animationProgress < 0.5,
+            child: InkWell(
+              onTap: callback,
+              child: Container(
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: theme.primaryColor),
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -687,6 +732,48 @@ class NextButton extends StatelessWidget {
                   ],
                 ),
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class BackButton extends StatelessWidget {
+  const BackButton({
+    super.key,
+    required this.leftOffset,
+    required this.animationProgress,
+    required this.callback,
+    required this.icon,
+  });
+
+  final double animationProgress;
+  final double leftOffset;
+  final void Function() callback;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return Positioned(
+      left: leftOffset,
+      bottom: 24 + leftOffset + (leftOffset + 24) * (1 - animationProgress),
+      child: Opacity(
+        opacity: animationProgress,
+        child: InkWell(
+          onTap: callback,
+          child: Container(
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: theme.dividerColor),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SizedBox(height: 28, child: Icon(icon, color: theme.primaryColor)),
+              ],
             ),
           ),
         ),
@@ -711,7 +798,6 @@ class SetupFinishPage extends StatelessWidget {
         child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 860, maxHeight: 1200),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const SizedBox(height: 40),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 25, horizontal: leftOffset),
                 child: Text("Abgeschlossen!",
@@ -721,16 +807,8 @@ class SetupFinishPage extends StatelessWidget {
               Expanded(
                   child: Stack(
                 children: [
-                  // ListView.builder(
-                  //     padding: const EdgeInsets.fromLTRB(0, 0, 0, 60),
-                  //     itemCount: choice.subjects.length,
-                  //     itemBuilder: (context, index) => Padding(
-                  //           padding: const EdgeInsets.symmetric(
-                  //               vertical: 7, horizontal: leftOffset + 5),
-                  //           child: SubjectWidget(subject: choice.subjects[index]),
-                  //         )),
                   ListView(
-                    padding: const EdgeInsets.fromLTRB(leftOffset + 5, 0, leftOffset + 5, 60),
+                    padding: const EdgeInsets.fromLTRB(leftOffset + 5, 0, leftOffset + 5, 120),
                     children: buildSubjects(choice, theme),
                   ),
                   const SizedBox(height: 50, width: 50),

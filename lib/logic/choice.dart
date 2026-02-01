@@ -43,6 +43,26 @@ class ChoiceBuilder {
 
   ChoiceBuilder();
 
+  ChoiceBuilder.fromChoice(Choice choice) {
+    lk = choice.lk;
+    mint1 = choice.ntg1;
+    sg1 = choice.sg1;
+    sbs = choice.mintSg2.category == SubjectCategory.sbs ? choice.mintSg2 : null;
+    mintSg2 = choice.mintSg2.category != SubjectCategory.sbs ? choice.mintSg2 : null;
+    pug13 = choice.pug13;
+    geoWr = choice.geoWr;
+    musikKunst = choice.musikKunst;
+    vk = choice.vk;
+    seminar = choice.seminar;
+    profil12 = choice.profil12;
+    profil13 = choice.profil13;
+
+    substituteMathe = choice.substituteMathe;
+    substituteDeutsch = choice.substituteDeutsch;
+    abi4 = choice.abi4;
+    abi5 = choice.abi5;
+  }
+
   Choice build() {
     if (lk == Subject.wr || lk == Subject.geo) {
       geoWr = lk;
@@ -190,6 +210,21 @@ class Choice extends HiveObject {
     if (subject == seminar || subject.category == SubjectCategory.seminar) return Semester.seminarPhase.contains(semester);
     if (subject == profil13) return (semester.order - 2) < numberOfSemestersFor(subject);
     return semester.order < numberOfSemestersFor(subject);
+  }
+
+  List<Semester> getSemestersForSubject(Subject subject) {
+    int numSemesters = numberOfSemestersFor(subject);
+    List<Semester> semesters = [];
+    for (int i = 0; i < numSemesters; i++) {
+      semesters.add(Semester.values[i]);
+    }
+    if (subject == seminar || subject.category == SubjectCategory.seminar) {
+      semesters.add(Semester.seminar13);
+    }
+    if (abiSubjects.contains(subject)) {
+      semesters.add(Semester.abi);
+    }
+    return semesters;
   }
 
   int numberOfSemestersFor(Subject subject) {

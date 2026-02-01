@@ -10,7 +10,9 @@ import '../logic/choice.dart';
 import '../logic/types.dart';
 
 class SetupPage extends StatefulWidget {
-  const SetupPage({super.key});
+  const SetupPage({super.key, this.onlyAbi = false});
+
+  final bool onlyAbi;
 
   @override
   State<SetupPage> createState() => _SetupPageState();
@@ -27,6 +29,11 @@ class _SetupPageState extends State<SetupPage> {
     _pageController = PageController(initialPage: 0);
     _choiceBuilder = ChoiceBuilder();
     _step = 0;
+
+    final choice = Provider.of<SettingsDataProvider>(context, listen: false).choice;
+    if (choice != null) {
+      _choiceBuilder = ChoiceBuilder.fromChoice(choice);
+    }
   }
 
   void allowNextStep() {
@@ -139,7 +146,8 @@ class _SetupPageState extends State<SetupPage> {
   }
 
   List<Widget> sublistSteps(List<Widget> list) {
-    return list.sublist(0, min(list.length, _step + 1));
+    final abiOffset = widget.onlyAbi ? list.indexWhere((element) => element is SetupStepPage && element.abi) : 0;
+    return list.sublist(abiOffset, min(list.length, abiOffset + _step + 1));
   }
 
   SubjectCategory? getLkCategory () => _choiceBuilder.lk?.category;
@@ -318,6 +326,7 @@ class _SetupPageState extends State<SetupPage> {
         SetupStepPage(
           key: const ValueKey("subD"),
           title: "Deutsch Abi substituieren",
+          abi: true,
           pageController: _pageController,
           allowNextStep: allowNextStep,
           subjectsPool: [_choiceBuilder.mintSg2!],
@@ -331,6 +340,7 @@ class _SetupPageState extends State<SetupPage> {
         SetupStepPage(
           key: const ValueKey("subM"),
           title: "Mathe Abi substituieren",
+          abi: true,
           pageController: _pageController,
           allowNextStep: allowNextStep,
           subjectsPool: [_choiceBuilder.lk?.category == SubjectCategory.ntg ? _choiceBuilder.mintSg2! : _choiceBuilder.mint1!],
@@ -343,6 +353,7 @@ class _SetupPageState extends State<SetupPage> {
         SetupStepPage(
           key: const ValueKey("abi5sg"),
           title: "Weiteres Abiturfach",
+          abi: true,
           infobox: "Bei Substitution von Mathematik muss eine fortgeführte Fremdsprache als Abiturprüfungsfach gewählt werden",
           pageController: _pageController,
           allowNextStep: allowNextStep,
@@ -356,6 +367,7 @@ class _SetupPageState extends State<SetupPage> {
         SetupStepPage(
           key: const ValueKey("abi4gpr"),
           title: "Weiteres Abiturfach",
+          abi: true,
           infobox: "Es muss mindestens eine Gesellschaftswissenschaft als Abiturprüfungsfach gewählt werden",
           pageController: _pageController,
           allowNextStep: allowNextStep,
@@ -373,6 +385,7 @@ class _SetupPageState extends State<SetupPage> {
         SetupStepPage(
           key: const ValueKey("abi45mintsg"),
           title: "Weiteres Abiturfach",
+          abi: true,
           infobox: "Es muss mindestens eine fortgeführte Fremdsprache oder eine Naturwissenschaft als Abiturprüfungsfach gewählt werden",
           pageController: _pageController,
           allowNextStep: allowNextStep,
@@ -394,6 +407,7 @@ class _SetupPageState extends State<SetupPage> {
         SetupStepPage(
           key: const ValueKey("abi5any"),
           title: "Weiteres Abiturfach",
+          abi: true,
           pageController: _pageController,
           allowNextStep: allowNextStep,
           subjectsPool: _without(_filter([
@@ -426,6 +440,7 @@ class SetupStepPage extends StatefulWidget {
   final String title;
   final String? infobox;
   final bool canSkip;
+  final bool abi;
   final Subject? currentlySelected;
 
   const SetupStepPage({
@@ -437,6 +452,7 @@ class SetupStepPage extends StatefulWidget {
     required this.currentlySelected,
     required this.allowNextStep,
     this.infobox,
+    this.abi = false,
     this.canSkip = false,
   });
 
@@ -494,7 +510,7 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
   void initState() {
     super.initState();
     _resetSubjectPool();
-    _selected = widget.currentlySelected;
+    _selected = _subjects.contains(widget.currentlySelected) ? widget.currentlySelected : null;
     _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 750));
     _fadeAnimation = Tween<double>(begin: 1, end: 0).animate(CurvedAnimation(parent: _controller, curve: const Interval(0, 0.45, curve: Curves.easeIn)));
     _slideAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _controller, curve: const Interval(0.3, 1, curve: Curves.ease)));
@@ -611,13 +627,17 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
                         )
                     ),
 
-                    const SizedBox(height: 50, width: 50),
+                    const SizedBox(height: 50,  width: 50),
 
                     AnimatedBuilder(
                         animation: _controller,
                         builder: (context, child) => BackButton(
                             icon: Icons.chevron_left_rounded,
                             callback: () {
+                              if (widget.pageController.page == 0) {
+                                Navigator.of(context).pop();
+                                return;
+                              }
                               // 375 = 500 * (24 / leftOffset)
                               widget.pageController.previousPage(duration: const Duration(milliseconds: 375), curve: Curves.ease);
                             },
@@ -728,7 +748,7 @@ class NextButton extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(text, style: theme.textTheme.labelMedium),
-                    Icon(icon, color: theme.textTheme.labelMedium?.color),
+                    Icon(icon, color: theme.textTheme.labelMedium?.color, size: 24,),
                   ],
                 ),
               ),

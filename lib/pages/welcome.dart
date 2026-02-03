@@ -59,11 +59,12 @@ Tippe auf Start, um direkt loszulegen.""",
     return Row(
       children: [
         SvgPicture.asset("assets/icons/logo.svg",
-            key: ValueKey(theme.primaryColor),
-            color: theme.primaryColor,
-            clipBehavior: Clip.hardEdge,
-            colorFilter: ColorFilter.mode(theme.primaryColor, BlendMode.srcIn),
-            width: isWide ? 74 : 50
+          clipBehavior: Clip.hardEdge,
+          colorFilter: ColorFilter.mode(theme.primaryColor, BlendMode.srcIn),
+          width: isWide ? 74 : 50,
+          theme: SvgTheme(
+            currentColor: theme.primaryColor,
+          ),
         ),
         const SizedBox(width: 2),
         Column(

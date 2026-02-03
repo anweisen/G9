@@ -481,7 +481,7 @@ class GradeHelper {
     return sum / count;
   }
 
-  static String formatDate(DateTime date) {
+  static String formatDate(DateTime date, {includeYear = true, shortMonth = false}) {
     var now = DateTime.now();
 
     if (date.day == now.day && date.month == now.month && date.year == now.year) {
@@ -491,38 +491,43 @@ class GradeHelper {
       return "Gestern";
     }
 
-    return "${date.day}. ${nameOfMonth(date.month)} ${date.year.toString().substring(2)}";
+    return "${date.day}. ${shortMonth ? shortNameOfMonth(date.month) : nameOfMonth(date.month)} ${includeYear ? date.year.toString().substring(2) : ""}".trimRight();
   }
 
   static String nameOfMonth(int month) {
-    switch (month) {
-      case 1:
-        return "Januar";
-      case 2:
-        return "Februar";
-      case 3:
-        return "März";
-      case 4:
-        return "April";
-      case 5:
-        return "Mai";
-      case 6:
-        return "Juni";
-      case 7:
-        return "Juli";
-      case 8:
-        return "August";
-      case 9:
-        return "September";
-      case 10:
-        return "Oktober";
-      case 11:
-        return "November";
-      case 12:
-        return "Dezember";
-      default:
-        return "$month. ";
-    }
+    return switch (month) {
+      1 => "Januar",
+      2 => "Februar",
+      3 => "März",
+      4 => "April",
+      5 => "Mai",
+      6 => "Juni",
+      7 => "Juli",
+      8 => "August",
+      9 => "September",
+      10 => "Oktober",
+      11 => "November",
+      12 => "Dezember",
+      _ => "$month. ",
+    };
+  }
+
+  static String shortNameOfMonth(int month) {
+    return switch (month) {
+      1 => "Jan",
+      2 => "Feb",
+      3 => "Mär",
+      4 => "Apr",
+      5 => "Mai",
+      6 => "Jun",
+      7 => "Jul",
+      8 => "Aug",
+      9 => "Sep",
+      10 => "Okt",
+      11 => "Nov",
+      12 => "Dez",
+      _ => "$month. ",
+    };
   }
 }
 

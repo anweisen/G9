@@ -113,6 +113,7 @@ class MyApp extends StatelessWidget {
         "/subjects": (context) => const SubjectsPage(key: Key("subjects")),
         "/results": (context) => const ResultsPage(key: Key("results")),
         "/setup": (context) => const SetupPage(key: Key("setup")),
+        "/setup/abi": (context) => const SetupPage(key: Key("setup/abi"), onlyAbi: true),
         "/settings": (context) => const SettingsPage(key: Key("settings")),
       },
     );

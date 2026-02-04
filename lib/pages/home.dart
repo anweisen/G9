@@ -132,7 +132,7 @@ class HomePage extends StatelessWidget {
 
             Text("Zulassung", style: theme.textTheme.bodySmall),
             _buildTextLine(Text("Unterpunktungen", style: theme.textTheme.bodyMedium, overflow: TextOverflow.fade), [
-              Text("${underscored} / 8", style: theme.textTheme.bodyMedium)
+              Text("$underscored / 8", style: theme.textTheme.bodyMedium)
             ]),
             const SizedBox(height: 4),
             _buildHurdleChart(context, underscored),
@@ -167,25 +167,24 @@ class HomePage extends StatelessWidget {
               Text("Top ${min(3, stats.bestSubjects.length)} Fächer", style: theme.textTheme.bodySmall),
               for (int i = 0; i < 3 && i < stats.bestSubjects.length; i++)
                 _buildTextLine(_buildSubject(theme.textTheme, stats.bestSubjects[i].$1), [
-                  Row(children: [
+                  if (MediaQuery.of(context).size.width > 500) Row(children: [
                     for (Semester semester in Semester.values)
                       if (!(results[stats.bestSubjects[i].$1]?[semester]?.prediction ?? true)) Container(
                         margin: const EdgeInsets.fromLTRB(0, 0, 4, 0),
-                        width: 24,
-                        height: 20,
-                        decoration: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(4)) : null,
-                        child: Center(child: Text(results[stats.bestSubjects[i].$1]?[semester]?.grade.toString() ?? "-",
-                          style: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false ? theme.textTheme.labelMedium : theme.textTheme.bodyMedium)?.copyWith(fontSize: 13, fontWeight: FontWeight.bold),)
-                        )
-                      ),
-                  ],),
-                  const SizedBox(width: 6),
+                        width: 21,
+                        height: 19,
+                        decoration: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? BoxDecoration(color: theme.hintColor, borderRadius: BorderRadius.circular(4)) : null,
+                        child: Center(child: Text(results[stats.bestSubjects[i].$1]?[semester]?.effectiveGrade.toString() ?? "-",
+                        style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, fontWeight: FontWeight.w600), textAlign: TextAlign.center,)
+                      )
+                    ),
+                  ]),
+                  const SizedBox(width: 8),
                   Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
                   const SizedBox(width: 4),
                   Text("${GradeHelper.formatNumber(stats.bestSubjects[i].$2, decimals: 1)}", style: theme.textTheme.bodyMedium),
                 ]),
             ]
-
           ],
         ),
       ),
@@ -193,10 +192,9 @@ class HomePage extends StatelessWidget {
       if (graduationHurdleCheckResults.isEmpty && admissionHurdleCheckResults.isEmpty)
         ..._buildHurdlePassingInfo(theme),
 
-      if (grades.currentSemester != Semester.abi)
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
+      const SizedBox(height: 20),
+      HomeSemesterSwitchButtons(
+        btn1: grades.currentSemester != Semester.abi ? GestureDetector(
             onTap: () {
               grades.currentSemester = grades.currentSemester.nextSemester();
               Navigator.popAndPushNamed(context, "/home");
@@ -204,31 +202,54 @@ class HomePage extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: theme.primaryColor),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                padding: const EdgeInsets.only(top: 14, bottom: 8, left: 18, right: 18),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded( // Expanded to avoid overflow (Column is no intrinsic width / constraints)
+                    Flexible( // Expanded to avoid overflow (Column is no intrinsic width / constraints)
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 4),
                           Text("Halbjahr ${grades.currentSemester.detailedDisplay} abschließen", style: theme.textTheme.displayMedium),
-                          Row(
-                            children: [
-                              Text("zu ${grades.currentSemester.nextSemester().detailedDisplay}", style: theme.textTheme.labelMedium, softWrap: false, overflow: TextOverflow.fade,),
-                            ],
-                          ),
+                          Text("zu ${grades.currentSemester.nextSemester().display}", style: theme.textTheme.labelMedium, softWrap: false, overflow: TextOverflow.fade,),
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right_rounded, color: theme.textTheme.labelMedium?.color),
+                    Icon(Icons.chevron_right_rounded, color: theme.textTheme.labelMedium?.color, size: 24,),
                   ],
                 ),
               ),
             ),
-          ),
-        )
+          ) : null,
+          btn2: grades.currentSemester != Semester.q12_1 ? GestureDetector(
+            onTap: () {
+              grades.currentSemester = grades.currentSemester.previousSemester();
+              Navigator.popAndPushNamed(context, "/home");
+            },
+            child: Container(
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(color: theme.dividerColor, width: 4)),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 14 - 4, bottom: 8 - 4, left: 18 - 4, right: 18 - 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible( // Expanded to avoid overflow (Column is no intrinsic width / constraints)
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("zurück", style: theme.textTheme.displayMedium),
+                          Text("zu ${grades.currentSemester.previousSemester().display}", style: theme.textTheme.bodyMedium, softWrap: false, overflow: TextOverflow.fade,),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ) : null
+      )
+
     ]);
   }
 
@@ -310,21 +331,23 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildSubject(TextTheme textTheme, Subject subject) {
-    return Row(
-      children: [
-        Container(
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), color: subject.color),
-          width: 16,
-          height: 16,
-        ),
-        const SizedBox(width: 8),
-        Text(subject.name, style: textTheme.bodyMedium, overflow: TextOverflow.clip, softWrap: false,),
-      ],
+    return Expanded(
+      child: Row(
+        children: [
+          Container(
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), color: subject.color),
+            width: 16,
+            height: 16,
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(subject.name, style: textTheme.bodyMedium, overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,)),
+        ],
+      ),
     );
   }
 
   Widget _buildChart(BuildContext context, List<MapEntry<int, int>> gradesDistribution) {
-    const spacing = 4.0;
+    const spacing = 3.0;
 
     final int maxValue = gradesDistribution.isEmpty ? 1 : gradesDistribution.reduce((a, b) => a.value > b.value ? a : b).value; // find max value for scaling
     final int totalGrades = gradesDistribution.fold(0, (sum, entry) => sum + entry.value); // total number of grades
@@ -352,8 +375,10 @@ class HomePage extends StatelessWidget {
                         SizedBox(
                           width: 22,
                           child: Text("${entry.value}x", textAlign: TextAlign.end, style: theme.textTheme.displayMedium)),
-                        const SizedBox(width: 6),
-                        Text("${(entry.value / totalGrades * 100).round()}%", style: theme.textTheme.bodySmall),
+                        const SizedBox(width: 4),
+                        SizedBox(
+                          width: 30,
+                          child: Text("${(entry.value / totalGrades * 100).round()}%", textAlign: TextAlign.end, style: theme.textTheme.bodySmall)),
                       ],
                     ),
                 )).toList(),
@@ -679,4 +704,42 @@ class _GradeBarChartState extends State<GradeBarChart> {
         });
   }
 }
+
+class HomeSemesterSwitchButtons extends StatelessWidget {
+  const HomeSemesterSwitchButtons({super.key, this.btn1, this.btn2});
+
+  final Widget? btn1;
+  final Widget? btn2;
+
+  @override
+  Widget build(BuildContext context) {
+    if (btn1 == null && btn2 == null) {
+      return const SizedBox.shrink();
+    }
+
+    bool wide = MediaQuery.of(context).size.width > 360;
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (btn2 != null && btn1 != null && !wide)
+            Flexible(flex: 4, child: btn1!)
+          else if (btn1 != null)
+            Expanded(child: btn1!),
+
+          if (wide && btn1 != null && btn2 != null)
+            const SizedBox(width: 16),
+
+          if (wide)
+            if (btn2 != null && btn1 == null)
+              Expanded(child: btn2!,)
+            else if (btn1 != null)
+              IntrinsicWidth(child: btn2),
+        ],
+      ),
+    );
+  }
+}
+
 

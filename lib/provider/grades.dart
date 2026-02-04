@@ -193,6 +193,11 @@ enum Semester {
     return Semester.normal[order + 1];
   }
 
+  Semester previousSemester() {
+    // error: for the first semester (q12_1) ! no previous semester
+    return Semester.normal[order - 1];
+  }
+
   static List<Semester> qPhaseEquivalents(SubjectCategory subjectCategory) {
     if (subjectCategory == SubjectCategory.seminar) {
       return seminarPhase;

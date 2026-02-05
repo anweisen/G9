@@ -10,7 +10,10 @@ import '../logic/types.dart';
 import '../widgets/general.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/subpage.dart';
+import 'development.dart';
 import 'grade.dart';
+import 'result.dart';
+import 'weighting.dart';
 
 class SubjectPage extends StatefulWidget {
   final Subject subject;
@@ -25,7 +28,6 @@ class SubjectPage extends StatefulWidget {
 class _SubjectPageState extends State<SubjectPage> {
 
   Semester? _currentSemester;
-  bool showInfo = false;
 
   @override
   void initState() {
@@ -48,10 +50,12 @@ class _SubjectPageState extends State<SubjectPage> {
     });
   }
 
-  void toggleInfo() {
-    setState(() {
-      showInfo = !showInfo;
-    });
+  void openResultPage() {
+    final choice = Provider.of<SettingsDataProvider>(context, listen: false).choice;
+    final dataProvider = Provider.of<GradesDataProvider>(context, listen: false);
+    final results = SemesterResult.calculateResultsWithPredictions(choice!, dataProvider);
+    final _ = SemesterResult.applyUseFlags(choice, results);
+    SubpageController.of(context).openSubpage(SubjectResultPage(subject: widget.subject, results: results[widget.subject]!, choice: choice, key: GlobalKey(),));
   }
 
   @override
@@ -99,7 +103,8 @@ class _SubjectPageState extends State<SubjectPage> {
                   for (Semester semester in Semester.qPhaseEquivalents(widget.subject.category))
                     _buildSemester(theme, dataProvider, choice, _currentSemester!, semester, setCurrentSemester)
                 ],
-              )),
+              )
+          ),
           const SizedBox(height: 36),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start, // align info text left
@@ -114,8 +119,13 @@ class _SubjectPageState extends State<SubjectPage> {
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
-                      onTap: toggleInfo,
-                      child: Icon(showInfo ? Icons.help_rounded : Icons.help_outline_rounded, size: 20)
+                      onTap: openResultPage,
+                      child: const Icon(Icons.insert_chart_outlined_rounded, size: 20),
+                  ),
+                  const SizedBox(width: 8),
+                  SubpageTrigger(
+                    createSubpage: () => GradesDevelopmentPage(subject: widget.subject,),
+                      child: const Icon(Icons.timeline, size: 20),
                   ),
                   const Spacer(),
                   GestureDetector(
@@ -129,10 +139,6 @@ class _SubjectPageState extends State<SubjectPage> {
                       child: Icon(Icons.add, color: theme.primaryColor, size: 30)),
                 ],
               ),
-              if (showInfo) ...[
-                CustomLineBreakText(GradeHelper.getWeightingExplanation(widget.subject, _currentSemester!, choice!), style: theme.textTheme.bodySmall),
-                const SizedBox(height: 10),
-              ],
             ],
           ),
           const SizedBox(height: 10),

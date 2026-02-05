@@ -18,6 +18,15 @@ class WindowTitleBar extends StatelessWidget implements PreferredSizeWidget {
   static bool get isWindows => !kIsWeb && TargetPlatform.windows == defaultTargetPlatform;
   static double get height => isWindows ? appWindow.titleBarHeight : 0;
 
+  static void focusWindow() {
+    if (isWindows) {
+      if (!appWindow.isMaximized) {
+        appWindow.restore();
+      }
+      appWindow.show();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!isWindows) {

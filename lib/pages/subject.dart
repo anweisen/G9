@@ -159,11 +159,11 @@ class _SubjectPageState extends State<SubjectPage> {
   }
 
   void _removeGrade(GradesDataProvider dataProvider, int index) {
-    dataProvider.removeGrade(widget.subject.id, index, semester: _currentSemester);
+    dataProvider.removeGrade(widget.subject.id, index, semester: _currentSemester); // result.semester?
   }
 
   void _addGrade(GradesDataProvider dataProvider, GradeEditResult result) {
-    dataProvider.addGrade(result.subject.id, result.entry, semester: _currentSemester);
+    dataProvider.addGrade(result.subject.id, result.entry, semester: result.semester);
   }
 
   Widget _buildSemester(ThemeData theme, GradesDataProvider dataProvider, Choice? choice, Semester currentSemester, Semester semester, void Function(Semester) callback) {

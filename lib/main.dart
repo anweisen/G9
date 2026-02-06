@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hive_flutter/adapters.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 
@@ -17,6 +15,7 @@ import 'pages/subjects.dart';
 import 'provider/grades.dart';
 import 'provider/settings.dart';
 import 'widgets/splash.dart';
+import 'widgets/skeleton.dart';
 
 void main() async {
   await Hive.initFlutter();
@@ -47,12 +46,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     var settings = Provider.of<SettingsDataProvider>(context);
 
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent, // Set the status bar background to white
-      statusBarIconBrightness: settings.theme == ThemeMode.dark ? Brightness.light : Brightness.dark, // Set the icons to dark (for better contrast on white background)
-      statusBarBrightness: settings.theme == ThemeMode.dark ? Brightness.dark : Brightness.light, // Set the icons to dark (for better contrast on white background)
-    ));
-
     const FontWeight bold = FontWeight.w600;
     const FontWeight normal = FontWeight.w500;
 
@@ -70,11 +63,11 @@ class MyApp extends StatelessWidget {
           hintColor: const Color.fromRGBO(143, 143, 147, 1.0),
           dividerColor: const Color.fromRGBO(28, 28, 32, 1.0),
           primaryColor: Colors.white,
-          shadowColor: const Color.fromRGBO(198, 198, 215, 1.0),
+          shadowColor: const Color.fromRGBO(117, 116, 131, 1.0),
           splashColor: const Color.fromRGBO(252, 130, 130, 0.25),
           indicatorColor: const Color.fromRGBO(252, 130, 130, 1.0),
           textTheme: const TextTheme(
-            headlineMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 24),
+            headlineMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 22),
             bodyMedium: TextStyle(fontWeight: bold, color: Colors.white, fontSize: 18),
             bodySmall: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 12, height: 1),
             displayMedium: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 14, height: 1),
@@ -89,7 +82,7 @@ class MyApp extends StatelessWidget {
         hintColor: Colors.white,
         dividerColor: const Color.fromRGBO(228, 233, 240, 1.0),
         primaryColor: Colors.black,
-        shadowColor: const Color.fromRGBO(198, 198, 215, 1.0),
+        shadowColor: const Color.fromRGBO(117, 116, 131, 1.0),
         splashColor: const Color.fromRGBO(252, 130, 130, 0.4),
         indicatorColor: const Color.fromRGBO(252, 130, 130, 1.0),
         textTheme: const TextTheme(
@@ -102,10 +95,6 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      // initialRoute: settings.onboarding
-      //     ? "/setup"
-      //     : "/subjects",
-      // initialRoute: "/home",
       home: const SplashScreenPage(),
       routes: {
         "/welcome": (context) => const WelcomePage(key: Key("welcome")),

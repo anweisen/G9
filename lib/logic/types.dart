@@ -13,7 +13,7 @@ class Subject {
   final String name;
 
   @HiveField(2)
-  final Color color;
+  Color color;
 
   @HiveField(3)
   final SubjectCategory category;

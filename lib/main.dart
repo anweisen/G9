@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'pages/welcome.dart';
 import 'logic/choice.dart';
@@ -25,6 +26,9 @@ void main() async {
   Hive.registerAdapter(SubjectCategoryAdapter());
   Hive.registerAdapter(GradeEntryAdapter());
   Hive.registerAdapter(GradeTypeAdapter());
+
+  // safe to call on desktop/mobile
+  usePathUrlStrategy();
 
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider<SettingsDataProvider>(create: (context) => SettingsDataProvider()),

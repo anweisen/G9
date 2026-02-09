@@ -67,57 +67,61 @@ class SubjectResultPage extends StatelessWidget {
   Widget _buildSemester(Semester semester, ThemeData theme, GradesDataProvider gradesProvider) {
     SemesterResult? result = results[semester];
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(semester.display, style: theme.textTheme.bodyMedium,),
-              if (semester.semesterCountEquivalent == 2)
-                Text("doppelte Einbringung (30 P.)", style: theme.textTheme.bodySmall),
-            ],
-          ),
-          Row(
-            children: [
-              Column(
-                children: [
-                  if (!(result?.prediction ?? true)) Row(
-                    children: [
-                      Text("Ø", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w300)),
-                      const SizedBox(width: 4),
-                      Text(GradeHelper.formatSemesterAverage(gradesProvider.getGrades(subject.id, semester: semester)), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                  if (semester.semesterCountEquivalent > 1)
-                    Text("(≈ ${result?.effectiveGrade})", style: theme.textTheme.bodySmall),
-                  if (result?.prediction ?? true)
-                    Text("Prognose", style: theme.textTheme.bodySmall),
-                ],
-              ),
-              const SizedBox(width: 12),
-              Container(
-                  width: 36,
-                  height: 27,
-                  decoration: (result?.used ?? false) ? BoxDecoration(color: (result?.grade ?? 15) >= 5 ? theme.primaryColor : theme.splashColor, borderRadius: BorderRadius.circular(6)) : null,
-                  child: Center(child: Text(result?.grade.toString() ?? "-",
-                        style: (result?.used ?? false) ? theme.textTheme.labelMedium?.copyWith(color: (result?.grade ?? 15) < 5 ? theme.indicatorColor : null) : theme.textTheme.bodyMedium,)
-                  )
-              ),
-              const SizedBox(width: 6),
-              SizedBox(width: 10, child: Column(
-                children: [
-                  if (result?.replacedByJoker ?? false) Icon(Icons.join_inner_rounded, size: 16, color: theme.primaryColor)
-                  else if (result?.useForced ?? false) Icon(Icons.check_circle, size: 16, color: theme.primaryColor)
-                  else if (result?.useExtra ?? false) Icon(Icons.check_circle_outline, size: 16, color: theme.primaryColor)
-                  else if (result?.useJoker ?? false) Icon(Icons.join_full_rounded, size: 16, color: theme.primaryColor)
-                ],)
-              ),
-            ],
-          ),
-        ],
+    return SubpageTrigger(
+      createSubpage: () => SubjectPage(subject: subject, semester: semester, key: GlobalKey(),),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(semester.display, style: theme.textTheme.bodyMedium,),
+                if (semester.semesterCountEquivalent == 2)
+                  Text("doppelte Einbringung (30 P.)", style: theme.textTheme.bodySmall),
+              ],
+            ),
+            Row(
+              children: [
+                Column(
+                  children: [
+                    if (!(result?.prediction ?? true)) Row(
+                      children: [
+                        Text("Ø", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w300)),
+                        const SizedBox(width: 4),
+                        Text(GradeHelper.formatSemesterAverage(gradesProvider.getGrades(subject.id, semester: semester)), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                    if (semester.semesterCountEquivalent > 1)
+                      Text("(≈ ${result?.effectiveGrade})", style: theme.textTheme.bodySmall),
+                    if (result?.prediction ?? true)
+                      Text("Prognose", style: theme.textTheme.bodySmall),
+                  ],
+                ),
+                const SizedBox(width: 12),
+                Container(
+                    width: 36,
+                    height: 27,
+                    decoration: (result?.used ?? false) ? BoxDecoration(color: (result?.grade ?? 15) >= 5 ? theme.primaryColor : theme.splashColor, borderRadius: BorderRadius.circular(6)) : null,
+                    child: Center(child: Text(result?.grade.toString() ?? "-",
+                          style: (result?.used ?? false) ? theme.textTheme.labelMedium?.copyWith(color: (result?.grade ?? 15) < 5 ? theme.indicatorColor : null) : theme.textTheme.bodyMedium,)
+                    )
+                ),
+                const SizedBox(width: 6),
+                SizedBox(width: 20, child: Column(
+                  children: [
+                    if (result?.replacedByJoker ?? false) Icon(Icons.join_inner_rounded, size: 16, color: theme.primaryColor)
+                    else if (result?.useForced ?? false) Icon(Icons.check_circle, size: 16, color: theme.primaryColor)
+                    else if (result?.useExtra ?? false) Icon(Icons.check_circle_outline, size: 16, color: theme.primaryColor)
+                    else if (result?.useJoker ?? false) Icon(Icons.join_full_rounded, size: 16, color: theme.primaryColor)
+                    else if (result?.useVk ?? false) Icon(Icons.stars_rounded, size: 16, color: theme.primaryColor)
+                  ],)
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -151,9 +155,12 @@ class SubjectResultPage extends StatelessWidget {
       if (result.useVk) usedVkExtra = semester;
     }
 
+    bool abi = choice.abiSubjects.contains(subject);
     bool extraVkMintSg2 = (choice.vk != null && (choice.vk == subject || choice.mintSg2 == subject));
+    // Rede nur von "Fremdsprachen", nicht fortgeführten Fremdsprachen (spät beginnend möglich)
     bool onlySg = choice.lk != subject && subject.category == SubjectCategory.sg && choice.mintSg2.category != SubjectCategory.sg && choice.mintSg2.category != SubjectCategory.sbs;
-    bool onlyNtg = choice.lk != subject && subject.category == SubjectCategory.ntg && choice.mintSg2.category != SubjectCategory.ntg && choice.mintSg2.category != SubjectCategory.info;
+    // Informatik zählt nicht
+    bool onlyNtg = choice.lk != subject && subject.category == SubjectCategory.ntg && choice.mintSg2.category != SubjectCategory.ntg;
 
     return [
       if (minSemesters == 4)
@@ -170,9 +177,9 @@ class SubjectResultPage extends StatelessWidget {
       if (usedVkExtra != null)
         _buildInfoWidget(theme, "verpflichtende Einbringung von ${usedVkExtra.display} für Vertiefungskurs genutzt", Icons.stars_rounded),
 
-      if (onlySg)
+      if (onlySg && !abi)
         _buildInfoWidget(theme, "einzige Fremdsprache", null),
-      if (onlyNtg)
+      if (onlyNtg && !abi)
         _buildInfoWidget(theme, "einzige Naturwissenschaft", null),
 
       if (maxSemesters < semesters)
@@ -240,16 +247,18 @@ class SubjectResultAbiPrediction extends StatelessWidget {
             children: [
               Flexible(
                 child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
                     decoration: BoxDecoration(
                       color: subject.color,
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Wrap(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(_buildAbiAreaWidget(), style: theme.textTheme.displayMedium?.copyWith(color: contrastColor, height: 1.25), softWrap: true, maxLines: 3, overflow: TextOverflow.ellipsis,),
+                        Flexible(child: Text(_buildAbiAreaWidget(), style: theme.textTheme.displayMedium?.copyWith(color: contrastColor, height: 1.25), softWrap: true, maxLines: 1, overflow: TextOverflow.ellipsis,)),
                         const SizedBox(width: 4),
-                        Icon(Icons.check_rounded, size: 16, color: contrastColor)
+                        SizedBox(height: 18, child: Icon(Icons.check_rounded, size: 16, color: contrastColor))
                       ],
                     )
                 ),
@@ -366,8 +375,8 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8,),
-                  GestureDetector(
-                    onTap: () => SubpageController.of(context).openSubpage(SubjectPage(subject: subject, semester: Semester.abi, key: GlobalKey(),)),
+                  SubpageTrigger(
+                    createSubpage: () => SubjectPage(subject: subject, semester: Semester.abi, key: GlobalKey(),),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(6)),
@@ -403,6 +412,9 @@ class SubjectResultAbiPrediction extends StatelessWidget {
     }
     if ((choice.lk.category != SubjectCategory.gpr || subject == choice.lk) && subject.category == SubjectCategory.gpr) {
       return "Gesellschaftswissenschaft";
+    }
+    if (subject == choice.lk) {
+      return "Freie Wahl (Leistungsfach)";
     }
     return "Freie Wahl";
   }

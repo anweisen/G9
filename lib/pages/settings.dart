@@ -57,7 +57,7 @@ class SettingsPage extends StatelessWidget {
           children: [
             Text(text, style: (primary ? theme.textTheme.labelMedium : theme.textTheme.bodyMedium)),
             const SizedBox(width: 16),
-            Icon(icon, color: (primary ? theme.textTheme.labelMedium : theme.textTheme.bodyMedium)?.color, size: 16),
+            Icon(icon, color: (primary ? theme.textTheme.labelMedium : theme.textTheme.bodyMedium)?.color, size: 18),
           ],
         ),
       ),

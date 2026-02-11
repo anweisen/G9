@@ -70,13 +70,6 @@ class _SubjectPageState extends State<SubjectPage> {
           children: [
             SubjectPageTitle(subject: widget.subject),
             const Spacer(),
-            if (widget.subject == choice?.lk) Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: [
-              const SizedBox(width: 8),
-              Text("eA", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 15)),
-            ]) else if (_currentSemester != Semester.abi && choice!.abiSubjects.contains(widget.subject)) ...[
-              const SizedBox(width: 8),
-              Text("ABI", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 15), textAlign: TextAlign.start),
-            ],
 
             const SizedBox(width: 12),
             Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300, fontSize: 22)),
@@ -216,7 +209,7 @@ class TestItem extends StatelessWidget {
           color: theme.dividerColor,
           borderRadius: BorderRadius.circular(10),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         child: Row(
           children: [
             Expanded(
@@ -224,7 +217,9 @@ class TestItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(entry.type.name, style: theme.textTheme.bodyMedium, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 2),
+                  Text(entry.type.name, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16, height: 1), maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 2),
                   Text(GradeHelper.formatDate(entry.date), style: theme.textTheme.bodySmall),
                 ],
               ),

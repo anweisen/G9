@@ -157,7 +157,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
             },
             shown: isValid,
             index: 0,
-            icon: Icons.chevron_right_rounded,
+            icon: Icons.check_rounded,
             text: "Speichern",
           ),
           btn2: isFromExisting ? SaveButton(

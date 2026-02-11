@@ -52,7 +52,7 @@ class SubjectsPage extends StatelessWidget {
         children: [
           for (Subject subject in subjects!)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               child: SubjectWidget(subject: subject, semester: Semester.mapSemesterToDisplaySemester(semester, subject.category)),
             )
         ]);
@@ -81,7 +81,7 @@ class SubjectWidget extends StatelessWidget {
           color: subject.color.withAlpha(theme.brightness == Brightness.dark ? 150 : 166),
           borderRadius: BorderRadius.circular(12),
         ),
-        padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+        padding: const EdgeInsets.fromLTRB(16, 7, 8, 7),
         child: Row(
           children: [
             Stack(
@@ -89,7 +89,7 @@ class SubjectWidget extends StatelessWidget {
                 children: [
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(7),
                   color: subject.color,
                 ),
                 width: 36,

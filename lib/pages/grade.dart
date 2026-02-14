@@ -9,6 +9,7 @@ import '../logic/grades.dart';
 import '../logic/types.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/subpage.dart';
+import '../widgets/datepicker.dart';
 
 // (!) USE A GLOBAL KEY
 class GradePage extends StatefulWidget {
@@ -220,17 +221,21 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
                   child: (_type == null)
                       ? const GradeOptionPlaceholder(text: "Wähle eine Prüfungsart")
                       : GradeOptionPlaceholder(
-                          text: _type!.name,
-                          icon: Icon(Icons.label_rounded, color: theme.primaryColor, size: 24))),
+                        text: _type!.name,
+                        icon: Icon(Icons.label_rounded, color: theme.primaryColor, size: 24))),
 
               // Date
               const SizedBox(height: 14),
-              if (_date == null)
-                const GradeOptionPlaceholder(text: "Wähle ein Datum")
-              else
-                GradeOptionPlaceholder(
-                    text: GradeHelper.formatDate(_date!),
-                    icon: Icon(Icons.calendar_month_rounded, color: theme.primaryColor, size: 24)),
+              SubpageTrigger(
+                  createSubpage: () => DateSelectionPage(date: _date),
+                  callback: (date) => {
+                    if (date is DateTime) setDate(date)
+                  },
+                  child: (_date == null)
+                      ? const GradeOptionPlaceholder(text: "Wähle ein Datum")
+                      : GradeOptionPlaceholder(
+                        text: GradeHelper.formatDate(_date!),
+                        icon: Icon(Icons.calendar_month_rounded, color: theme.primaryColor, size: 24))),
             ]),
           ],
         )
@@ -456,6 +461,56 @@ class SemesterSelectionPage extends StatelessWidget {
       Semester.abi => Icons.school_rounded,
       _ => Icons.account_tree_rounded,
     };
+  }
+}
+
+
+class DateSelectionPage extends StatefulWidget {
+  const DateSelectionPage({super.key, this.date});
+
+  final DateTime? date;
+
+  @override
+  State<DateSelectionPage> createState() => _DateSelectionPageState();
+}
+
+class _DateSelectionPageState extends State<DateSelectionPage> {
+
+  late DateTime? _selectedDate;
+
+  @override
+  void initState() {
+    _selectedDate = widget.date;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return SubpageSkeleton(
+      title: Text("Datum wählen", style: theme.textTheme.headlineMedium),
+      actions: [
+        SaveButtonContainer(btn1: SaveButton(
+          onTap: () {
+            if (_selectedDate != null) {
+              SubpageController.of(context).closeSubpage(_selectedDate!);
+            }
+          },
+          shown: widget.date != null,
+          index: 0,
+          icon: Icons.check_rounded,
+          text: "Fertig",
+        ), btn2: null, shown: widget.date != null)
+      ],
+      children: [
+        DatePicker(date: widget.date, onDateChanged: (date) {
+          setState(() {
+            _selectedDate = date;
+          });
+        },)
+      ],
+    );
   }
 }
 

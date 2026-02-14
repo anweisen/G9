@@ -47,7 +47,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
     _usesSlider = gradesProvider.usesSlider ?? kIsWeb;
 
     final choice = gradesProvider.choice;
-    if (choice != null) {
+    if (_grade == null && choice != null) {
       final results = SemesterResult.calculateResultsWithPredictions(choice, Provider.of<GradesDataProvider>(context, listen: false));
       _grade = SemesterResult.calculatePrediction(_subject, results);
     }

@@ -20,12 +20,12 @@ class SubjectPageTitle extends StatelessWidget {
       child: Row(children: [
         Container(
           decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(7),
               color: subject.color),
-          width: 24,
-          height: 24,
+          width: 22,
+          height: 22,
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Expanded(flex: 100, child: Text(subject.name, softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1, style: theme.textTheme.headlineMedium)),
       ],),
     ));
@@ -102,6 +102,7 @@ class CustomLineBreakText extends StatelessWidget {
     return
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           for (int i = 0; i < parts.length; i++) ...[
             Text(parts[i], style: style ?? DefaultTextStyle.of(context).style),

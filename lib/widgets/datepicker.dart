@@ -25,9 +25,15 @@ class _DatePickerState extends State<DatePicker> {
     super.initState();
   }
 
-  void _selectDate(DateTime date) {
-    _monthBeginDate = DateTime(date.year, date.month, 1);
+  void _selectMonth(DateTime date) {
     setState(() {
+      _monthBeginDate = DateTime(date.year, date.month, 1);
+    });
+  }
+
+  void _selectDate(DateTime date) {
+    setState(() {
+      _monthBeginDate = DateTime(date.year, date.month, 1);
       _selectedDate = date;
     });
     widget.onDateChanged(_selectedDate);
@@ -39,35 +45,44 @@ class _DatePickerState extends State<DatePicker> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                    child: Container(margin: const EdgeInsets.symmetric(horizontal: 20), child: Icon(Icons.chevron_left_rounded, color: theme.primaryColor, size: 22)),
-                    onTap: () => _selectDate(DateTime(_monthBeginDate.year, _monthBeginDate.month - 1, 1))
+        return GestureDetector(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: constraints.maxWidth > 400 ? 18 : 12, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: theme.dividerColor,
                 ),
-                Text("${GradeHelper.nameOfMonth(_monthBeginDate.month)} ${_monthBeginDate.year}", style: theme.textTheme.bodyMedium),
-                GestureDetector(
-                    child: Container(margin: const EdgeInsets.symmetric(horizontal: 20), child: Icon(Icons.chevron_right_rounded, color: theme.primaryColor, size: 22)),
-                    onTap: () => _selectDate(DateTime(_monthBeginDate.year, _monthBeginDate.month + 1, 1))
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            for (DateTime monthBegin in _getMonthBeginningDates(_selectedDate))
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  for (DateTime date in _getWeekDates(monthBegin))
-                    _buildDate(date, constraints, _selectDate, theme),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                        child: Container(margin: const EdgeInsets.symmetric(horizontal: 20), child: Icon(Icons.chevron_left_rounded, color: theme.primaryColor, size: 22)),
+                        onTap: () => _selectMonth(DateTime(_monthBeginDate.year, _monthBeginDate.month - 1, 1))
+                    ),
+                    Text("${GradeHelper.nameOfMonth(_monthBeginDate.month)} ${_monthBeginDate.year}", style: theme.textTheme.bodyMedium),
+                    GestureDetector(
+                        child: Container(margin: const EdgeInsets.symmetric(horizontal: 20), child: Icon(Icons.chevron_right_rounded, color: theme.primaryColor, size: 22)),
+                        onTap: () => _selectMonth(DateTime(_monthBeginDate.year, _monthBeginDate.month + 1, 1))
+                    ),
                   ],
-                )
-          ],
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              for (DateTime monthBegin in _getMonthBeginningDates(_monthBeginDate))
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    for (DateTime date in _getWeekDates(monthBegin))
+                      _buildDate(date, constraints, theme),
+                    ],
+                  )
+            ],
+          ),
         );
       }
     );
@@ -75,7 +90,7 @@ class _DatePickerState extends State<DatePicker> {
 
   List<DateTime> _getMonthBeginningDates(DateTime date) {
     final firstDayOfMonth = DateTime(date.year, date.month, 1);
-    return List.generate(5, (index) => firstDayOfMonth.add(Duration(days: index * 7)));
+    return List.generate(6, (index) => firstDayOfMonth.add(Duration(days: index * 7)));
   }
 
   List<DateTime> _getWeekDates(DateTime date) {
@@ -83,9 +98,9 @@ class _DatePickerState extends State<DatePicker> {
     return List.generate(7, (index) => firstDayOfWeek.add(Duration(days: index)));
   }
 
-  Widget _buildDate(DateTime date, BoxConstraints constraints, Function(DateTime) onSelect, ThemeData theme) {
+  Widget _buildDate(DateTime date, BoxConstraints constraints, ThemeData theme) {
     return GestureDetector(
-      onTap: () => onSelect(date),
+      onTap: () => date.month != _monthBeginDate.month ? _selectMonth(date) : _selectDate(date),
       child: Container(
         width: (constraints.maxWidth > 400 ? 18 : 16) * 2.5,
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
@@ -94,7 +109,7 @@ class _DatePickerState extends State<DatePicker> {
           color: Theme.of(context).primaryColor,
         ) : null,
         child: Text("${date.day}", textAlign: TextAlign.center, style: theme.textTheme.labelMedium?.copyWith(
-            color: date.month != _selectedDate.month ? theme.shadowColor : _selectedDate != date ? theme.primaryColor : theme.scaffoldBackgroundColor,
+            color: date.month != _monthBeginDate.month ? theme.shadowColor : _selectedDate != date ? theme.primaryColor : theme.scaffoldBackgroundColor,
             fontSize: (constraints.maxWidth > 400 ? 18 : 16)
         ),),
       ),

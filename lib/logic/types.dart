@@ -140,23 +140,29 @@ enum SubjectCategory {
 // "Aufgabenfelder"
 @HiveType(typeId: 12)
 enum SubjectTaskField {
-  @HiveField(0)
-  none("/"),
 
   @HiveField(1)
-  slk("SLK (sprachlich-literarisch-künstlerisch)"),
+  slk("SLK", "sprachlich-literarisch-künstlerisch"),
 
   @HiveField(2)
-  gpr("GPR (gesellschaftswissenschaftlich)"),
+  gpr("GPR", "gesellschaftswissenschaftlich"),
 
   @HiveField(3)
-  mint("MINT (mathematisch-naturwissenschaftlich-technisch)"),
+  mint("MINT", "mathematisch-naturwissenschaftlich-technisch"),
+
+  @HiveField(0)
+  none("/", "sonstig"),
 
   ;
 
-  final String display;
+  final String shortName;
+  final String longName;
 
-  const SubjectTaskField(this.display);
+  get fullName => "${longName[0].toUpperCase()}${longName.substring(1)}es Aufgabenfeld";
+  get fullDisplay => "$fullName ${this != none ? "($shortName)" : ""}";
+  get display => "$shortName ($longName)";
+
+  const SubjectTaskField(this.shortName, this.longName);
 
   static List<SubjectTaskField> all = [slk, gpr, mint];
 

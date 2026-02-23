@@ -481,13 +481,13 @@ class GradeHelper {
     return sum / count;
   }
 
-  static String formatDate(DateTime date, {includeYear = true, shortMonth = false}) {
+  static String formatDate(DateTime date, {includeYear = true, shortMonth = false, useRelative = true}) {
     var now = DateTime.now();
 
-    if (date.day == now.day && date.month == now.month && date.year == now.year) {
+    if (useRelative && date.day == now.day && date.month == now.month && date.year == now.year) {
       return "Heute";
     }
-    if (date.day == now.day - 1 && date.month == now.month && date.year == now.year) {
+    if (useRelative && date.day == now.day - 1 && date.month == now.month && date.year == now.year) {
       return "Gestern";
     }
 

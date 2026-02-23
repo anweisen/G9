@@ -162,6 +162,20 @@ class HomePage extends StatelessWidget {
             _buildTextLine(Text("Pflichteinbringungen", style: theme.textTheme.bodyMedium), [
               Text("${flags.forcedSemesters}", style: theme.textTheme.bodyMedium),
             ]),
+            _buildTextLine(Text("Einbringungen", style: theme.textTheme.bodyMedium), [
+              Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(flags.pointsQ / 40))})", style: theme.textTheme.bodySmall),
+              const SizedBox(width: 8),
+              Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+              const SizedBox(width: 4),
+              Text(GradeHelper.formatNumber(flags.pointsQ / 40, decimals: 2), style: theme.textTheme.bodyMedium),
+            ]),
+            if (grades.currentSemester == Semester.abi) _buildTextLine(Text("Abiprüfungen", style: theme.textTheme.bodyMedium), [
+              Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(flags.pointsAbi / 20))})", style: theme.textTheme.bodySmall),
+              const SizedBox(width: 8),
+              Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+              const SizedBox(width: 4),
+              Text(GradeHelper.formatNumber(flags.pointsAbi / 20, decimals: 2), style: theme.textTheme.bodyMedium),
+            ]),
             if (!flags.isEmpty && stats.bestSubjects.isNotEmpty) ...[
               const SizedBox(height: 15),
               Text("Top ${min(3, stats.bestSubjects.length)} Fächer", style: theme.textTheme.bodySmall),
@@ -464,16 +478,14 @@ class HomePage extends StatelessWidget {
 
   int _calculateUnderscoredResults(Map<Subject, Map<Semester, SemesterResult>> results) {
     int count = 0;
-
     for (var subjectResults in results.values) {
       for (var semesterResult in subjectResults.values) {
-        if (semesterResult.semester == Semester.abi) continue; // nur Q-Phase
+        if (semesterResult.semester == Semester.abi) continue; // nur Q-Phase (und Seminar)
         if (!semesterResult.prediction && semesterResult.used && semesterResult.effectiveGrade < 5) {
           count += semesterResult.semester.semesterCountEquivalent;
         }
       }
     }
-
     return count;
   }
 }

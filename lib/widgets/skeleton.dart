@@ -155,15 +155,16 @@ class PageSkeleton extends StatelessWidget {
 class PageTitle extends StatelessWidget {
   final String title;
   final Widget? info;
+  final CrossAxisAlignment crossAxisAlignment;
 
-  const PageTitle({super.key, required this.title, this.info});
+  const PageTitle({super.key, required this.title, this.info, this.crossAxisAlignment = CrossAxisAlignment.end});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: crossAxisAlignment,
       children: [
         Text(title, style: theme.textTheme.headlineMedium),
         if (info != null) info!,

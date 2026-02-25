@@ -3,9 +3,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../api/api.dart';
 import '../logic/hurdles.dart';
 import '../logic/types.dart';
 import '../logic/results.dart';
+import '../provider/account.dart';
 import '../provider/grades.dart';
 import '../provider/settings.dart';
 import '../widgets/skeleton.dart';
@@ -24,6 +26,7 @@ class HomePage extends StatelessWidget {
 
     var settings = Provider.of<SettingsDataProvider>(context);
     var grades = Provider.of<GradesDataProvider>(context);
+    var account = Provider.of<AccountDataProvider>(context);
 
     var results = SemesterResult.calculateResultsWithPredictions(settings.choice!, grades);
     var flags = SemesterResult.applyUseFlags(settings.choice!, results);
@@ -43,13 +46,41 @@ class HomePage extends StatelessWidget {
       double avgUsed = GradeHelper.averageOfSemesterUsed(results, semester);
       if (avgUsed > 0) pastSemestersAvgUsed[semester] = avgUsed;
     }
-    var betterGradePoints = SemesterResult.getMinPointsForBetterAbiGrade(flags.pointsTotal);
     var underscored = _calculateUnderscoredResults(results);
 
     var admissionHurdleCheckResults = AdmissionHurdle.check(settings.choice!, results, flags, grades);
     var graduationHurdleCheckResults = GraduationHurdle.check(settings.choice!, results, flags, grades);
 
-    return PageSkeleton(title: const PageTitle(title: "Übersicht"), children: [
+    return PageSkeleton(title: PageTitle(
+        title: "Übersicht",
+        crossAxisAlignment: CrossAxisAlignment.center,
+        info: GestureDetector(
+          onTap: account.isLoggedIn ? null : () => Api.handleGoogleAuth(account),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: theme.dividerColor.withOpacity(0.75),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Row(
+              children: [
+                if (account.isLoggedIn) ...[
+                  Text(account.userProfile!.name, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,),
+                  const SizedBox(width: 6,),
+                  ClipRRect(
+                      borderRadius: BorderRadius.circular(9),
+                      child: Image.network(account.userProfile!.picture, width:22, height: 22, errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_circle_rounded, size: 18))
+                  ),
+                ] else ...[
+                  const Icon(Icons.account_circle_rounded, size: 18),
+                  const SizedBox(width: 8,),
+                  Text("Login", style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,),
+                ]
+              ],
+            ),
+          ),
+        ),
+    ), children: [
       SubpageTrigger(createSubpage: () => const SemesterSwitcherPage(), callback: (result) => {
         if (result is Semester) {
           grades.currentSemester = result

@@ -13,6 +13,7 @@ import 'pages/settings.dart';
 import 'pages/results.dart';
 import 'pages/setup.dart';
 import 'pages/subjects.dart';
+import 'provider/account.dart';
 import 'provider/grades.dart';
 import 'provider/settings.dart';
 import 'widgets/splash.dart';
@@ -33,6 +34,7 @@ void main() async {
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider<SettingsDataProvider>(create: (context) => SettingsDataProvider()),
     ChangeNotifierProvider<GradesDataProvider>(create: (context) => GradesDataProvider()),
+    ChangeNotifierProvider<AccountDataProvider>(create: (context) => AccountDataProvider()),
   ], child: const MyApp()));
 
   if (WindowTitleBar.isWindows) {

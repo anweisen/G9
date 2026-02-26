@@ -1,7 +1,9 @@
 import 'dart:math';
 
 import 'package:hive/hive.dart';
+import 'package:json_annotation/json_annotation.dart';
 
+import '../adapter/json_converters.dart';
 import '../provider/grades.dart';
 import 'choice.dart';
 import 'types.dart';
@@ -14,14 +16,16 @@ typedef SubjectGradesMap = Map<SubjectId, GradesList>;
 typedef GradesList = List<GradeEntry>;
 
 @HiveType(typeId: 20)
+@JsonSerializable(explicitToJson: true)
 class GradeEntry {
-  @HiveField(0)
+
+  @HiveField(0) @JsonKey(name: "g")
   final int grade;
 
-  @HiveField(1)
+  @HiveField(1) @JsonKey(name: "t")
   final GradeType type;
 
-  @HiveField(2)
+  @HiveField(2) @JsonKey(name: "d") @DateOnlyConverter()
   final DateTime date;
 
   GradeEntry(this.grade, this.type, this.date);
@@ -30,6 +34,9 @@ class GradeEntry {
   String toString() {
     return 'GradeEntry{$type =$grade}';
   }
+
+  factory GradeEntry.fromJson(Map<String, dynamic> json) => _$GradeEntryFromJson(json);
+  Map<String, dynamic> toJson() => _$GradeEntryToJson(this);
 }
 
 // https://www.gesetze-bayern.de/Content/Document/BayGSO-29
@@ -532,53 +539,54 @@ class GradeHelper {
 }
 
 @HiveType(typeId: 21)
+@JsonEnum()
 enum GradeType {
-  @HiveField(0)
+  @HiveField(0) @JsonValue(0)
   klausur("Klausur", GradeTypeArea.klausur),
 
-  @HiveField(1)
+  @HiveField(1) @JsonValue(1)
   test("Stegreifaufgabe", GradeTypeArea.muendlich),
 
-  @HiveField(2)
+  @HiveField(2) @JsonValue(2)
   ausfrage("Ausfrage", GradeTypeArea.muendlich),
 
-  @HiveField(3)
+  @HiveField(3) @JsonValue(3)
   referat("Referat", GradeTypeArea.muendlich),
 
-  @HiveField(4)
+  @HiveField(4) @JsonValue(4)
   mitarbeit("Unterrichtsbeitrag", GradeTypeArea.muendlich),
 
-  @HiveField(10)
+  @HiveField(10) @JsonValue(10)
   praxis("Praxis", GradeTypeArea.sport),
 
-  @HiveField(12)
+  @HiveField(12) @JsonValue(12)
   technik("Technik", GradeTypeArea.sport),
 
-  @HiveField(11)
+  @HiveField(11) @JsonValue(11)
   theorie("Theorie", GradeTypeArea.sport),
 
-  @HiveField(20)
+  @HiveField(20) @JsonValue(20)
   seminar("Seminar Arbeit", GradeTypeArea.seminar), // wird 3x gewichtet
 
-  @HiveField(21)
+  @HiveField(21) @JsonValue(21)
   seminarreferat("Seminar Präsentation", GradeTypeArea.seminar),
 
-  @HiveField(30)
+  @HiveField(30) @JsonValue(30)
   schriftlich("Schriftliche Prüfung", GradeTypeArea.abi),
 
-  @HiveField(31)
+  @HiveField(31) @JsonValue(31)
   muendlich("Mündliche Prüfung (Kolloquium)", GradeTypeArea.abi),
 
-  @HiveField(32)
+  @HiveField(32) @JsonValue(32)
   zusatz("Mündliche Zusatzprüfung (Nachprüfung)", GradeTypeArea.abi),
 
-  @HiveField(33)
+  @HiveField(33) @JsonValue(33)
   fach("Besondere Fachprüfung (Praktisch)", GradeTypeArea.abi),
 
-  @HiveField(40)
+  @HiveField(40) @JsonValue(40)
   kunstprojekt("Künstlerisches Projekt", GradeTypeArea.kunstLk),
 
-  @HiveField(50)
+  @HiveField(50) @JsonValue(50)
   musikpruefung("Praktische Prüfung", GradeTypeArea.musikLk)
 
   ;

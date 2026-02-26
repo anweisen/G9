@@ -1,6 +1,5 @@
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-
-import 'dart:ui';
 
 part 'types.g.dart';
 
@@ -13,7 +12,7 @@ class Subject {
   final String name;
 
   @HiveField(2)
-  Color color;
+  late int colorValue;
 
   @HiveField(3)
   final SubjectCategory category;
@@ -21,8 +20,13 @@ class Subject {
   @HiveField(4)
   late final SubjectTaskField field;
 
-  Subject({required this.id, required this.name, required this.color, required this.category, SubjectTaskField? field}) {
+  // store color as int value for serialization
+  Color get color => Color(colorValue);
+  set color(Color value) => colorValue = value.value;
+
+  Subject({required this.id, required this.name, required this.category, SubjectTaskField? field, Color color = Colors.blueGrey}) {
     byId[id] = this;
+    colorValue = color.value;
     this.field = field ?? SubjectTaskField.fromSubjectCategory(category);
   }
 

@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 import 'types.dart';
 import '../provider/grades.dart';
@@ -112,67 +113,79 @@ class ChoiceBuilder {
 }
 
 @HiveType(typeId: 1)
+@JsonSerializable(ignoreUnannotated: true)
 class Choice extends HiveObject {
-  @HiveField(0)
-  final SubjectId _lk;
+  @HiveField(0) @JsonKey(name: "lk")
+  final SubjectId lkId;
 
-  @HiveField(1)
-  final SubjectId _sg1;
+  @HiveField(1) @JsonKey(name: "sg1")
+  final SubjectId sg1Id;
 
-  @HiveField(2)
-  final SubjectId _ntg1;
+  @HiveField(2) @JsonKey(name: "ntg1")
+  final SubjectId ntg1Id;
 
-  @HiveField(3)
-  final SubjectId _mintSg2;
+  @HiveField(3) @JsonKey(name: "mint_sg2")
+  final SubjectId mintSg2Id;
 
-  @HiveField(4)
+  @HiveField(4) @JsonKey(name: "pug13")
   final bool pug13;
 
-  @HiveField(5)
-  final SubjectId _geoWr;
+  @HiveField(5) @JsonKey(name: "geo_wr")
+  final SubjectId geoWrId;
 
-  @HiveField(6)
-  final SubjectId _musikKunst;
+  @HiveField(6) @JsonKey(name: "ku_mu")
+  final SubjectId musikKunstId;
 
-  @HiveField(7)
-  final SubjectId? _vk;
+  @HiveField(7) @JsonKey(name: "vk")
+  final SubjectId? vkId;
 
-  @HiveField(8)
-  final SubjectId _seminar;
+  @HiveField(8) @JsonKey(name: "sem")
+  final SubjectId seminarId;
 
-  @HiveField(9)
-  final SubjectId? _profil12;
+  @HiveField(9) @JsonKey(name: "profil12")
+  final SubjectId? profil12Id;
 
-  @HiveField(14)
-  final SubjectId? _profil13;
+  @HiveField(14) @JsonKey(name: "profil13")
+  final SubjectId? profil13Id;
 
-  @HiveField(10)
+  @HiveField(10) @JsonKey(name: "sub_m")
   final bool substituteMathe;
 
-  @HiveField(11)
+  @HiveField(11) @JsonKey(name: "sub_d")
   final bool substituteDeutsch;
 
-  @HiveField(12)
-  final SubjectId _abi4;
+  @HiveField(12) @JsonKey(name: "abi4")
+  final SubjectId abi4Id;
 
-  @HiveField(13)
-  final SubjectId _abi5;
+  @HiveField(13) @JsonKey(name: "abi5")
+  final SubjectId abi5Id;
+
+  static final Choice dummy = (ChoiceBuilder()
+      ..lk = Subject.english
+      ..musikKunst = Subject.kunst
+      ..mint1 = Subject.bio
+      ..mintSg2 = Subject.info
+      ..geoWr = Subject.geo
+      ..pug13 = true
+      ..abi4 = Subject.geschi
+      ..abi5 = Subject.bio
+    ).build();
 
   Subject _byId(SubjectId id) => Subject.byId[id]!;
   Subject? _byIdOpt(SubjectId? id) => id == null ? null : Subject.byId[id];
 
-  Subject get lk => _byId(_lk);
-  Subject get sg1 => _byId(_sg1);
-  Subject get ntg1 => _byId(_ntg1);
-  Subject get mintSg2 => _byId(_mintSg2);
-  Subject get geoWr => _byId(_geoWr);
-  Subject get musikKunst => _byId(_musikKunst);
-  Subject? get vk => _byIdOpt(_vk);
-  Subject? get profil12 => _byIdOpt(_profil12);
-  Subject? get profil13 => _byIdOpt(_profil13);
-  Subject get seminar => _byId(_seminar);
-  Subject get abi4 => _byId(_abi4);
-  Subject get abi5 => _byId(_abi5);
+  Subject get lk => _byId(lkId);
+  Subject get sg1 => _byId(sg1Id);
+  Subject get ntg1 => _byId(ntg1Id);
+  Subject get mintSg2 => _byId(mintSg2Id);
+  Subject get geoWr => _byId(geoWrId);
+  Subject get musikKunst => _byId(musikKunstId);
+  Subject? get vk => _byIdOpt(vkId);
+  Subject? get profil12 => _byIdOpt(profil12Id);
+  Subject? get profil13 => _byIdOpt(profil13Id);
+  Subject get seminar => _byId(seminarId);
+  Subject get abi4 => _byId(abi4Id);
+  Subject get abi5 => _byId(abi5Id);
 
   List<Subject> get subjects => [
     // lk is already represented by the corresponding subject category (ntg1 / sg1 / sport / kumu)
@@ -181,7 +194,7 @@ class Choice extends HiveObject {
     sg1,
     ntg1,
     mintSg2,
-    if (_vk != null) vk!,
+    if (vkId != null) vk!,
     musikKunst,
     geoWr,
     Subject.pug,
@@ -233,7 +246,7 @@ class Choice extends HiveObject {
     // W-Seminar als Kurs mit HJ-Leistungen in Q12/1 und Q12/2,
     // in Q13 auch "zwei HJ-Leistungen" in Form der Seminararbeit (bis zu 30 Punkte)
 
-    if (_vk != null) { // VK(sg/ntg): 2+2 Semester
+    if (vkId != null) { // VK(sg/ntg): 2+2 Semester
       if (subject == vk || subject == mintSg2) {
         return 2;
       }
@@ -263,27 +276,31 @@ class Choice extends HiveObject {
   }
 
   Choice(
-    this._lk,
-    this._sg1,
-    this._ntg1,
-    this._mintSg2,
+    this.lkId,
+    this.sg1Id,
+    this.ntg1Id,
+    this.mintSg2Id,
     this.pug13,
-    this._geoWr,
-    this._musikKunst,
-    this._seminar,
-    this._vk,
-    this._profil12,
-    this._profil13,
+    this.geoWrId,
+    this.musikKunstId,
+    this.seminarId,
+    this.vkId,
+    this.profil12Id,
+    this.profil13Id,
     this.substituteMathe,
     this.substituteDeutsch,
-    this._abi4,
-    this._abi5,
+    this.abi4Id,
+    this.abi5Id,
   ) {
+    print("vkId: $vkId");
     Subject.all; // initialize subject instances
   }
 
+  factory Choice.fromJson(Map<String, dynamic> json) => _$ChoiceFromJson(json);
+  Map<String, dynamic> toJson() => _$ChoiceToJson(this);
+
   @override
   String toString() {
-    return 'Choice{_lk: $_lk, _sg1: $_sg1, _ntg1: $_ntg1, _mintSg2: $_mintSg2, pug13: $pug13, _geoWr: $_geoWr, _musikKunst: $_musikKunst, _vk: $_vk, _seminar: $_seminar, _profil12: $_profil12, _profil13: $_profil13, substituteMathe: $substituteMathe, substituteDeutsch: $substituteDeutsch, _abi4: $_abi4, _abi5: $_abi5}';
+    return 'Choice{lk: $lkId, sg1: $sg1Id, ntg1: $ntg1Id, mintSg2: $mintSg2Id, pug13: $pug13, geoWr: $geoWrId, musikKunst: $musikKunstId, vk: $vkId, seminar: $seminarId, profil12: $profil12Id, profil13: $profil13Id, substituteMathe: $substituteMathe, substituteDeutsch: $substituteDeutsch, abi4: $abi4Id, abi5: $abi5Id}';
   }
 }

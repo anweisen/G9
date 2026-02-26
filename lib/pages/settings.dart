@@ -110,6 +110,11 @@ class SettingsPage extends StatelessWidget {
             }
           ),
           const SizedBox(height: 14),
+          SubpageTrigger(
+              createSubpage: () => const PdfPreviewPage(),
+              child: buildButton(theme, "Notenübersicht drucken", Icons.print_rounded, null, primary: false)
+          ),
+          const SizedBox(height: 14),
           buildButton(theme, "Zur Startseite", Icons.info_rounded, () => Navigator.pushNamed(context, "/welcome"), primary: false),
           const SizedBox(height: 20),
         ]);

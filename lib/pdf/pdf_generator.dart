@@ -45,7 +45,7 @@ class PdfGenerator {
           build: (context) => [
             Text("Notenübersicht", style: TextStyle(fontSize: 14, height: 1, fontWeight: FontWeight.bold),),
 
-            SizedBox(height: 4),
+            SizedBox(height: 2),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -164,16 +164,8 @@ class PdfGenerator {
             else if (flags.isEmpty)
               Text("Es wurden bisher noch keine Noten eingetragen", style: bodyTextStyle,)
             else for (HurdleCheckResult check in [...admissionHurdles, ...graduationHurdles]) ...[
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(flex: 8, child: Text(check.hurdle.desc, style: bodyTextStyle, softWrap: true, maxLines: 3,),),
-                  SizedBox(width: 8),
-                  Expanded(flex: 2, child: Text(check.text, style: TextStyle(fontSize: 8, color: secondaryColor, fontWeight: FontWeight.normal,), softWrap: true, maxLines: 5, textAlign: TextAlign.right)),
-                ]
-              ),
-              SizedBox(height: 2),
+              buildHurdleCheckResultTextLine(check),
+              SizedBox(height: 3),
             ],
 
             Spacer(),
@@ -271,6 +263,21 @@ class PdfGenerator {
         SizedBox(width: 4),
         Expanded(child: Text(text, style: TextStyle(fontSize: 6, color: secondaryColor, fontWeight: FontWeight.normal),))
       ],
+    );
+  }
+
+  static Widget buildHurdleCheckResultTextLine(HurdleCheckResult check) {
+    final double relative = check.text.length.toDouble() / check.hurdle.desc.length.toDouble();
+    final int flex = (relative * 100).clamp(15, 40).round(); // min 15%, max 40% for desc
+
+    return Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(flex: 100 - flex, child: Text(check.hurdle.desc, style: bodyTextStyle, softWrap: true, maxLines: 3,),),
+          SizedBox(width: 8),
+          Expanded(flex: flex, child: Text(check.text, style: TextStyle(fontSize: 8, color: secondaryColor, fontWeight: FontWeight.normal,), softWrap: true, maxLines: 5, textAlign: TextAlign.right)),
+        ]
     );
   }
 

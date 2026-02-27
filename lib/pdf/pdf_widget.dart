@@ -54,7 +54,7 @@ class PdfPreviewPage extends StatelessWidget {
           ),
 
           setup.BackButton(
-            leftOffset: PageSkeleton.leftOffset,
+            leftOffset: PageSkeleton.leftOffset + 2,
             animationProgress: 1,
             icon: Icons.print_rounded,
             callback: () async {

@@ -20,6 +20,7 @@ class PdfGenerator {
       headerTextStyle = TextStyle(fontSize: 9, color: primaryColor, fontWeight: FontWeight.bold);
 
   static Future<Uint8List> generatePdf(
+      PdfPageFormat format,
       Choice choice, Map<Subject, Map<Semester, SemesterResult>> results, ResultsFlags flags, Statistics statistics,
       List<HurdleCheckResult> admissionHurdles, List<HurdleCheckResult> graduationHurdles
       ) async {

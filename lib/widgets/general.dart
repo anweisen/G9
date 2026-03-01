@@ -113,3 +113,50 @@ class CustomLineBreakText extends StatelessWidget {
       );
   }
 }
+
+class DotLoadingIndicator extends StatefulWidget {
+  const DotLoadingIndicator({super.key, required this.style, required this.duration});
+
+  final TextStyle style;
+  final Duration duration;
+
+  @override
+  State<DotLoadingIndicator> createState() => _DotLoadingIndicatorState();
+}
+
+class _DotLoadingIndicatorState extends State<DotLoadingIndicator> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<int> _dotCount;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.duration
+    )..repeat(); // Loop the animation infinitely
+
+    // StepTween breaks the animation into 4 stages: "", ".", "..", "..."
+    _dotCount = IntTween(begin: 1, end: 3).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 3 * widget.style.fontSize!, // Max width for "..."
+      child: AnimatedBuilder(
+        animation: _dotCount,
+        builder: (context, child) {
+          final dots = "." * _dotCount.value;
+          return Text(dots, style: widget.style,);
+        },
+      ),
+    );
+  }
+}

@@ -239,6 +239,10 @@ class GradeWeightingComponent {
   }
 
   double calculateAverage(GradesList grades) {
+    if (grades.length == 1 && grades.first.type == GradeType.result) {
+      return grades.first.grade.toDouble();
+    }
+
     final filteredGrades = filter(grades);
     if (subcomponents == null) return GradeHelper.unweightedAverageOf(filteredGrades);
     return calculateSubComponentsAverage(filteredGrades, subcomponents!);
@@ -587,7 +591,10 @@ enum GradeType {
   kunstprojekt("Künstlerisches Projekt", GradeTypeArea.kunstLk),
 
   @HiveField(50) @JsonValue(50)
-  musikpruefung("Praktische Prüfung", GradeTypeArea.musikLk)
+  musikpruefung("Praktische Prüfung", GradeTypeArea.musikLk),
+
+  @HiveField(100) @JsonValue(100)
+  result("Ergebnis", GradeTypeArea.result),
 
   ;
 
@@ -681,7 +688,9 @@ enum GradeTypeArea {
   /// Im Musik LK wird eine praktische Prüfung benotet
   musikLk("Leistungsfach Musik"),
   /// Abiturprüfungen: schriftliche / mündliche Prüfungen, Fachprüfungen, Zusatzprüfungen, etc.
-  abi("Abiturprüfungen");
+  abi("Abiturprüfungen"),
+  /// Ergebnis direkt eintragen (z.B. Gesamtleistung Seminar, Abiturprüfungsergebnis, etc.)
+  result("Ergebnis");
 
   const GradeTypeArea(this.name);
 

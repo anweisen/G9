@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -142,8 +144,16 @@ class _SubjectPageState extends State<SubjectPage> {
           ),
           const SizedBox(height: 10),
 
-          for (int index = 0; index < grades.length; index++)
-            TestItem(theme: theme,
+          if ((grades.isEmpty || grades.length == 1 && grades.first.type == GradeType.result) && (_currentSemester == Semester.seminar13 || _currentSemester == Semester.abi))
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 32,),
+                ..._buildDirectSelection(theme, grades.firstOrNull, accountProvider, dataProvider)
+              ],
+            )
+          else for (int index = 0; index < grades.length; index++)
+            if (grades[index].type != GradeType.result) TestItem(theme: theme,
               entry: grades[index],
               subject: widget.subject,
               semester: _currentSemester!,
@@ -154,7 +164,7 @@ class _SubjectPageState extends State<SubjectPage> {
                   accountProvider.updateSubjectGradesFromResult(result, dataProvider);
                 }
               },
-            )
+            ),
     ]);
   }
 
@@ -164,6 +174,83 @@ class _SubjectPageState extends State<SubjectPage> {
 
   void _addGrade(GradesDataProvider dataProvider, GradeEditResult result) {
     dataProvider.addGrade(result.subject.id, result.entry, semester: result.semester);
+  }
+
+  List<Widget> _buildDirectSelection(ThemeData theme, GradeEntry? grade, AccountDataProvider accountProvider, GradesDataProvider gradesProvider) {
+    return [
+      Text("oder direkt Ergebnis eintragen", style: theme.textTheme.displayMedium?.copyWith(fontStyle: FontStyle.italic)),
+      const SizedBox(height: 8,),
+
+      if (grade != null) Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  final entry = GradeEntry(min(max(grade.grade - 1, 0), 15 * _currentSemester!.semesterCountEquivalent), GradeType.result, DateTime.now());
+                  final result = GradeEditResult(entry, widget.subject, _currentSemester!, true);
+                  _removeGrade(gradesProvider, 0);
+                  _addGrade(gradesProvider, result);
+                  accountProvider.updateSubjectGradesFromResult(result, gradesProvider);
+                },
+                child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: grade.grade <= 0 ? Colors.transparent : theme.textTheme.labelSmall!.color!, width: 1.5))),
+                    child: Icon(Icons.remove_rounded, size: 16, color: grade.grade <= 0 ? Colors.transparent : theme.textTheme.labelSmall?.color)
+                ),
+              ),
+              const SizedBox(width: 12,),
+              SizedBox(
+                  width: 32,
+                  child: Text(grade.grade.toString(), style: theme.textTheme.headlineMedium, textAlign: TextAlign.center,)
+              ),
+              const SizedBox(width: 12,),
+              GestureDetector(
+                onTap: () {
+                  final entry = GradeEntry(min(max(grade.grade + 1, 0), 15 * _currentSemester!.semesterCountEquivalent), GradeType.result, DateTime.now());
+                  final result = GradeEditResult(entry, widget.subject, _currentSemester!, true);
+                  _removeGrade(gradesProvider, 0);
+                  _addGrade(gradesProvider, result);
+                  accountProvider.updateSubjectGradesFromResult(result, gradesProvider);
+                },
+                child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: grade.grade >= 15 * _currentSemester!.semesterCountEquivalent ? Colors.transparent : theme.textTheme.labelSmall!.color!, width: 1.5))),
+                    child: Icon(Icons.add_rounded, size: 16, color: grade.grade >= 15 * _currentSemester!.semesterCountEquivalent ? Colors.transparent : theme.textTheme.labelSmall?.color)
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8,),
+          GestureDetector(
+            onTap: () {
+              _removeGrade(gradesProvider, 0);
+              accountProvider.updateSubjectGrades(widget.subject.id, _currentSemester!, gradesProvider);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: theme.dividerColor, width: 2))),
+              child: Text("Ergebnis löschen", style: theme.textTheme.displayMedium?.copyWith(height: 1.25), softWrap: true, maxLines: 2,),
+            ),
+          ),
+        ],
+      ) else GestureDetector(
+        onTap: () {
+          final settingsProvider = Provider.of<SettingsDataProvider>(context, listen: false);
+          final results = SemesterResult.calculateResultsWithPredictions(settingsProvider.choice!, gradesProvider);
+          final _ = SemesterResult.applyUseFlags(settingsProvider.choice!, results);
+          final result = GradeEditResult(GradeEntry(SemesterResult.calculatePrediction(null, results) * _currentSemester!.semesterCountEquivalent, GradeType.result, DateTime.now()), widget.subject, _currentSemester!, false);
+          _addGrade(gradesProvider, result);
+          accountProvider.updateSubjectGradesFromResult(result, gradesProvider);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: theme.dividerColor, width: 2))),
+          child: Text("Ergebnis eintragen", style: theme.textTheme.displayMedium?.copyWith(height: 1.25, color: theme.primaryColor), softWrap: true, maxLines: 2,),
+        ),
+      )
+    ];
   }
 
   Widget _buildSemester(ThemeData theme, GradesDataProvider dataProvider, Choice? choice, Semester currentSemester, Semester semester, void Function(Semester) callback) {

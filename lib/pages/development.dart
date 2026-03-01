@@ -29,7 +29,10 @@ class GradesDevelopmentPage extends StatelessWidget {
     for (Semester semester in semesters) {
       final semesterGrades = rawGrades[semester]?[subject.id] ?? [];
       semesterGrades.sort((a, b) => a.date.compareTo(b.date),);
-      grades.addAll(semesterGrades);
+      for (GradeEntry grade in semesterGrades) {
+        if (grade.type == GradeType.result) continue;
+        grades.add(grade);
+      }
       gradesSemesters.addAll(List.filled(semesterGrades.length, semester));
     }
 

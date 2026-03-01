@@ -342,6 +342,24 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                     children: [
                       GestureDetector(
                         onTap: () {
+                          final newPrediction = max(min(predicted - 1, 15), 0);
+                          gradesProvider.setAbiPrediction(subject.id, newPrediction);
+                          accountProvider.updateAbiPrediction(subject.id, newPrediction);
+                        },
+                        child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: predicted <= 0 ? Colors.transparent : theme.textTheme.labelSmall!.color!, width: 1.5))),
+                            child: Icon(Icons.remove_rounded, size: 16, color: predicted <= 0 ? Colors.transparent : theme.textTheme.labelSmall?.color)
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 36,
+                        child: Text("$predicted", style: theme.textTheme.headlineMedium, textAlign: TextAlign.center),
+                      ),
+                      const SizedBox(width: 12),
+                      GestureDetector(
+                        onTap: () {
                           final newPrediction = max(min(predicted + 1, 15), 0);
                           gradesProvider.setAbiPrediction(subject.id, newPrediction);
                           accountProvider.updateAbiPrediction(subject.id, newPrediction);
@@ -350,22 +368,6 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
                             decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: predicted >= 15 ? Colors.transparent : theme.textTheme.labelSmall!.color!, width: 1.5))),
                             child: Icon(Icons.add_rounded, size: 16, color: predicted >= 15 ? Colors.transparent : theme.textTheme.labelSmall?.color)
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                        width: 48,
-                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: theme.textTheme.labelSmall!.color!, width: 2))),
-                        child: Text("$predicted", style: theme.textTheme.bodyMedium, textAlign: TextAlign.center),
-                      ),
-                      const SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: () => gradesProvider.setAbiPrediction(subject.id, max(min(predicted - 1, 15), 0)),
-                        child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: predicted <= 0 ? Colors.transparent : theme.textTheme.labelSmall!.color!, width: 1.5))),
-                            child: Icon(Icons.remove_rounded, size: 16, color: predicted <= 0 ? Colors.transparent : theme.textTheme.labelSmall?.color)
                         ),
                       ),
                     ],

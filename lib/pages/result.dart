@@ -7,6 +7,7 @@ import '../logic/grades.dart';
 import '../logic/choice.dart';
 import '../logic/results.dart';
 import '../logic/types.dart';
+import '../provider/account.dart';
 import '../provider/grades.dart';
 import '../widgets/general.dart';
 import '../widgets/skeleton.dart';
@@ -105,7 +106,7 @@ class SubjectResultPage extends StatelessWidget {
                     height: 27,
                     decoration: (result?.used ?? false) ? BoxDecoration(color: (result?.grade ?? 15) >= 5 ? theme.primaryColor : theme.splashColor, borderRadius: BorderRadius.circular(6)) : null,
                     child: Center(child: Text(result?.grade.toString() ?? "-",
-                          style: (result?.used ?? false) ? theme.textTheme.labelMedium?.copyWith(color: (result?.grade ?? 15) < 5 ? theme.indicatorColor : null) : theme.textTheme.bodyMedium,)
+                          style: (result?.used ?? false) ? theme.textTheme.labelMedium?.copyWith(color: (result?.grade ?? 15) < 5 ? theme.disabledColor : null) : theme.textTheme.bodyMedium,)
                     )
                 ),
                 const SizedBox(width: 6),
@@ -229,8 +230,9 @@ class SubjectResultAbiPrediction extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final gradesProvider = Provider.of<GradesDataProvider>(context);
+    final accountProvider = Provider.of<AccountDataProvider>(context, listen: false);
 
-    Color contrastColor = subject.color.computeLuminance() > 0.80 ? (theme.brightness == Brightness.light ? Colors.black : Colors.black87) : Colors.white;
+    Color contrastColor = subject.color.computeLuminance() > 0.78 ? (theme.brightness == Brightness.light ? Colors.black : Colors.black87) : Colors.white;
 
     bool prediction = result?.prediction ?? true;
     int predicted = gradesProvider.getAbiPrediction(subject.id) ?? result?.effectiveGrade ?? 1;
@@ -339,7 +341,11 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       GestureDetector(
-                        onTap: () => gradesProvider.setAbiPrediction(subject.id, max(min(predicted + 1, 15), 0)),
+                        onTap: () {
+                          final newPrediction = max(min(predicted + 1, 15), 0);
+                          gradesProvider.setAbiPrediction(subject.id, newPrediction);
+                          accountProvider.updateAbiPrediction(subject.id, newPrediction);
+                        },
                         child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
                             decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: predicted >= 15 ? Colors.transparent : theme.textTheme.labelSmall!.color!, width: 1.5))),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 import '../logic/choice.dart';
 import '../logic/types.dart';
@@ -16,22 +17,25 @@ class GradesDataProvider extends ChangeNotifier {
     load();
   }
 
-  Semester _currentSemester = Semester.q12_1;
+  bool _loaded = false;
+  get hasLoaded => _loaded;
 
-  Map<Semester, SubjectGradesMap>? _data;
-  Map<SubjectId, int>? _abiPredictions;
+  Map<Semester, SubjectGradesMap>? data;
 
-  Semester get currentSemester => _currentSemester;
-  set currentSemester(Semester value) {
-    _currentSemester = value;
+  Map<SubjectId, int>? abiPredictions;
+
+  Semester currentSemester = Semester.q12_1;
+
+  void changeCurrentSemester(Semester semester) {
+    currentSemester = semester;
     notifyListeners();
     save();
   }
 
   // (!) READ-ONLY
   GradesList getGrades(SubjectId subjectId, {Semester? semester}) {
-    semester ??= _currentSemester;
-    var grades = _data?[semester]?[subjectId] ?? [];
+    semester ??= currentSemester;
+    var grades = data?[semester]?[subjectId] ?? [];
     return grades..sort((a, b) {
       // Step 1: Prioritize 'klausur' types.
       if (a.type == GradeType.klausur && b.type != GradeType.klausur) {
@@ -54,31 +58,31 @@ class GradesDataProvider extends ChangeNotifier {
   // (!) READ-ONLY
   // TODO "parallel" semesters (e.g. seminar)
   Map<SubjectId, GradesList> getGradesForSemester(Choice choice, {Semester? semester}) {
-    semester ??= _currentSemester;
-    var currentMap = _data?[semester] ?? {};
+    semester ??= currentSemester;
+    var currentMap = data?[semester] ?? {};
     return choice.subjects
       .asMap().map((_, subject) => MapEntry(subject.id, currentMap[subject.id] ?? []));
   }
 
   Map<Semester, SubjectGradesMap> getRawGrades() {
-    return _data ?? {};
+    return data ?? {};
   }
 
   void setAbiPrediction(SubjectId subjectId, int points) {
     print("Setting ABI prediction for $subjectId to $points");
-    _abiPredictions![subjectId] = points;
+    abiPredictions![subjectId] = points;
 
     notifyListeners();
     save();
   }
 
   int? getAbiPrediction(SubjectId subjectId) {
-    return _abiPredictions?[subjectId];
+    return abiPredictions?[subjectId];
   }
 
   void clearAbiPrediction(SubjectId subjectId) {
     print("Clearing ABI prediction for $subjectId");
-    _abiPredictions!.remove(subjectId);
+    abiPredictions!.remove(subjectId);
 
     notifyListeners();
     save();
@@ -86,11 +90,11 @@ class GradesDataProvider extends ChangeNotifier {
 
   void addGrade(SubjectId subjectId, GradeEntry grade, {Semester? semester}) {
     print("Adding grade $grade to $subjectId in $semester");
-    assert (_data != null);
-    semester ??= _currentSemester;
+    assert (data != null);
+    semester ??= currentSemester;
 
-    var grades = _data![semester]![subjectId];
-    grades ??= _data![semester]![subjectId] = [];
+    var grades = data![semester]![subjectId];
+    grades ??= data![semester]![subjectId] = [];
 
     grades.add(grade);
 
@@ -100,11 +104,11 @@ class GradesDataProvider extends ChangeNotifier {
 
   void removeGrade(SubjectId subjectId, int index, {Semester? semester}) {
     print("Removing grade at $index from $subjectId in $semester");
-    assert (_data != null);
-    semester ??= _currentSemester;
+    assert (data != null);
+    semester ??= currentSemester;
 
-    var grades = _data![semester]![subjectId];
-    grades ??= _data![semester]![subjectId] = [];
+    var grades = data![semester]![subjectId];
+    grades ??= data![semester]![subjectId] = [];
 
     grades.removeAt(index);
 
@@ -114,22 +118,23 @@ class GradesDataProvider extends ChangeNotifier {
 
   Future<void> load() async {
     var settingsBox = await Hive.openBox(hiveSettingsBoxName);
-    _currentSemester = Semester.values[settingsBox.get("currentSemester", defaultValue: Semester.q12_1.index)];
+    currentSemester = Semester.values[settingsBox.get("currentSemester", defaultValue: Semester.q12_1.index)];
 
     // for some reason we cannot use the generic type here directly as the casting fails
     // this then requires the mapping of the dynamic type
     var box = await Hive.openBox<Map>(hiveBoxName);
 
-    _data = <Semester, SubjectGradesMap>{};
+    data = <Semester, SubjectGradesMap>{};
     for (var semester in Semester.values) {
       Map<dynamic, dynamic> dynamicMap = box.get(semester.index, defaultValue: <SubjectId, GradesList>{})!;
-      _data![semester] = dynamicMap.map((key, value) => MapEntry(key as SubjectId, _mapHiveList<GradeEntry>(value)));
+      data![semester] = dynamicMap.map((key, value) => MapEntry(key as SubjectId, _mapHiveList<GradeEntry>(value)));
     }
 
     var predictionsBox = await Hive.openBox<Map>(hivePredictionsBoxName);
     Map<dynamic, dynamic> dynamicPredictionsMap = predictionsBox.get("abiPredictions", defaultValue: <SubjectId, int>{})!;
-    _abiPredictions = dynamicPredictionsMap.map((key, value) => MapEntry(key as SubjectId, value as int));
+    abiPredictions = dynamicPredictionsMap.map((key, value) => MapEntry(key as SubjectId, value as int));
 
+    _loaded = true;
     notifyListeners();
   }
 
@@ -139,24 +144,25 @@ class GradesDataProvider extends ChangeNotifier {
 
   Future<void> save() async {
     var settingsBox = await Hive.openBox(hiveSettingsBoxName);
-    settingsBox.put("currentSemester", _currentSemester.index);
+    settingsBox.put("currentSemester", currentSemester.index);
 
     // see load() for the reason of the dynamic type
     var box = await Hive.openBox<Map>(hiveBoxName);
 
-    _data!.forEach((semester, subjectGradesMap) {
+    data!.forEach((semester, subjectGradesMap) {
       print("Saving $semester with $subjectGradesMap");
       box.put(semester.index, subjectGradesMap);
     });
 
     var predictionsBox = await Hive.openBox<Map>(hivePredictionsBoxName);
-    predictionsBox.put("abiPredictions", _abiPredictions!);
+    predictionsBox.put("abiPredictions", abiPredictions!);
   }
 }
 
 
 // TODO move to logic package
 @HiveType(typeId: 4)
+@JsonEnum()
 enum Semester {
   @HiveField(0)
   q12_1(0, "12/1", "Q12/1", 1),

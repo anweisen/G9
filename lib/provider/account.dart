@@ -1,21 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hive/hive.dart';
+import 'package:json_annotation/json_annotation.dart';
 
+import '../adapter/json_converters.dart';
 import '../api/api.dart';
+import '../api/types.dart';
+import '../logic/choice.dart';
+import '../logic/grades.dart';
+import '../logic/types.dart';
+import '../pages/grade.dart';
+import 'grades.dart';
+import 'settings.dart';
+
+part 'account.g.dart';
 
 class AccountDataProvider extends ChangeNotifier {
+  static const hiveBoxName = "account";
+  static const hiveProfileKey = "profile";
+  static const hivePrivateProfileKey = "private_profile";
+  static const hiveStashedChangesKey = "stashed_changes";
+  static const hiveProviderKey = "provider";
 
   final storage = const FlutterSecureStorage();
 
+  bool _loaded = false;
+  get hasLoaded => _loaded;
+
+  bool _syncingFailed = false;
+  bool _synced = false;
+  bool _syncing = false;
+  get isSyncing => _syncing;
+  get hasSynced => _synced;
+  get hasSyncingFailed => _syncingFailed;
+
+  bool _authenticating = false;
+  get isAuthenticating => _authenticating;
+  set authenticating(bool value) {
+    _authenticating = value;
+    notifyListeners();
+  }
+
+  late AuthenticatedApi _api;
   String? _accessToken;
+  String? _provider;
   PublicUserProfile? _userProfile;
+  PrivateUserProfile? _privateProfile;
+  StashedChanges? _stashedChanges;
 
   String? get accessToken => _accessToken;
   set accessToken(String? value) {
     _accessToken = value;
+    _api = AuthenticatedApi(_accessToken ?? "");
     notifyListeners();
     save();
   }
+
+  AuthenticatedApi get api => _api;
 
   PublicUserProfile? get userProfile => _userProfile;
   set userProfile(PublicUserProfile? value) {
@@ -24,7 +65,21 @@ class AccountDataProvider extends ChangeNotifier {
     save();
   }
 
-  bool get isLoggedIn => _accessToken != null && _userProfile != null;
+  PrivateUserProfile? get privateProfile => _privateProfile;
+  set privateProfile(PrivateUserProfile? value) {
+    _privateProfile = value;
+    notifyListeners();
+    save();
+  }
+
+  String? get provider => _provider;
+  set provider(String? value) {
+    _provider = value;
+    notifyListeners();
+    save();
+  }
+
+  bool get isLoggedIn => _accessToken != null && _userProfile != null && _privateProfile != null;
 
   AccountDataProvider() {
     load();
@@ -33,15 +88,259 @@ class AccountDataProvider extends ChangeNotifier {
   void logout() {
     _accessToken = null;
     _userProfile = null;
+    _privateProfile = null;
     notifyListeners();
     save();
   }
 
   void load() async {
+    // use setter to init api
     accessToken = await storage.read(key: "accessToken");
+
+    var box = await Hive.openBox(hiveBoxName);
+    _userProfile = box.get(hiveProfileKey);
+    _privateProfile = box.get(hivePrivateProfileKey);
+
+    _stashedChanges = box.get(hiveStashedChangesKey);
+
+    _provider = box.get(hiveProviderKey);
+
+    _loaded = true;
+    notifyListeners();
   }
 
   void save() async {
     await storage.write(key: "accessToken", value: _accessToken);
+
+    var box = await Hive.openBox(hiveBoxName);
+    await box.put(hiveProfileKey, _userProfile);
+    await box.put(hivePrivateProfileKey, _privateProfile);
+
+    await box.put(hiveProviderKey, _provider);
+
+    await box.put(hiveStashedChangesKey, _stashedChanges);
   }
+
+  void saveStash() async {
+    print("Saving stashed changes: $_stashedChanges");
+    var box = await Hive.openBox(hiveBoxName);
+    box.put(hiveStashedChangesKey, _stashedChanges);
+  }
+
+  void deleteAccount() async {
+    if (!isLoggedIn) {
+      return;
+    }
+
+    final success = await api.deleteAccount();
+    if (success) {
+      logout();
+    }
+  }
+
+  void syncStoredData(SettingsDataProvider settingsProvider, GradesDataProvider gradesProvider) async {
+    _syncing = true;
+    notifyListeners();
+
+    await Future.delayed(const Duration(milliseconds: 1500));
+
+    final dataPayload = SyncDataPayload(
+      choice: settingsProvider.choice,
+      currentSemester: gradesProvider.currentSemester,
+      usesSlider: settingsProvider.usesSlider,
+      // theme: settingsProvider.theme.index,
+      abiPredictions: gradesProvider.abiPredictions,
+      grades: gradesProvider.data,
+    );
+
+    print("Syncing data with backend. Payload: ${dataPayload?.toJson()}");
+    print("Stashed changes being sent to backend: ${_stashedChanges?.toJson()}");
+    final responsePayload = await api.postSyncData(dataPayload, _stashedChanges);
+
+    if (responsePayload == null) {
+      _syncing = false;
+      _syncingFailed = true;
+      notifyListeners();
+      return;
+    }
+
+    if (responsePayload.choice != null) {
+      settingsProvider.choice = responsePayload.choice!;
+    }
+    if (responsePayload.currentSemester != null) {
+      gradesProvider.currentSemester = responsePayload.currentSemester!;
+    }
+    if (responsePayload.usesSlider != null) {
+      settingsProvider.usesSlider = responsePayload.usesSlider!;
+    }
+    // if (responsePayload.theme != null) {
+    //   print("Updating theme from sync data: ${responsePayload.theme}");
+    //   settingsProvider.theme = ThemeMode.values[responsePayload.theme!];
+    // }
+    if (responsePayload.abiPredictions != null) {
+      gradesProvider.abiPredictions = responsePayload.abiPredictions!;
+    }
+    if (responsePayload.grades != null) {
+      gradesProvider.data = responsePayload.grades!;
+    }
+
+    gradesProvider.save();
+    gradesProvider.notifyListeners();
+    settingsProvider.save();
+    settingsProvider.notifyListeners();
+
+    _stashedChanges = null;
+    saveStash();
+
+    _syncing = false;
+    _synced = true;
+    notifyListeners();
+  }
+
+  void updateSubjectGradesFromResult(GradeEditResult result, GradesDataProvider gradesProvider) {
+    updateSubjectGrades(result.subject.id, result.semester, gradesProvider);
+  }
+
+  void updateSubjectGrades(SubjectId subjectId, Semester semester, GradesDataProvider gradesProvider) async {
+    final grades = gradesProvider.getGrades(subjectId, semester: semester);
+
+    if (!isLoggedIn) {
+      stashSubjectGrades(subjectId, semester, grades);
+      return;
+    }
+
+    final success = await api.postSubjectGrades(subjectId, semester, grades);
+    if (!success) {
+      stashSubjectGrades(subjectId, semester, grades);
+    }
+  }
+
+  void updateChoice(Choice choice) async {
+    if (!isLoggedIn) {
+      stashChoice(choice);
+      return;
+    }
+
+    final success = await api.postChoice(choice);
+    if (!success) {
+      stashChoice(choice);
+    }
+  }
+
+  void updateAbiPrediction(SubjectId subjectId, int? points) async {
+    if (!isLoggedIn) {
+      stashAbiPrediction(subjectId, points);
+      return;
+    }
+
+    final success = await api.postAbiPrediction(subjectId, points);
+    if (!success) {
+      stashAbiPrediction(subjectId, points);
+    }
+  }
+
+  void updateSemester(Semester semester) async { // only stash, no live update for now
+    _stashedChanges ??= StashedChanges.empty();
+    _stashedChanges!.stashedSemester = StashedSemesterChange.now(semester);
+    saveStash();
+  }
+
+  void stashSubjectGrades(SubjectId subjectId, Semester semester, GradesList grades) {
+    _stashedChanges ??= StashedChanges.empty();
+    _stashedChanges!.stashedGrades ??= {};
+    _stashedChanges!.stashedGrades![semester] ??= {};
+    _stashedChanges!.stashedGrades![semester]![subjectId] = StashedGradesChange.now(grades);
+    saveStash();
+  }
+
+  void stashChoice(Choice choice) {
+    _stashedChanges ??= StashedChanges.empty();
+    _stashedChanges!.stashedChoice = StashedChoiceChange.now(choice);
+    saveStash();
+  }
+
+  void stashAbiPrediction(SubjectId subjectId, int? points) {
+    _stashedChanges ??= StashedChanges.empty();
+    _stashedChanges!.stashedAbiPredictions ??= {};
+    _stashedChanges!.stashedAbiPredictions![subjectId] = StashedAbiPredictionsChange.now(points);
+    saveStash();
+  }
+
+}
+
+@JsonSerializable(explicitToJson: true)
+@HiveType(typeId: 40)
+class StashedChanges {
+
+  @HiveField(0) @JsonKey(name: "grades")
+  Map<Semester, Map<SubjectId, StashedGradesChange>>? stashedGrades;
+
+  @HiveField(1) @JsonKey(name: "choice")
+  StashedChoiceChange? stashedChoice;
+
+  @HiveField(2) @JsonKey(name: "abi_predictions")
+  Map<SubjectId, StashedAbiPredictionsChange>? stashedAbiPredictions;
+
+  @HiveField(3) @JsonKey(name: "semester")
+  StashedSemesterChange? stashedSemester;
+
+  StashedChanges(this.stashedGrades, this.stashedChoice, this.stashedAbiPredictions);
+
+  StashedChanges.empty();
+
+  factory StashedChanges.fromJson(Map<String, dynamic> json) => _$StashedChangesFromJson(json);
+  Map<String, dynamic> toJson() => _$StashedChangesToJson(this);
+}
+
+class StashedValueChange<T> {
+
+  @HiveField(0) @JsonKey(name: "at") @GoDateTimeConverter()
+  final DateTime at;
+
+  @HiveField(1) @JsonKey(name: "to")
+  final T to;
+
+  StashedValueChange(this.at, this.to);
+
+  StashedValueChange.now(this.to) : at = DateTime.now();
+}
+
+@HiveType(typeId: 41)
+@JsonSerializable(explicitToJson: true)
+class StashedGradesChange extends StashedValueChange<GradesList> {
+  StashedGradesChange(super.at, super.to);
+  StashedGradesChange.now(super.to) : super.now();
+
+  factory StashedGradesChange.fromJson(Map<String, dynamic> json) => _$StashedGradesChangeFromJson(json);
+  Map<String, dynamic> toJson() => _$StashedGradesChangeToJson(this);
+}
+
+@HiveType(typeId: 42)
+@JsonSerializable(explicitToJson: true)
+class StashedChoiceChange extends StashedValueChange<Choice> {
+  StashedChoiceChange(super.at, super.to);
+  StashedChoiceChange.now(super.to) : super.now();
+
+  factory StashedChoiceChange.fromJson(Map<String, dynamic> json) => _$StashedChoiceChangeFromJson(json);
+  Map<String, dynamic> toJson() => _$StashedChoiceChangeToJson(this);
+}
+
+@HiveType(typeId: 43)
+@JsonSerializable()
+class StashedAbiPredictionsChange extends StashedValueChange<int?> {
+  StashedAbiPredictionsChange(super.at, super.to);
+  StashedAbiPredictionsChange.now(super.to) : super.now();
+
+  factory StashedAbiPredictionsChange.fromJson(Map<String, dynamic> json) => _$StashedAbiPredictionsChangeFromJson(json);
+  Map<String, dynamic> toJson() => _$StashedAbiPredictionsChangeToJson(this);
+}
+
+@HiveType(typeId: 44)
+@JsonSerializable()
+class StashedSemesterChange extends StashedValueChange<Semester> {
+  StashedSemesterChange(super.at, super.to);
+  StashedSemesterChange.now(super.to) : super.now();
+
+  factory StashedSemesterChange.fromJson(Map<String, dynamic> json) => _$StashedSemesterChangeFromJson(json);
+  Map<String, dynamic> toJson() => _$StashedSemesterChangeToJson(this);
 }

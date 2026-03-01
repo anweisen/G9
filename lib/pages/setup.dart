@@ -8,6 +8,7 @@ import '../widgets/general.dart';
 import '../provider/settings.dart';
 import '../logic/choice.dart';
 import '../logic/types.dart';
+import '../provider/account.dart';
 
 class SetupPage extends StatefulWidget {
   const SetupPage({super.key, this.onlyAbi = false});
@@ -224,7 +225,7 @@ class _SetupPageState extends State<SetupPage> {
           currentlySelected: _choiceBuilder.mint1,
         ),
 
-      // spät beginnende Fremdsprache als 2. Fremdsprache
+      // spät beginnende Fremdsprache/Informatik als 2. Fremdsprache/Naturwissenschaft
       if (_choiceBuilder.lk != Subject.info)
         SetupStepPage(
           key: const ValueKey("sbs"),
@@ -837,6 +838,7 @@ class SetupFinishPage extends StatelessWidget {
                       icon: Icons.check_rounded,
                       callback: () => {
                         Provider.of<SettingsDataProvider>(context, listen: false).choice = choice,
+                        Provider.of<AccountDataProvider>(context, listen: false).updateChoice(choice),
                         Navigator.popAndPushNamed(context, "/home")
                       },
                       leftOffset: leftOffset,
@@ -921,7 +923,7 @@ class SetupFinishPage extends StatelessWidget {
       SubjectWidget(subject: choice.seminar),
       const SizedBox(height: sectionSpacing),
 
-      // Vertiefungskurs (optional, ersetzt mintSg2 in Q13), nicht mit spät beginnender Fremdsprache
+      // Vertiefungskurs (optional, ersetzt mintSg2 in Q13), nicht mit spät beginnender Fremdsprache/Informatik
       Text("Vertiefungskurs", style: theme.textTheme.bodySmall),
       const SizedBox(height: labelSpacing),
       SubjectWidget(subject: choice.vk ?? SetupStepPage.skipSubject),

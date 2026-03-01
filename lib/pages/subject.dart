@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../logic/results.dart';
 import '../logic/choice.dart';
+import '../provider/account.dart';
 import '../provider/settings.dart';
 import '../provider/grades.dart';
 import '../logic/grades.dart';
@@ -38,11 +39,14 @@ class _SubjectPageState extends State<SubjectPage> {
 
   void setCurrentSemester(Semester semester) {
     // TODO extract
-    final provider = Provider.of<GradesDataProvider>(context, listen: false);
-    if (semester == Semester.seminar13 && !(provider.currentSemester == Semester.q13_1 || provider.currentSemester == Semester.q13_2)) {
-      provider.currentSemester = Semester.q13_1;
+    final gradesProvider = Provider.of<GradesDataProvider>(context, listen: false);
+    final accountProvider = Provider.of<AccountDataProvider>(context, listen: false);
+    if (semester == Semester.seminar13 && !(gradesProvider.currentSemester == Semester.q13_1 || gradesProvider.currentSemester == Semester.q13_2)) {
+      gradesProvider.changeCurrentSemester(Semester.q13_1);
+      accountProvider.updateSemester(Semester.q13_1);
     } else {
-      provider.currentSemester = semester;
+      gradesProvider.changeCurrentSemester(semester);
+      accountProvider.updateSemester(semester);
     }
 
     setState(() {
@@ -63,6 +67,7 @@ class _SubjectPageState extends State<SubjectPage> {
     final ThemeData theme = Theme.of(context);
     final Choice? choice = Provider.of<SettingsDataProvider>(context).choice;
     final GradesDataProvider dataProvider = Provider.of<GradesDataProvider>(context);
+    final AccountDataProvider accountProvider = Provider.of<AccountDataProvider>(context);
     final GradesList grades = dataProvider.getGrades(widget.subject.id, semester: _currentSemester);
 
     return SubpageSkeleton(
@@ -124,9 +129,10 @@ class _SubjectPageState extends State<SubjectPage> {
                   GestureDetector(
                       onTap: () => SubpageController.of(context).openSubpage(
                           GradePage(subject: widget.subject, key: GlobalKey(), semester: _currentSemester!,),
-                          callback: (result) => {
+                          callback: (result) {
                             if (result is GradeEditResult) {
-                              _addGrade(dataProvider, result)
+                              _addGrade(dataProvider, result);
+                              accountProvider.updateSubjectGradesFromResult(result, dataProvider);
                             }
                           }),
                       child: Icon(Icons.add, color: theme.primaryColor, size: 30)),
@@ -145,6 +151,7 @@ class _SubjectPageState extends State<SubjectPage> {
                 if (result is GradeEditResult) {
                   _removeGrade(dataProvider, index);
                   if (!result.remove) _addGrade(dataProvider, result);
+                  accountProvider.updateSubjectGradesFromResult(result, dataProvider);
                 }
               },
             )

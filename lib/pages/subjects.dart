@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../logic/grades.dart';
 import '../logic/results.dart';
 import '../provider/grades.dart';
+import '../provider/account.dart';
 import '../provider/settings.dart';
 import '../widgets/skeleton.dart';
 import '../logic/types.dart';
@@ -19,6 +20,7 @@ class SubjectsPage extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     final settings = Provider.of<SettingsDataProvider>(context);
     final gradesProvider = Provider.of<GradesDataProvider>(context);
+    final accountProvider = Provider.of<AccountDataProvider>(context, listen: false);
     final semester = gradesProvider.currentSemester;
     final grades = gradesProvider.getGradesForSemester(settings.choice!, semester: semester);
     final avg = GradeHelper.averageOfSubjects(grades, semester: semester);
@@ -31,7 +33,8 @@ class SubjectsPage extends StatelessWidget {
             createSubpage: () => const SemesterSwitcherPage(),
             callback: (result) => {
               if (result != null && result is Semester) {
-                gradesProvider.currentSemester = result
+                gradesProvider.changeCurrentSemester(result),
+                accountProvider.updateSemester(result)
               }
             },
             child: PageTitle(
@@ -72,7 +75,7 @@ class SubjectWidget extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     final grades = Provider.of<GradesDataProvider>(context).getGrades(subject.id, semester: semester); // sorted!
 
-    final Color contrastColor = subject.color.computeLuminance() > 0.80 ? (theme.brightness == Brightness.light ? Colors.black : Colors.black87) : Colors.white;
+    final Color contrastColor = subject.color.computeLuminance() > 0.78 ? (theme.brightness == Brightness.light ? Colors.black : Colors.black87) : Colors.white;
 
     return GestureDetector(
       onTap: () => SubpageController.of(context).openSubpage(SubjectPage(subject: subject, key: GlobalKey(),)),

@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 import '../api/api.dart';
 import '../provider/account.dart';
 import '../provider/settings.dart';
+import '../pdf/pdf_widget.dart';
 import '../widgets/subpage.dart';
 import '../widgets/skeleton.dart';
+import 'account.dart';
 import 'setup.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -24,41 +26,44 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: 8),
 
           if (accountProvider.userProfile != null && accountProvider.accessToken != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: theme.dividerColor, width: 4),
-              ),
-              child: Row(
-                children: [
-                  Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
-                        child: Image.network(accountProvider.userProfile!.picture, width: 44, height: 44, errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_circle_rounded, size: 40))
-                      ),
-                      const SizedBox(width: 16,),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("angemeldet als", style: theme.textTheme.bodySmall),
-                          Text(accountProvider.userProfile!.name, style: theme.textTheme.bodyMedium),
-                        ],
-                      )
-                    ],
-                  ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () => accountProvider.logout(),
-                    child: Icon(Icons.logout_rounded, size: 24, color: theme.indicatorColor,)
-                  )
-                ],
+            SubpageTrigger(
+              createSubpage: () => const AccountPage(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: theme.dividerColor, width: 4),
+                ),
+                child: Row(
+                  children: [
+                    Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.network(accountProvider.userProfile!.picture, width: 48, height: 48, errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_circle_rounded, size: 44))
+                        ),
+                        const SizedBox(width: 16,),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("angemeldet als", style: theme.textTheme.bodySmall),
+                            Text(accountProvider.userProfile!.name, style: theme.textTheme.bodyMedium),
+                          ],
+                        )
+                      ],
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () => accountProvider.logout(),
+                      child: Icon(Icons.logout_rounded, size: 24, color: theme.disabledColor,)
+                    )
+                  ],
+                ),
               ),
             )
           else
             GestureDetector(
-              onTap: () => Api.handleGoogleAuth(accountProvider),
+              onTap: () => Api.doGoogleLoginAndSync(context),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                 decoration: BoxDecoration(
@@ -73,9 +78,10 @@ class SettingsPage extends StatelessWidget {
                         const SizedBox(width: 10,),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text("anmelden", style: theme.textTheme.bodyMedium?.copyWith(height: 1.2)),
                             Text("mit Google", style: theme.textTheme.bodySmall),
+                            Text("anmelden", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1)),
                           ],
                         )
                       ],

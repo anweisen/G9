@@ -13,6 +13,7 @@ import '../provider/settings.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/subpage.dart';
 import '../logic/grades.dart';
+import 'account.dart';
 import 'grade.dart';
 import 'hurdles.dart';
 import 'switcher.dart';
@@ -51,39 +52,15 @@ class HomePage extends StatelessWidget {
     var admissionHurdleCheckResults = AdmissionHurdle.check(settings.choice!, results, flags, grades);
     var graduationHurdleCheckResults = GraduationHurdle.check(settings.choice!, results, flags, grades);
 
-    return PageSkeleton(title: PageTitle(
+    return PageSkeleton(title: const PageTitle(
         title: "Übersicht",
         crossAxisAlignment: CrossAxisAlignment.center,
-        info: GestureDetector(
-          onTap: account.isLoggedIn ? null : () => Api.handleGoogleAuth(account),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: theme.dividerColor.withOpacity(0.75),
-              borderRadius: BorderRadius.circular(9),
-            ),
-            child: Row(
-              children: [
-                if (account.isLoggedIn) ...[
-                  Text(account.userProfile!.name, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,),
-                  const SizedBox(width: 6,),
-                  ClipRRect(
-                      borderRadius: BorderRadius.circular(9),
-                      child: Image.network(account.userProfile!.picture, width:22, height: 22, errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_circle_rounded, size: 18))
-                  ),
-                ] else ...[
-                  const Icon(Icons.account_circle_rounded, size: 18),
-                  const SizedBox(width: 8,),
-                  Text("Login", style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,),
-                ]
-              ],
-            ),
-          ),
-        ),
+        info: AccountWidget(),
     ), children: [
       SubpageTrigger(createSubpage: () => const SemesterSwitcherPage(), callback: (result) => {
         if (result is Semester) {
-          grades.currentSemester = result
+          grades.changeCurrentSemester(result),
+          account.updateSemester(result)
         }
       }, child: _buildTextLine(Row(
         children: [
@@ -94,6 +71,7 @@ class HomePage extends StatelessWidget {
               callback: (result) {
                 if (result is GradeEditResult) {
                   grades.addGrade(result.subject.id, result.entry, semester: result.semester);
+                  account.updateSubjectGradesFromResult(result, grades);
                 }
               },
               child: Container(
@@ -130,9 +108,9 @@ class HomePage extends StatelessWidget {
       const SizedBox(height: 20),
 
       if (!flags.isEmpty && admissionHurdleCheckResults.isNotEmpty)
-        ..._buildHurdleInfo(theme, "Zulassungshürde", admissionHurdleCheckResults)
+        ..._buildHurdleInfo(theme, "Zulassungshürde", admissionHurdleCheckResults.first, [...admissionHurdleCheckResults, ...graduationHurdleCheckResults])
       else if (!flags.isEmpty && graduationHurdleCheckResults.isNotEmpty)
-        ..._buildHurdleInfo(theme, "Anerkennungshürde", graduationHurdleCheckResults),
+        ..._buildHurdleInfo(theme, "Anerkennungshürde", graduationHurdleCheckResults.first, [...admissionHurdleCheckResults, ...graduationHurdleCheckResults]),
 
       // Abitur Vorhersage
       Container(
@@ -147,7 +125,7 @@ class HomePage extends StatelessWidget {
             Text("Abitur Vorhersage", style: theme.textTheme.bodySmall),
             _buildTextLine(Text("Note", style: theme.textTheme.bodyMedium), [
               if (graduationHurdleCheckResults.isNotEmpty || admissionHurdleCheckResults.isNotEmpty) ...[
-                Icon(Icons.warning_amber_rounded, size: 14, color: theme.indicatorColor),
+                Icon(Icons.warning_amber_rounded, size: 14, color: theme.disabledColor),
                 const SizedBox(width: 10),
               ],
               Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
@@ -241,7 +219,9 @@ class HomePage extends StatelessWidget {
       HomeSemesterSwitchButtons(
         btn1: grades.currentSemester != Semester.abi ? GestureDetector(
             onTap: () {
-              grades.currentSemester = grades.currentSemester.nextSemester();
+              final result = grades.currentSemester.nextSemester();
+              grades.changeCurrentSemester(result);
+              account.updateSemester(result);
               Navigator.popAndPushNamed(context, "/home");
             },
             child: Container(
@@ -268,7 +248,9 @@ class HomePage extends StatelessWidget {
           ) : null,
           btn2: grades.currentSemester != Semester.q12_1 ? GestureDetector(
             onTap: () {
-              grades.currentSemester = grades.currentSemester.previousSemester();
+              final result = grades.currentSemester.previousSemester();
+              grades.changeCurrentSemester(result);
+              account.updateSemester(result);
               Navigator.popAndPushNamed(context, "/home");
             },
             child: Container(
@@ -298,7 +280,7 @@ class HomePage extends StatelessWidget {
     ]);
   }
 
-  List<Widget> _buildHurdleInfo(ThemeData theme, String title, List<HurdleCheckResult> checkResults) {
+  List<Widget> _buildHurdleInfo(ThemeData theme, String title, HurdleCheckResult show, List<HurdleCheckResult> checkResults) {
     return [
       SubpageTrigger(
         createSubpage: () => HurdlesPage(checkResults: checkResults),
@@ -467,7 +449,7 @@ class HomePage extends StatelessWidget {
                 Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(3),
-                    color: (underscored > i ? (underscored >= 6 ? theme.indicatorColor : theme.primaryColor) : theme.hintColor),
+                    color: (underscored > i ? (underscored >= 6 ? theme.disabledColor : theme.primaryColor) : theme.hintColor),
                   ),
                   height: 9,
                   width: width,
@@ -784,5 +766,42 @@ class HomeSemesterSwitchButtons extends StatelessWidget {
     );
   }
 }
+
+class AccountWidget extends StatelessWidget {
+  const AccountWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final account = Provider.of<AccountDataProvider>(context);
+    return GestureDetector(
+      onTap: account.isLoggedIn ? () => SubpageController.of(context).openSubpage(const AccountPage()) : () => Api.doGoogleLoginAndSync(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+        decoration: BoxDecoration(
+          color: theme.dividerColor.withOpacity(0.66),
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Row(
+          children: [
+            if (account.isLoggedIn) ...[
+              Text(account.userProfile!.name, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,),
+              const SizedBox(width: 6,),
+              ClipRRect(
+                  borderRadius: BorderRadius.circular(9),
+                  child: Image.network(account.userProfile!.picture, width:22, height: 22, errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_circle_rounded, size: 18))
+              ),
+            ] else ...[
+              const Icon(Icons.account_circle_rounded, size: 18),
+              const SizedBox(width: 8,),
+              Text("Login", style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,),
+            ]
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 
 

@@ -26,7 +26,7 @@ class _CustomizeSubjectPageState extends State<CustomizeSubjectPage> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final Color contrastColor = widget.subject.color.computeLuminance() > 0.80 ? (theme.brightness == Brightness.light ? Colors.black : Colors.black87) : Colors.white;
+    final Color contrastColor = widget.subject.color.computeLuminance() > 0.78 ? (theme.brightness == Brightness.light ? Colors.black : Colors.black87) : Colors.white;
 
     return SubpageSkeleton(
         title: Text("Fachdarstellung anpassen", style: theme.textTheme.headlineMedium),

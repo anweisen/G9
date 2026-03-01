@@ -14,11 +14,15 @@ class SettingsDataProvider extends ChangeNotifier {
     // load(); called by the slash screen
   }
 
+  bool _loaded = false;
+
+  get hasLoaded => _loaded;
+
   SettingsData? _data;
 
   ThemeMode get theme => _data?.theme != null ? ThemeMode.values[_data!.theme] : ThemeMode.system;
-  set theme(value) {
-    _data?.theme = value;
+  set theme(ThemeMode value) {
+    _data?.theme = value.index;
     notifyListeners();
     save();
   }
@@ -47,13 +51,19 @@ class SettingsDataProvider extends ChangeNotifier {
 
     var box = await Hive.openLazyBox<SettingsData>(hiveBoxName);
     try {
-      _data = await box.get(hiveSettingsKey, defaultValue: defaultData)!;
+      _data = await box.get(hiveSettingsKey, defaultValue: defaultData);
     } catch (e) {
       box.clear();
       _data = defaultData;
     }
 
     print("Loaded settings data: ${_data?.choice}");
+
+    if (kDebugMode && _data?.choice == null) {
+      _data?.choice = Choice.dummy;
+    }
+
+    _loaded = true;
 
     notifyListeners();
   }

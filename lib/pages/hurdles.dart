@@ -80,7 +80,7 @@ class HurdleInfoBox extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             if (hurdle == conflictingHurdleResult?.hurdle)
-              Icon(Icons.warning_rounded, size: 20, color: theme.indicatorColor)
+              Icon(Icons.warning_rounded, size: 20, color: theme.disabledColor)
             else
               Icon(Icons.check_circle_rounded, size: 20, color: theme.primaryColor),
             const SizedBox(width: 4),

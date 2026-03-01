@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
+import 'api/types.dart';
 import 'pages/welcome.dart';
 import 'logic/choice.dart';
 import 'logic/grades.dart';
@@ -27,6 +30,13 @@ void main() async {
   Hive.registerAdapter(SubjectCategoryAdapter());
   Hive.registerAdapter(GradeEntryAdapter());
   Hive.registerAdapter(GradeTypeAdapter());
+  Hive.registerAdapter(PublicUserProfileAdapter());
+  Hive.registerAdapter(PrivateUserProfileAdapter());
+  Hive.registerAdapter(StashedChangesAdapter());
+  Hive.registerAdapter(StashedGradesChangeAdapter());
+  Hive.registerAdapter(StashedChoiceChangeAdapter());
+  Hive.registerAdapter(StashedSemesterChangeAdapter());
+  Hive.registerAdapter(SemesterAdapter());
 
   // safe to call on desktop/mobile
   usePathUrlStrategy();
@@ -35,6 +45,16 @@ void main() async {
     ChangeNotifierProvider<SettingsDataProvider>(create: (context) => SettingsDataProvider()),
     ChangeNotifierProvider<GradesDataProvider>(create: (context) => GradesDataProvider()),
     ChangeNotifierProvider<AccountDataProvider>(create: (context) => AccountDataProvider()),
+
+    ProxyProvider3<SettingsDataProvider, GradesDataProvider, AccountDataProvider, Null>( // background sync on startup
+      lazy: false,
+      update: (context, settings, grades, account, previous) {
+        print("! proxy update !");
+        if (!account.hasSynced && !account.isSyncing && !account.hasSyncingFailed && !account.isAuthenticating && account.hasLoaded && grades.hasLoaded && settings.hasLoaded && account.isLoggedIn) {
+          account.syncStoredData(settings, grades);
+        }
+      }
+    ),
   ], child: const MyApp()));
 
   if (WindowTitleBar.isWindows) {

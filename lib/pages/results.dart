@@ -9,7 +9,9 @@ import '../logic/types.dart';
 import '../logic/results.dart';
 import '../provider/grades.dart';
 import '../provider/settings.dart';
+import '../pdf/pdf_widget.dart';
 import 'result.dart';
+import 'settings.dart';
 
 class ResultsPage extends StatelessWidget {
   const ResultsPage({super.key});
@@ -56,6 +58,11 @@ class ResultsPage extends StatelessWidget {
           const SizedBox(height: 8),
           _buildText(theme, "Diese Note bis", "${SemesterResult.getMinPointsForThisAbiGrade(flags.pointsTotal)}"),
           _buildText(theme, "Bessere Note bei", "${SemesterResult.getMinPointsForBetterAbiGrade(flags.pointsTotal)}"),
+          const SizedBox(height: 24),
+          SubpageTrigger(
+              createSubpage: () => const PdfPreviewPage(),
+              child: SettingsPage.buildButton(theme, "Notenübersicht drucken", Icons.print_rounded, null, primary: true)
+          ),
         ]);
   }
 

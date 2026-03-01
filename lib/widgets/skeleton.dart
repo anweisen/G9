@@ -5,6 +5,7 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 import 'dart:ui';
 
+import 'connector.dart';
 import 'general.dart';
 import 'nav.dart';
 import 'subpage.dart';
@@ -91,57 +92,63 @@ class PageSkeleton extends StatelessWidget {
           body: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 860, maxHeight: 1200),
-              child: CustomScrollView(
-                slivers: [
-                  SliverAppBar(
-                    stretch: true,
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    pinned: true,
-                    centerTitle: true,
-                    automaticallyImplyLeading: false,
-                    titleSpacing: 0,
-                    leadingWidth: 0,
-                    toolbarHeight: 64 + WindowTitleBar.height,
-                    primary: true,
-                    floating: true,
-                    flexibleSpace: LayoutBuilder(
-                        builder: (context, constraints) {
-                          return Container(
-                            constraints: constraints,
-                            child: ClipRRect(
-                                child: Container(
-                                  padding: EdgeInsets.only(top: WindowTitleBar.height),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        theme.scaffoldBackgroundColor,
-                                        theme.scaffoldBackgroundColor.withOpacity(0.6),
-                                        theme.scaffoldBackgroundColor.withOpacity(0.4),
-                                      ],
-                                      stops: const [0.0, 0.4, 1.0],
-                                    ),
-                                  ),
-                                  child: BackdropFilter(
-                                      filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                                      child: Padding(padding: const EdgeInsets.fromLTRB(leftOffset, 16, leftOffset, 10), child: title)),
-                                )
-                            ),
-                          );
-                        }),
+              child: Stack(
+                children: [
+                  CustomScrollView(
+                    slivers: [
+                      SliverAppBar(
+                        stretch: true,
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        pinned: true,
+                        centerTitle: true,
+                        automaticallyImplyLeading: false,
+                        titleSpacing: 0,
+                        leadingWidth: 0,
+                        toolbarHeight: 64 + WindowTitleBar.height,
+                        primary: true,
+                        floating: true,
+                        flexibleSpace: LayoutBuilder(
+                            builder: (context, constraints) {
+                              return Container(
+                                constraints: constraints,
+                                child: ClipRRect(
+                                    child: Container(
+                                      padding: EdgeInsets.only(top: WindowTitleBar.height),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                          colors: [
+                                            theme.scaffoldBackgroundColor,
+                                            theme.scaffoldBackgroundColor.withOpacity(0.6),
+                                            theme.scaffoldBackgroundColor.withOpacity(0.4),
+                                          ],
+                                          stops: const [0.0, 0.4, 1.0],
+                                        ),
+                                      ),
+                                      child: BackdropFilter(
+                                          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                                          child: Padding(padding: const EdgeInsets.fromLTRB(leftOffset, 16, leftOffset, 10), child: title)),
+                                    )
+                                ),
+                              );
+                            }),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: leftOffset),
+                        sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              childCount: children.length,
+                              (context, index) => children[index],
+                            )
+                        ),
+                      ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 80))
+                    ],
                   ),
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: leftOffset),
-                    sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          childCount: children.length,
-                          (context, index) => children[index],
-                        )
-                    ),
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 80))
+
+                  const SyncApiConnectorLoadingWidget(),
                 ],
               ),
             ),

@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 import '../adapter/json_converters.dart';
 import '../api/api.dart';
@@ -25,33 +28,45 @@ class AccountDataProvider extends ChangeNotifier {
   final storage = const FlutterSecureStorage();
 
   bool _loaded = false;
-  get hasLoaded => _loaded;
+  bool get hasLoaded => _loaded;
 
   bool _syncingFailed = false;
   bool _synced = false;
   bool _syncing = false;
-  get isSyncing => _syncing;
-  get hasSynced => _synced;
-  get hasSyncingFailed => _syncingFailed;
+  bool get isSyncing => _syncing;
+  bool get hasSynced => _synced;
+  bool get hasSyncingFailed => _syncingFailed;
 
   bool _authenticating = false;
-  get isAuthenticating => _authenticating;
+  bool get isAuthenticating => _authenticating;
   set authenticating(bool value) {
     _authenticating = value;
-    notifyListeners();
   }
 
   late AuthenticatedApi _api;
+  Timer? _refreshTimer;
+
   String? _accessToken;
+  String? _refreshToken;
   String? _provider;
   PublicUserProfile? _userProfile;
   PrivateUserProfile? _privateProfile;
   StashedChanges? _stashedChanges;
 
+  bool get hasRefreshScheduled => _refreshTimer != null && _refreshTimer!.isActive;
+
   String? get accessToken => _accessToken;
   set accessToken(String? value) {
     _accessToken = value;
     _api = AuthenticatedApi(_accessToken ?? "");
+    scheduleTokenRefresh();
+    notifyListeners();
+    save();
+  }
+
+  String? get refreshToken => _refreshToken;
+  set refreshToken(String? value) {
+    _refreshToken = value;
     notifyListeners();
     save();
   }
@@ -85,17 +100,27 @@ class AccountDataProvider extends ChangeNotifier {
     load();
   }
 
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
   void logout() {
+    Api.postLogout(this);
     _accessToken = null;
+    _refreshToken = null;
     _userProfile = null;
     _privateProfile = null;
+    _refreshTimer?.cancel();
     notifyListeners();
     save();
   }
 
   void load() async {
-    // use setter to init api
-    accessToken = await storage.read(key: "accessToken");
+    _accessToken = await storage.read(key: "accessToken");
+    _refreshToken = await storage.read(key: "refreshToken");
+    _api = AuthenticatedApi(_accessToken ?? "");
 
     var box = await Hive.openBox(hiveBoxName);
     _userProfile = box.get(hiveProfileKey);
@@ -111,6 +136,7 @@ class AccountDataProvider extends ChangeNotifier {
 
   void save() async {
     await storage.write(key: "accessToken", value: _accessToken);
+    await storage.write(key: "refreshToken", value: _refreshToken);
 
     var box = await Hive.openBox(hiveBoxName);
     await box.put(hiveProfileKey, _userProfile);
@@ -138,9 +164,42 @@ class AccountDataProvider extends ChangeNotifier {
     }
   }
 
+  void refreshTokens() async {
+    if (!isLoggedIn) {
+      return;
+    }
+
+    await Api.refreshAccessTokenWithBackend(this);
+    notifyListeners();
+  }
+
+  void scheduleTokenRefresh() {
+    if (!isLoggedIn) {
+      return;
+    }
+
+    try {
+      final expirationDate = JwtDecoder.getExpirationDate(_accessToken!);
+      final timeUntilExpiration = expirationDate.difference(DateTime.now());
+      if (timeUntilExpiration.isNegative) {
+        print("Access token is already expired. Refreshing now.");
+        refreshTokens();
+        return;
+      }
+      final refreshTime = timeUntilExpiration - const Duration(minutes: 1);
+
+      _refreshTimer?.cancel();
+      _refreshTimer = Timer(refreshTime, () {
+        refreshTokens();
+      });
+    } catch (e) {
+      print("Error scheduling token refresh: $e");
+    }
+  }
+
   void syncStoredData(SettingsDataProvider settingsProvider, GradesDataProvider gradesProvider) async {
     _syncing = true;
-    notifyListeners();
+    // notifyListeners();
 
     await Future.delayed(const Duration(milliseconds: 1500));
 
@@ -153,7 +212,7 @@ class AccountDataProvider extends ChangeNotifier {
       grades: gradesProvider.data,
     );
 
-    print("Syncing data with backend. Payload: ${dataPayload?.toJson()}");
+    print("Syncing data with backend. Payload: ${dataPayload.toJson()}");
     print("Stashed changes being sent to backend: ${_stashedChanges?.toJson()}");
     final responsePayload = await api.postSyncData(dataPayload, _stashedChanges);
 

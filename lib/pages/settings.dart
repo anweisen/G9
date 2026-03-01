@@ -25,7 +25,7 @@ class SettingsPage extends StatelessWidget {
         children: [
           const SizedBox(height: 8),
 
-          if (accountProvider.userProfile != null && accountProvider.accessToken != null)
+          if (accountProvider.isLoggedIn)
             SubpageTrigger(
               createSubpage: () => const AccountPage(),
               child: Container(

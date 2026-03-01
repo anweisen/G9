@@ -42,16 +42,37 @@ class AuthResponseBody {
   @JsonKey(name: "access_token")
   String accessToken;
 
+  @JsonKey(name: "refresh_token")
+  String refreshToken;
+
   @JsonKey(name: "user_profile")
   PublicUserProfile userProfile;
 
   @JsonKey(name: "private_profile")
   PrivateUserProfile privateProfile;
 
-  AuthResponseBody({required this.accessToken, required this.userProfile, required this.privateProfile});
+  AuthResponseBody({required this.accessToken, required this.refreshToken, required this.userProfile, required this.privateProfile});
 
   factory AuthResponseBody.fromJson(Map<String, dynamic> json) => _$AuthResponseBodyFromJson(json);
   Map<String, dynamic> toJson() => _$AuthResponseBodyToJson(this);
+}
+
+@JsonSerializable()
+class RefreshResponseBody {
+  @JsonKey(name: "access_token")
+  String accessToken;
+
+  @JsonKey(name: "refresh_token")
+  String refreshToken;
+
+  RefreshResponseBody({required this.accessToken, required this.refreshToken});
+
+  factory RefreshResponseBody.fromJson(Map<String, dynamic> json) => _$RefreshResponseBodyFromJson(json);
+  Map<String, dynamic> toJson() => _$RefreshResponseBodyToJson(this);
+}
+
+@JsonSerializable()
+class AccountSession {
 }
 
 @JsonSerializable()

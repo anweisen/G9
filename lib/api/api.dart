@@ -12,10 +12,13 @@ import '../provider/account.dart';
 import '../provider/grades.dart';
 import '../provider/settings.dart';
 import 'oauth/oauth_flow.dart';
+import 'device.dart';
 import 'types.dart';
 
 class ApiRoutes {
   static const String authExchange = "/auth/exchange";
+  static const String authRefresh = "/auth/refresh";
+  static const String authLogout = "/auth/logout";
   static const String accountSync = "/account/sync";
   static const String accountChoice = "/account/choice";
   static const String deleteAccount = "/account";
@@ -53,9 +56,22 @@ class Api {
     print("Sending Auth Code to Backend: $code");
     dataProvider.authenticating = true;
 
+    String? deviceName;
+    try {
+      deviceName = await getDeviceName();
+    } catch (e) {
+      deviceName = "Unknown Device";
+      print("Error getting device name: $e");
+    }
+
     final response = await http.post(
       Uri.parse("$apiBaseUrl${ApiRoutes.authExchange}"),
-      body: json.encode({"provider": providerName, "redirect_uri": flow.redirectUrl(), "code": code}),
+      body: json.encode({
+        "provider": providerName,
+        "redirect_uri": flow.redirectUrl(),
+        "code": code,
+        "device_name": deviceName
+      }),
       headers: {"Content-Type": "application/json"},
     );
 
@@ -66,6 +82,7 @@ class Api {
       final body = AuthResponseBody.fromJson(data);
 
       dataProvider.accessToken = body.accessToken;
+      dataProvider.refreshToken = body.refreshToken;
       dataProvider.userProfile = body.userProfile;
       dataProvider.privateProfile = body.privateProfile;
       dataProvider.provider = providerName;
@@ -77,6 +94,62 @@ class Api {
     dataProvider.authenticating = false;
   }
 
+  static Future<void> refreshAccessTokenWithBackend(AccountDataProvider dataProvider) async {
+    dataProvider.authenticating = true;
+
+    String? deviceName;
+    try {
+      deviceName = await getDeviceName();
+    } catch (e) {
+      deviceName = "Unknown Device";
+      print("Error getting device name: $e");
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse("$apiBaseUrl${ApiRoutes.authRefresh}"),
+        body: json.encode({
+          "device_name": deviceName,
+          "refresh_token": dataProvider.refreshToken,
+        }),
+        headers: {"Content-Type": "application/json"},
+      );
+
+      if (response.statusCode == 200) {
+        print("Backend Refresh Success: ${response.body}");
+
+        Map<String, dynamic> data = jsonDecode(response.body);
+        final body = RefreshResponseBody.fromJson(data);
+
+        dataProvider.accessToken = body.accessToken;
+        dataProvider.refreshToken = body.refreshToken;
+        // TODO update user profile data as well?
+
+      } else {
+        dataProvider.logout();
+        print("Backend Refresh Failed: ${response.statusCode} - ${response.body} (${response.request?.url.toString()})");
+      }
+
+    } catch (e) {
+      dataProvider.logout();
+    }
+
+    dataProvider.authenticating = false;
+  }
+
+  static void postLogout(AccountDataProvider dataProvider) async {
+    try {
+      await http.post(
+        Uri.parse("$apiBaseUrl${ApiRoutes.authLogout}"),
+        body: json.encode({
+          "refresh_token": dataProvider.refreshToken,
+        }),
+        headers: {"Content-Type": "application/json"},
+      );
+    } catch (e) {
+      print("Error posting logout: $e");
+    }
+  }
 }
 
 class AuthenticatedApi {
@@ -85,10 +158,6 @@ class AuthenticatedApi {
   AuthenticatedApi(this.accessToken);
 
   bool get isAuthenticated => accessToken.isNotEmpty;
-
-  // Future<http.Response> get(String endpoint) {
-  //   return http.get(Uri.parse("${Api.apiBaseUrl}$endpoint"), headers: {"Authorization": "Bearer $accessToken"});
-  // }
 
   Future<http.Response> post(String endpoint, {Map<String, dynamic>? body}) async {
     try {

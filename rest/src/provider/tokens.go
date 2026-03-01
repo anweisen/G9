@@ -1,33 +1,48 @@
 package provider
 
 import (
-	"github.com/golang-jwt/jwt/v5"
-	"os"
-	"time"
+  "github.com/golang-jwt/jwt/v5"
+  "github.com/google/uuid"
+  "os"
+  "time"
 )
 
 var (
-	JwtSecret      = os.Getenv("JWT_SIGN_SECRET")
-	JwtSecretBytes = []byte(JwtSecret)
+  JwtSecret      = os.Getenv("JWT_SIGN_SECRET")
+  JwtSecretBytes = []byte(JwtSecret)
 )
 
 type JwtClaims struct {
-	jwt.RegisteredClaims
+  jwt.RegisteredClaims
 }
 
 func SignJwt(claims JwtClaims) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString(JwtSecretBytes)
+  token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+  signedToken, err := token.SignedString(JwtSecretBytes)
 
-	return signedToken, err
+  return signedToken, err
 }
 
-func CreateJwtClaims(user *User) JwtClaims {
-	return JwtClaims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   user.Id.Hex(),
-			IssuedAt:  jwt.NewNumericDate(user.CreatedAt),
-			ExpiresAt: jwt.NewNumericDate(user.CreatedAt.Add(24 * 7 * time.Hour)),
-		},
-	}
+func CreateAccessJwtClaims(userId UserId) JwtClaims {
+  return JwtClaims{
+    RegisteredClaims: jwt.RegisteredClaims{
+      Subject:   userId.Hex(),
+      IssuedAt:  jwt.NewNumericDate(time.Now()),
+      ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+    },
+  }
+}
+
+func CreateRefreshJwtClaims(userId UserId) JwtClaims {
+  // refresh tokens are valid for 4 months (120 days), a rather very long time for refresh tokens, but we don't deal with very sensitive data,
+  // our main priority is to minimize the need for users to re-authenticate and improve user experience.
+  // also, refresh tokens can be revoked before their expiration (jti stored in db)
+  return JwtClaims{
+    RegisteredClaims: jwt.RegisteredClaims{
+      Subject:   userId.Hex(),
+      ID:        uuid.NewString(),
+      IssuedAt:  jwt.NewNumericDate(time.Now()),
+      ExpiresAt: jwt.NewNumericDate(time.Now().Add(4 * 30 * 24 * time.Hour)),
+    },
+  }
 }

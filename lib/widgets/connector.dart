@@ -98,7 +98,7 @@ class _SyncApiConnectorLoadingWidgetState extends State<SyncApiConnectorLoadingW
 
     if (!ConnectorLoadingStage.stages[index].isLoading) {
       Future.delayed(const Duration(seconds: 3), () {
-        if (mounted) hide();
+        if (mounted && _stageIndex == index) hide();
       });
     }
 

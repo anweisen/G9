@@ -50,7 +50,9 @@ void main() async {
       lazy: false,
       update: (context, settings, grades, account, previous) {
         print("! proxy update !");
-        if (!account.hasSynced && !account.isSyncing && !account.hasSyncingFailed && !account.isAuthenticating && account.hasLoaded && grades.hasLoaded && settings.hasLoaded && account.isLoggedIn) {
+        if (account.hasLoaded && account.accessToken != null && !account.hasRefreshScheduled) {
+          account.scheduleTokenRefresh();
+        } else if (!account.hasSynced && !account.isSyncing && !account.hasSyncingFailed && !account.isAuthenticating && account.hasLoaded && grades.hasLoaded && settings.hasLoaded && account.isLoggedIn && account.hasRefreshScheduled) {
           account.syncStoredData(settings, grades);
         }
       }

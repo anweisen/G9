@@ -57,7 +57,6 @@ Falls du die App bereits genutzt hast, kannst du dich auch mit deinem Account an
                                 if (!accountProvider.isLoggedIn) GestureDetector(
                                   onTap: () async {
                                     Api.doGoogleLoginAndSync(context);
-                                    Navigator.of(context).pushNamed(settingsProvider.onboarding ? "/setup" : "/home");
                                   },
                                   child: Container(
                                     decoration: BoxDecoration(

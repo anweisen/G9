@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"os"
+	"time"
 )
 
 type MongoDatabase struct {
@@ -86,4 +87,25 @@ func (database MongoDatabase) CreateIdentity(identity *Identity) error {
 	}
 
 	return nil
+}
+
+func (database MongoDatabase) UpdateUserStorage(userId UserId, storage UserStorage) error {
+	syncTime := time.Now()
+	storage.LastSync = &syncTime
+	update := bson.M{
+		"$set": storage,
+	}
+
+	_, err := database.UserCollection.UpdateOne(database.Context, bson.M{"_id": userId}, update)
+	return err
+}
+
+func (database MongoDatabase) DeleteUser(userId UserId) error {
+	_, err := database.UserCollection.DeleteOne(database.Context, bson.M{"_id": userId})
+	return err
+}
+
+func (database MongoDatabase) DeleteIdentities(userId UserId) error {
+	_, err := database.IdentityCollection.DeleteMany(database.Context, bson.M{"user_id": userId})
+	return err
 }

@@ -83,6 +83,7 @@ enum AdmissionHurdle implements HurdleType {
     for (int i = 0, min5 = 0; min5 < 32; i++) {
       if (sortedUsedResults.length <= i || sortedUsedResults[i].effectiveGrade < 5) {
         checkResults.add(HurdleCheckResult(AdmissionHurdle.min5je32, "$min5 von 32"));
+        break;
       }
       min5 += sortedUsedResults[i].semester.semesterCountEquivalent;
     }

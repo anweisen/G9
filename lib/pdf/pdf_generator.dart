@@ -37,7 +37,7 @@ class PdfGenerator {
 
     pdf.addPage(
         MultiPage(
-          pageFormat: PdfPageFormat.a4,
+          pageFormat: format,
           theme: ThemeData.withFont(
             base: regularFontTtf,
             bold: boldFontTtf,
@@ -75,7 +75,7 @@ class PdfGenerator {
                           SizedBox(child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: buildSemesterResultText(results[subject]![semester])
+                            children: buildSemesterResultText(results[subject]?[semester])
                           ), width: 40),
                       ],
                     )

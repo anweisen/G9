@@ -44,7 +44,7 @@ class PdfPreviewPage extends StatelessWidget {
 
             pdfFileName: PdfGenerator.fileName,
             initialPageFormat: PdfPageFormat.a4,
-            build: (format) => PdfGenerator.generatePdf(choice, results, flags, statistics, admissionHurdles, graduationHurdles),
+            build: (format) => PdfGenerator.generatePdf(format, choice, results, flags, statistics, admissionHurdles, graduationHurdles),
             useActions: false,
             canChangePageFormat: false,
             canDebug: false,
@@ -58,7 +58,7 @@ class PdfPreviewPage extends StatelessWidget {
             animationProgress: 1,
             icon: Icons.print_rounded,
             callback: () async {
-              final bytes = await PdfGenerator.generatePdf(choice, results, flags, statistics, admissionHurdles, graduationHurdles);
+              final bytes = await PdfGenerator.generatePdf(PdfPageFormat.a4, choice, results, flags, statistics, admissionHurdles, graduationHurdles);
               await Printing.sharePdf(bytes: bytes, filename: PdfGenerator.fileName);
             },
           ),

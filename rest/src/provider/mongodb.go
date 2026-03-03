@@ -31,11 +31,6 @@ func NewMongoDatabase() Database {
   identityCollection := database.Collection("identities")
   sessionCollection := database.Collection("sessions")
 
-  //sessionTtlIndexModel := mongo.IndexModel{
-  //  Keys: bson.D{{Key: "expires_at", Value: 1}},
-  //  Options: options.Index().SetExpireAfterSeconds(0),
-  //}
-
   println("MongoDB connected successfully -", client.NumberSessionsInProgress())
 
   return &MongoDatabase{

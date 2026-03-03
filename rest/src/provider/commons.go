@@ -187,14 +187,14 @@ func MergeUserStorageAndChanges(existing UserStorage, update UserStorage, change
   var updatedSemester Semester
   if existing.Semester != nil && *existing.Semester != "" {
     updatedSemester = *existing.Semester
-  } else {
+  } else if update.Semester != nil {
     updatedSemester = *update.Semester
   }
 
   var updatedUsesSlider bool
   if existing.UsesSlider != nil {
     updatedUsesSlider = *existing.UsesSlider
-  } else {
+  } else if update.UsesSlider != nil {
     updatedUsesSlider = *update.UsesSlider
   }
 

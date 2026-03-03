@@ -30,6 +30,7 @@ func main() {
   accountGroup.Post("/grades/:subject/:semester", embed.HandlePostAccountSubjectSemesterGrades)
   accountGroup.Post("/abi-prediction/:subject", embed.HandlePostAccountSubjectAbiPrediction)
   accountGroup.Post("/choice", embed.HandlePostAccountChoice)
+  accountGroup.Post("/semester", embed.HandlePostAccountSemester)
   accountGroup.Get("/sessions", embed.HandleGetAccountSessions)
 
   bind, present := os.LookupEnv("BIND_ADDR")

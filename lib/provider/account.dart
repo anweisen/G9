@@ -158,7 +158,7 @@ class AccountDataProvider extends ChangeNotifier {
       return;
     }
 
-    final success = await api.deleteAccount();
+    final success = await api.postDeleteAccount();
     if (success) {
       logout();
     }
@@ -298,7 +298,19 @@ class AccountDataProvider extends ChangeNotifier {
     }
   }
 
-  void updateSemester(Semester semester) async { // only stash, no live update for now
+  void updateSemester(Semester semester) async {
+    if (!isLoggedIn) {
+      stashSemester(semester);
+      return;
+    }
+
+    final success = await api.postSemester(semester);
+    if (!success) {
+      stashSemester(semester);
+    }
+  }
+
+  void stashSemester(Semester semester) {
     _stashedChanges ??= StashedChanges.empty();
     _stashedChanges!.stashedSemester = StashedSemesterChange.now(semester);
     saveStash();

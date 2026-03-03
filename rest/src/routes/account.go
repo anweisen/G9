@@ -25,6 +25,10 @@ type AccountSubjectAbiPredictionPostBody struct {
   Prediction *uint8 `json:"prediction"`
 }
 
+type AccountSemesterPostBody struct {
+  Semester provider.Semester `json:"semester"`
+}
+
 func (app AppEmbed) HandlePostAccountSync(ctx fiber.Ctx) error {
   userId, err := ExtractUserId(ctx)
   if err != nil {
@@ -212,4 +216,28 @@ func (app AppEmbed) HandleGetAccountSessions(ctx fiber.Ctx) error {
   }
 
   return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"sessions": sessions})
+}
+
+func (app AppEmbed) HandlePostAccountSemester(ctx fiber.Ctx) error {
+  userId, err := ExtractUserId(ctx)
+  if err != nil {
+    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
+  }
+
+  var body AccountSemesterPostBody
+  err = ctx.Bind().Body(&body)
+  if err != nil {
+    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+  }
+
+  updateStorage := provider.UserStorage{
+    Semester: &body.Semester,
+  }
+
+  err = app.Database.UpdateUserStorage(userId, updateStorage)
+  if err != nil {
+    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
+  }
+
+  return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success"})
 }

@@ -21,6 +21,7 @@ class ApiRoutes {
   static const String authLogout = "/auth/logout";
   static const String accountSync = "/account/sync";
   static const String accountChoice = "/account/choice";
+  static const String accountSemester = "/account/semester";
   static const String deleteAccount = "/account";
   static String accountSubjectSemesterGrades(SubjectId subjectId, Semester semester) => "/account/grades/$subjectId/${semester.name}";
   static String accountSubjectAbiPrediction(SubjectId subjectId) => "/account/abi-prediction/$subjectId";
@@ -242,7 +243,15 @@ class AuthenticatedApi {
     return response.statusCode == 200;
   }
 
-  Future<bool> deleteAccount() async {
+  Future<bool> postSemester(Semester semester) async {
+    final response = await post(ApiRoutes.accountSemester, body: {
+      "semester": semester,
+    });
+
+    return response.statusCode == 200;
+  }
+
+  Future<bool> postDeleteAccount() async {
     final response = await delete(ApiRoutes.deleteAccount);
 
     return response.statusCode == 200;

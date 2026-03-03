@@ -266,9 +266,9 @@ class _SubjectPageState extends State<SubjectPage> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(minWidth: 44),
         child: Container(
-          padding: const EdgeInsets.fromLTRB(8, 10, 8, 6),
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(8),
             color: selected ? theme.scaffoldBackgroundColor : null,
           ),
           child: Column(children: [

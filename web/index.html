@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <!-- https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base -->
-  <!-- '--base-href' in 'flutter build' -->
+  <!-- https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base '--base-href' in 'flutter build' -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
@@ -23,7 +22,7 @@
 
   <!-- Basic SEO -->
   <link rel="canonical" href="https://g9.anweisen.net">
-  <meta name="keywords" content="G9, Notenapp, Abitur, Bayern, Notenrechner">
+  <meta name="keywords" content="G9, Notenapp, Noten, Punkte, Einbringungen, Durchschnitt, Prognose, Abitur, Abi, Bayern, Notenrechner, Oberstufe, Gymnasium, LehrplanPlus, berechnen">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="de_DE">
   <meta property="og:site_name" content="g9.anweisen.net">
@@ -43,6 +42,14 @@
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
+
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src * 'self' 'unsafe-inline' 'unsafe-eval';
+             script-src * 'self' 'unsafe-inline' 'unsafe-eval' blob:;
+             worker-src 'self' blob:;
+             child-src 'self' blob:;
+             img-src * 'self' data: blob:;
+             connect-src * 'self' blob:;">
 </head>
 <body>
   <script>

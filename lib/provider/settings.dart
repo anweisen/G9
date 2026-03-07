@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 import '../logic/choice.dart';
+import '../logic/types.dart';
 
 part "settings.g.dart";
 
@@ -41,6 +43,14 @@ class SettingsDataProvider extends ChangeNotifier {
     save();
   }
 
+  Map<SubjectId, SubjectSettings>? get subjectSettings => _data?.subjectSettings;
+  set subjectSettings(Map<SubjectId, SubjectSettings>? value) {
+    _data?.subjectSettings = value;
+    applySubjectSettings(value);
+    notifyListeners();
+    save();
+  }
+
   bool get onboarding => _data?.choice == null;
 
   Future<void> load() async {
@@ -63,6 +73,8 @@ class SettingsDataProvider extends ChangeNotifier {
       _data?.choice = Choice.dummy;
     }
 
+    applySubjectSettings(_data?.subjectSettings);
+
     _loaded = true;
 
     notifyListeners();
@@ -74,6 +86,37 @@ class SettingsDataProvider extends ChangeNotifier {
     }
     var box = await Hive.openLazyBox<SettingsData>(hiveBoxName);
     await box.put(hiveSettingsKey, _data!);
+  }
+
+  void applySubjectSettings(Map<SubjectId, SubjectSettings>? settings) {
+    if (settings == null) return;
+
+    for (MapEntry<SubjectId, SubjectSettings> entry in settings.entries) {
+      Subject? subject = Subject.byId[entry.key];
+      if (subject != null) {
+        applySubjectSetting(subject, entry.value);
+      }
+    }
+  }
+
+  void applySubjectSetting(Subject subject, SubjectSettings? settings) {
+    if (settings == null) {
+      subject.color = Subject.originalColors[subject.id]!;
+    } else {
+      subject.color = Color(settings.colorValue!);
+    }
+  }
+
+  void setSubjectSettings(SubjectId subjectId, SubjectSettings? settings) {
+    applySubjectSetting(Subject.byId[subjectId]!, settings);
+    _data?.subjectSettings ??= {};
+    if (settings == null) {
+      _data?.subjectSettings!.remove(subjectId);
+    } else {
+      _data?.subjectSettings![subjectId] = settings;
+    }
+    notifyListeners();
+    save();
   }
 
 }
@@ -89,5 +132,21 @@ class SettingsData {
   @HiveField(2)
   bool? usesSlider;
 
-  SettingsData({required this.theme, this.choice, this.usesSlider});
+  @HiveField(3)
+  Map<SubjectId, SubjectSettings>? subjectSettings;
+
+  SettingsData({required this.theme, this.choice, this.usesSlider, this.subjectSettings});
+}
+
+@JsonSerializable()
+@HiveType(typeId: 7)
+class SubjectSettings {
+
+  @HiveField(0) @JsonKey(name: "color")
+  final int? colorValue;
+
+  SubjectSettings({this.colorValue});
+
+  factory SubjectSettings.fromJson(Map<String, dynamic> json) => _$SubjectSettingsFromJson(json);
+  Map<String, dynamic> toJson() => _$SubjectSettingsToJson(this);
 }

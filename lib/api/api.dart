@@ -24,6 +24,7 @@ class ApiRoutes {
   static const String accountSemester = "/account/semester";
   static const String deleteAccount = "/account";
   static String accountSubjectSemesterGrades(SubjectId subjectId, Semester semester) => "/account/grades/$subjectId/${semester.name}";
+  static String accountSubjectSettings(SubjectId subjectId) => "/account/subject/$subjectId";
   static String accountSubjectAbiPrediction(SubjectId subjectId) => "/account/abi-prediction/$subjectId";
 }
 
@@ -65,31 +66,35 @@ class Api {
       print("Error getting device name: $e");
     }
 
-    final response = await http.post(
-      Uri.parse("$apiBaseUrl${ApiRoutes.authExchange}"),
-      body: json.encode({
-        "provider": providerName,
-        "redirect_uri": flow.redirectUrl(),
-        "code": code,
-        "device_name": deviceName
-      }),
-      headers: {"Content-Type": "application/json"},
-    );
+    try {
+      final response = await http.post(
+        Uri.parse("$apiBaseUrl${ApiRoutes.authExchange}"),
+        body: json.encode({
+          "provider": providerName,
+          "redirect_uri": flow.redirectUrl(),
+          "code": code,
+          "device_name": deviceName
+        }),
+        headers: {"Content-Type": "application/json"},
+      );
 
-    if (response.statusCode == 200) {
-      print("Backend Auth Success: ${response.body}");
+      if (response.statusCode == 200) {
+        print("Backend Auth Success: ${response.body}");
 
-      Map<String, dynamic> data = jsonDecode(response.body);
-      final body = AuthResponseBody.fromJson(data);
+        Map<String, dynamic> data = jsonDecode(response.body);
+        final body = AuthResponseBody.fromJson(data);
 
-      dataProvider.accessToken = body.accessToken;
-      dataProvider.refreshToken = body.refreshToken;
-      dataProvider.userProfile = body.userProfile;
-      dataProvider.privateProfile = body.privateProfile;
-      dataProvider.provider = providerName;
+        dataProvider.accessToken = body.accessToken;
+        dataProvider.refreshToken = body.refreshToken;
+        dataProvider.userProfile = body.userProfile;
+        dataProvider.privateProfile = body.privateProfile;
+        dataProvider.provider = providerName;
 
-    } else {
-      print("Backend Auth Failed: ${response.statusCode} - ${response.body} (${response.request?.url.toString()})");
+      } else {
+        print("Backend Auth Failed: ${response.statusCode} - ${response.body} (${response.request?.url.toString()})");
+      }
+    } catch (e) {
+      print("Error during backend auth exchange: $e");
     }
 
     dataProvider.authenticating = false;
@@ -162,6 +167,7 @@ class AuthenticatedApi {
 
   Future<http.Response> post(String endpoint, {Map<String, dynamic>? body}) async {
     try {
+      print("POST Request to $endpoint with body: ${json.encode(body)}");
       return await http.post(
           Uri.parse("${Api.apiBaseUrl}$endpoint"),
           headers: {"Authorization": "Bearer $accessToken", "Content-Type": "application/json"},
@@ -253,6 +259,15 @@ class AuthenticatedApi {
 
   Future<bool> postDeleteAccount() async {
     final response = await delete(ApiRoutes.deleteAccount);
+
+    return response.statusCode == 200;
+  }
+
+  Future<bool> postSubjectSettings(SubjectId subjectId, SubjectSettings? settings) async {
+    final response = await post(ApiRoutes.accountSubjectSettings(subjectId), body: {
+      "settings": settings,
+    });
+    print("Response from posting subject settings: ${response.statusCode} - ${response.body}");
 
     return response.statusCode == 200;
   }

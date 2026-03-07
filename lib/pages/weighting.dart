@@ -27,7 +27,11 @@ class WeightingPage extends StatelessWidget {
     final weighting = GradeHelper.getWeightingFor(subject, semester, choice!, grades);
 
     return SubpageSkeleton(
-        title: SubjectPageTitle(subject: subject),
+        title: Row(
+          children: [
+            SubjectPageTitle(subject: subject),
+          ],
+        ),
         children: [
           SubjectSemesterSubtitle(subtitle: "Notengewichtung", choice: choice, subject: subject, semester: semester),
 

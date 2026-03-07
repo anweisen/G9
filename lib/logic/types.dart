@@ -26,6 +26,7 @@ class Subject {
 
   Subject({required this.id, required this.name, required this.category, SubjectTaskField? field, Color color = Colors.blueGrey}) {
     byId[id] = this;
+    originalColors[id] = color;
     colorValue = color.value;
     this.field = field ?? SubjectTaskField.fromSubjectCategory(category);
   }
@@ -79,6 +80,8 @@ class Subject {
     mathe, deutsch, matheVk, deutschVk, english, franz, spanisch, latein, spanischSb, physik, chemie, bio, info, reli, geschi, geo, wr, pug, kunst, musik, sport, seminar, wahl
   ];
   static List<Subject> lks = [english, bio, physik, chemie, info, reli, geschi, geo, wr, pug, kunst, musik, sport, franz, spanisch, latein]; // custom order
+
+  static final Map<SubjectId, Color> originalColors = {};
 
   static List<Subject> allOf(SubjectCategory c1, [SubjectCategory? c2, SubjectCategory? c3, SubjectCategory? c4, SubjectCategory? c5]) {
     return all.where((element) => element.category == c1 || element.category == c2 || element.category == c3 || element.category == c4 || element.category == c5).toList();

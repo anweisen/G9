@@ -6,6 +6,7 @@ import '../logic/choice.dart';
 import '../logic/grades.dart';
 import '../logic/types.dart';
 import '../provider/grades.dart';
+import '../provider/settings.dart';
 
 part 'types.g.dart';
 
@@ -95,7 +96,10 @@ class SyncDataPayload {
   @JsonKey(name: "grades")
   Map<Semester, SubjectGradesMap>? grades;
 
-  SyncDataPayload({this.choice, this.currentSemester, this.usesSlider, this.abiPredictions, this.grades});
+  @JsonKey(name: "subject_settings")
+  Map<SubjectId, SubjectSettings>? subjectSettings;
+
+  SyncDataPayload({this.choice, this.currentSemester, this.usesSlider, this.abiPredictions, this.grades, this.subjectSettings});
 
   factory SyncDataPayload.fromJson(Map<String, dynamic> json) => _$SyncDataPayloadFromJson(json);
   Map<String, dynamic> toJson() => _$SyncDataPayloadToJson(this);

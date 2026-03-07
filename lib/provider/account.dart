@@ -210,6 +210,7 @@ class AccountDataProvider extends ChangeNotifier {
       // theme: settingsProvider.theme.index,
       abiPredictions: gradesProvider.abiPredictions,
       grades: gradesProvider.data,
+      subjectSettings: settingsProvider.subjectSettings,
     );
 
     print("Syncing data with backend. Payload: ${dataPayload.toJson()}");
@@ -241,6 +242,9 @@ class AccountDataProvider extends ChangeNotifier {
     }
     if (responsePayload.grades != null) {
       gradesProvider.data = responsePayload.grades!;
+    }
+    if (responsePayload.subjectSettings != null) {
+      settingsProvider.subjectSettings = responsePayload.subjectSettings!;
     }
 
     gradesProvider.save();
@@ -310,6 +314,21 @@ class AccountDataProvider extends ChangeNotifier {
     }
   }
 
+  void updateSubjectSettings(SubjectId subjectId, SubjectSettings settings) async {
+    print("Updating subject settings for subject $subjectId. Settings: ${settings.toJson()}");
+    if (!isLoggedIn) {
+      print("not logged in, stashing subject settings");
+      stashSubjectSettings(subjectId, settings);
+      return;
+    }
+
+    final success = await api.postSubjectSettings(subjectId, settings);
+    print("Subject settings update successful: $success");
+    if (!success) {
+      stashSubjectSettings(subjectId, settings);
+    }
+  }
+
   void stashSemester(Semester semester) {
     _stashedChanges ??= StashedChanges.empty();
     _stashedChanges!.stashedSemester = StashedSemesterChange.now(semester);
@@ -337,6 +356,13 @@ class AccountDataProvider extends ChangeNotifier {
     saveStash();
   }
 
+  void stashSubjectSettings(SubjectId subjectId, SubjectSettings settings) {
+    _stashedChanges ??= StashedChanges.empty();
+    _stashedChanges!.stashedSubjectSettings ??= {};
+    _stashedChanges!.stashedSubjectSettings![subjectId] = StashedSubjectSettingsChange.now(settings);
+    saveStash();
+  }
+
 }
 
 @JsonSerializable(explicitToJson: true)
@@ -354,6 +380,9 @@ class StashedChanges {
 
   @HiveField(3) @JsonKey(name: "semester")
   StashedSemesterChange? stashedSemester;
+
+  @HiveField(4) @JsonKey(name: "subject_settings")
+  Map<SubjectId, StashedSubjectSettingsChange>? stashedSubjectSettings;
 
   StashedChanges(this.stashedGrades, this.stashedChoice, this.stashedAbiPredictions);
 
@@ -414,4 +443,14 @@ class StashedSemesterChange extends StashedValueChange<Semester> {
 
   factory StashedSemesterChange.fromJson(Map<String, dynamic> json) => _$StashedSemesterChangeFromJson(json);
   Map<String, dynamic> toJson() => _$StashedSemesterChangeToJson(this);
+}
+
+@HiveType(typeId: 45)
+@JsonSerializable()
+class StashedSubjectSettingsChange extends StashedValueChange<SubjectSettings> {
+  StashedSubjectSettingsChange(super.at, super.to);
+  StashedSubjectSettingsChange.now(super.to) : super.now();
+
+  factory StashedSubjectSettingsChange.fromJson(Map<String, dynamic> json) => _$StashedSubjectSettingsChangeFromJson(json);
+  Map<String, dynamic> toJson() => _$StashedSubjectSettingsChangeToJson(this);
 }

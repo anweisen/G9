@@ -36,7 +36,9 @@ void main() async {
   Hive.registerAdapter(StashedGradesChangeAdapter());
   Hive.registerAdapter(StashedChoiceChangeAdapter());
   Hive.registerAdapter(StashedSemesterChangeAdapter());
+  Hive.registerAdapter(StashedSubjectSettingsChangeAdapter());
   Hive.registerAdapter(SemesterAdapter());
+  Hive.registerAdapter(SubjectSettingsAdapter());
 
   // safe to call on desktop/mobile
   usePathUrlStrategy();

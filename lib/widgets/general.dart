@@ -2,11 +2,14 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../logic/choice.dart';
 import '../logic/types.dart';
 import '../pages/customize.dart';
+import '../provider/account.dart';
 import '../provider/grades.dart';
+import '../provider/settings.dart';
 import 'subpage.dart';
 
 class SubjectPageTitle extends StatelessWidget {
@@ -19,6 +22,12 @@ class SubjectPageTitle extends StatelessWidget {
     final theme = Theme.of(context);
     return Expanded(flex: 100, child: SubpageTrigger(
       createSubpage: () => CustomizeSubjectPage(subject: subject),
+      callback: (result) {
+        if (result != null && result is SubjectSettings) {
+          Provider.of<SettingsDataProvider>(context, listen: false).setSubjectSettings(subject.id, result);
+          Provider.of<AccountDataProvider>(context, listen: false).updateSubjectSettings(subject.id, result);
+        }
+      },
       child: Row(children: [
         Container(
           decoration: BoxDecoration(

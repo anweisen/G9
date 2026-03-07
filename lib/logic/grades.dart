@@ -99,6 +99,14 @@ class GradeWeighting {
     return _calculateDepth(components);
   }
 
+  List<GradeWeightingComponent> flattenComponents() {
+    List<GradeWeightingComponent> flattened = [];
+    for (var component in components) {
+      component.flattenInto(flattened);
+    }
+    return flattened;
+  }
+
   String generateInfoText() {
     String text = "";
 
@@ -246,6 +254,29 @@ class GradeWeightingComponent {
     final filteredGrades = filter(grades);
     if (subcomponents == null) return GradeHelper.unweightedAverageOf(filteredGrades);
     return calculateSubComponentsAverage(filteredGrades, subcomponents!);
+  }
+
+  void flattenInto(List<GradeWeightingComponent> list) {
+    if (hasSubComponents) {
+      for (var sub in subcomponents!) {
+        sub.flattenInto(list);
+      }
+    } else {
+      list.add(this);
+    }
+  }
+
+  GradeType getRepresentativeGradeType() {
+    if (hasSubComponents) {
+      return subcomponents!.first.getRepresentativeGradeType();
+    }
+    if (filterTypes != null && filterTypes!.isNotEmpty) {
+      return filterTypes!.first;
+    }
+    if (filterAreas != null && filterAreas!.isNotEmpty) {
+      return GradeType.only(filterAreas!.first).first;
+    }
+    throw Exception("GradeWeightingComponent $title has no filter and no subcomponents");
   }
 
   static double calculateSubComponentsAverage(GradesList grades, List<GradeWeightingComponent> components) {
@@ -679,7 +710,7 @@ enum GradeTypeArea {
   klausur("Klausur"),
   /// Mündliche Noten in einem Fach
   muendlich("kl. Leistungsnachweise"),
-  /// Die beiden letzten Halbjahreseinbringungen setzen sich aus der Seminararbeit und dem Referat dazu zusammen
+  /// Die beiden letzten Halbjahreseinbringungen setzen sich aus der Seminararbeit und dem Referat zusammen
   seminar("W-Seminar"),
   /// Das Fach Sport(GK) hat keine üblichen Noten(sondern Praxis & Theorie) (= Praxisteil im LK)
   sport("Sportpraxis"),

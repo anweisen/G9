@@ -16,6 +16,7 @@ import '../widgets/subpage.dart';
 import 'development.dart';
 import 'grade.dart';
 import 'result.dart';
+import 'tendency.dart';
 import 'weighting.dart';
 
 class SubjectPage extends StatefulWidget {
@@ -124,7 +125,12 @@ class _SubjectPageState extends State<SubjectPage> {
                   ),
                   const SizedBox(width: 8),
                   SubpageTrigger(
-                    createSubpage: () => GradesDevelopmentPage(subject: widget.subject,),
+                      createSubpage: () => GradesTendencyPage(subject: widget.subject, semester: _currentSemester!, choice: choice!, grades: grades, gradesProvider: dataProvider,),
+                      child: const Icon(Icons.tips_and_updates_outlined, size: 18),
+                  ),
+                  const SizedBox(width: 8),
+                  SubpageTrigger(
+                      createSubpage: () => GradesDevelopmentPage(subject: widget.subject,),
                       child: const Icon(Icons.timeline, size: 20),
                   ),
                   const Spacer(),

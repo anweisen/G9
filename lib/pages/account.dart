@@ -60,23 +60,14 @@ class AccountPage extends StatelessWidget {
                   spacing: 10,
                   runSpacing: 10,
                   children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: theme.dividerColor, width: 2),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Icon(stage.icon, color: stage.color(theme), size: 24),
-                          const SizedBox(width: 12,),
-                          Flexible(child: Text(stage.text, style: theme.textTheme.bodyMedium?.copyWith(color: stage.color(theme), fontSize: 16), softWrap: true, maxLines: 2, overflow: TextOverflow.ellipsis,)),
-                          const SizedBox(width: 6,),
-                          if (stage.isLoading) DotLoadingIndicator(style: theme.textTheme.bodyMedium!.copyWith(fontSize: 16), duration: const Duration(milliseconds: 1500))
-                        ],
-                      ),
+                    AccountActionButton(
+                      text: stage.text,
+                      icon: stage.icon,
+                      textColor: stage.color(theme),
+                      backgroundColor: null,
+                      borderColor: theme.dividerColor,
+                      onTap: null,
+                      suffix: stage.isLoading ? DotLoadingIndicator(style: theme.textTheme.bodyMedium!.copyWith(fontSize: 16), duration: const Duration(milliseconds: 1500)) : null,
                     ),
                     AccountActionButton(
                       text: null,
@@ -112,7 +103,7 @@ class AccountPage extends StatelessWidget {
                       createSubpage: () => const ConfirmDeleteAccountDialoge(),
                     )
                   ],
-                )
+                ),
               ],
             )
           else
@@ -152,8 +143,9 @@ class AccountPage extends StatelessWidget {
 }
 
 class AccountActionButton extends StatelessWidget {
-  const AccountActionButton({super.key, required this.text, required this.icon, required this.textColor, required this.backgroundColor, required this.borderColor, required this.onTap, this.createSubpage});
+  const AccountActionButton({super.key, required this.text, required this.icon, required this.textColor, required this.backgroundColor, required this.borderColor, required this.onTap, this.createSubpage, this.suffix});
 
+  final Widget? suffix;
   final String? text;
   final IconData icon;
   final Color textColor;
@@ -168,7 +160,7 @@ class AccountActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: createSubpage != null ? () => SubpageController.of(context).openSubpage(createSubpage!()) : onTap,
       child: Container(
-        padding: text != null ? const EdgeInsets.symmetric(horizontal: 16, vertical: 8) : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: text != null ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6) : const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: borderColor, width: 2),
@@ -177,10 +169,10 @@ class AccountActionButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 24, color: textColor,),
+            Icon(icon, size: 22, color: textColor,),
             if (text != null) ...[
               const SizedBox(width: 8,),
-              Text(text!, style: theme.textTheme.bodyMedium?.copyWith(color: textColor, fontSize: 16)),
+              Text(text!, style: theme.textTheme.bodyMedium?.copyWith(color: textColor, fontSize: 15), softWrap: true, maxLines: 2, overflow: TextOverflow.ellipsis,),
             ]
           ],
         ),

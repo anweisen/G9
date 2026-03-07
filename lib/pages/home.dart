@@ -17,6 +17,7 @@ import 'account.dart';
 import 'grade.dart';
 import 'hurdles.dart';
 import 'switcher.dart';
+import 'top.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -185,31 +186,34 @@ class HomePage extends StatelessWidget {
               const SizedBox(width: 4),
               Text(GradeHelper.formatNumber(flags.pointsAbi / 20, decimals: 2), style: theme.textTheme.bodyMedium),
             ]),
-            if (!flags.isEmpty && stats.bestSubjects.isNotEmpty) ...[
-              const SizedBox(height: 15),
-              Text("Top ${min(3, stats.bestSubjects.length)} Fächer", style: theme.textTheme.bodySmall),
-              for (int i = 0; i < 3 && i < stats.bestSubjects.length; i++)
-                _buildTextLine(_buildSubject(theme.textTheme, stats.bestSubjects[i].$1), [
-                  if (MediaQuery.of(context).size.width > 500) Row(children: [
-                    for (Semester semester in Semester.values)
-                      if (!(results[stats.bestSubjects[i].$1]?[semester]?.prediction ?? true)) Container(
-                        margin: const EdgeInsets.fromLTRB(0, 0, 4, 0),
-                        width: 21,
-                        height: 19,
-                        decoration: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? BoxDecoration(color: theme.hintColor, borderRadius: BorderRadius.circular(4)) : null,
-                        child: Center(child: Text(results[stats.bestSubjects[i].$1]?[semester]?.effectiveGrade.toString() ?? "-",
-                        style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, fontWeight: FontWeight.w600), textAlign: TextAlign.center,)
-                      )
-                    ),
+            if (!flags.isEmpty && stats.bestSubjects.isNotEmpty) SubpageTrigger(
+              createSubpage: () => TopSubjectsSubpage(stats: stats, results: results),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const SizedBox(height: 15),
+                Text("Top ${min(3, stats.bestSubjects.length)} Fächer", style: theme.textTheme.bodySmall),
+                for (int i = 0; i < 3 && i < stats.bestSubjects.length; i++)
+                  _buildTextLine(_buildSubject(theme.textTheme, stats.bestSubjects[i].$1), [
+                    if (MediaQuery.of(context).size.width > 500) Row(children: [
+                      for (Semester semester in Semester.values)
+                        if (!(results[stats.bestSubjects[i].$1]?[semester]?.prediction ?? true)) Container(
+                          margin: const EdgeInsets.fromLTRB(0, 0, 4, 0),
+                          width: 21,
+                          height: 19,
+                          decoration: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? BoxDecoration(color: theme.hintColor, borderRadius: BorderRadius.circular(4)) : null,
+                          child: Center(child: Text(results[stats.bestSubjects[i].$1]?[semester]?.effectiveGrade.toString() ?? "-",
+                          style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, fontWeight: FontWeight.w600), textAlign: TextAlign.center,)
+                        )
+                      ),
+                    ]),
+                    const SizedBox(width: 8),
+                    Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+                    const SizedBox(width: 4),
+                    Text("${GradeHelper.formatNumber(stats.bestSubjects[i].$2, decimals: 1)}", style: theme.textTheme.bodyMedium),
                   ]),
-                  const SizedBox(width: 8),
-                  Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
-                  const SizedBox(width: 4),
-                  Text("${GradeHelper.formatNumber(stats.bestSubjects[i].$2, decimals: 1)}", style: theme.textTheme.bodyMedium),
-                ]),
-            ]
-          ],
-        ),
+              ]),
+            ),
+          ]
+        )
       ),
 
       if (graduationHurdleCheckResults.isEmpty && admissionHurdleCheckResults.isEmpty)

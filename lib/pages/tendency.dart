@@ -44,7 +44,7 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
       final results = SemesterResult.calculateResultsWithPredictions(widget.choice, widget.gradesProvider);
       _target = SemesterResult.calculatePrediction(widget.subject, results);
     } else {
-      _target = GradeHelper.roundResult(weighting.calculateAverage(widget.grades));
+      _target = GradeHelper.roundResult(weighting.calculateAverage(widget.grades) / widget.semester.semesterCountEquivalent);
     }
 
     for (var component in components) {
@@ -139,11 +139,10 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
     if (isFinal) {
       return _recalculateTargetRecursively(componentIndex + 1, added);
     } else {
-      for (int n = 0; n < maxN; n++) {
+      for (int n = 0; n < maxN && (!component.singleGrade || n < 1); n++) {
         for (int grade = 0; grade <= 15; grade++) {
-          var newGrade = GradeEntry(grade, component.getRepresentativeGradeType(), DateTime.now());
-          var newAdded = [...added, newGrade];
-          for (int x = 1; x < n; x++) {
+          var newAdded = [...added];
+          for (int x = 0; x <= n; x++) {
             newAdded.add(GradeEntry(grade, component.getRepresentativeGradeType(), DateTime.now()));
           }
 
@@ -154,10 +153,12 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
         }
       }
     }
+
+    return null;
   }
 
   int _calculateComponentAverage(GradeWeightingComponent component) {
-    final allGrades = [...widget.grades, ..._addedManual];
+    final allGrades = [...widget.grades, ..._addedManual].where((entry) => entry.type != GradeType.result).toList();
     if (allGrades.isEmpty) {
       final results = SemesterResult.calculateResultsWithPredictions(widget.choice, widget.gradesProvider);
       return SemesterResult.calculatePrediction(widget.subject, results);
@@ -166,8 +167,7 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
     if (componentGrades.isEmpty) {
       return GradeHelper.unweightedAverageOf(allGrades).round();
     }
-    final average = componentGrades.map((entry) => entry.grade).reduce((a, b) => a + b) / componentGrades.length;
-    return average.round();
+    return GradeHelper.unweightedAverageOf(componentGrades).round();
   }
 
   @override

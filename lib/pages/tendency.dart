@@ -28,14 +28,15 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
   late GradeWeighting weighting;
   late List<GradeWeightingComponent> components;
   GradesList _addedManual = [];
+  GradesList _addedTarget = [];
   bool _targetEnabled = false;
   bool _targetFailed = false;
   late int _target;
 
+  get allGrades => [...widget.grades, ..._addedManual, ..._addedTarget];
+
   @override
   void initState() {
-
-
     weighting = GradeHelper.getWeightingFor(widget.subject, widget.semester, widget.choice, widget.grades);
     components = weighting.flattenComponents();
 
@@ -53,36 +54,25 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
     super.initState();
   }
 
+  void _setUpdatedWeightingComponents() {
+    weighting = GradeHelper.getWeightingFor(widget.subject, widget.semester, widget.choice, allGrades);
+    components = weighting.flattenComponents();
+  }
+
   void _addGrade(GradeWeightingComponent component) {
     setState(() {
       var newGradeEntry = GradeEntry(_calculateComponentAverage(component), component.getRepresentativeGradeType(), DateTime.now());
       _addedManual.add(newGradeEntry);
-
-      if (_targetEnabled) {
-        var added = _recalculateTarget(newGradeEntry);
-        if (added != null) {
-          _addedManual = added;
-          _targetFailed = false;
-        } else {
-          _targetFailed = true;
-        }
-      }
+      _setUpdatedWeightingComponents();
+      _setRecalculateTarget();
     });
   }
 
   void _deleteGrade(GradeEntry grade) {
     setState(() {
       _addedManual.remove(grade);
-
-      if (_targetEnabled) {
-        var added = _recalculateTarget(null);
-        if (added != null) {
-          _addedManual = added;
-          _targetFailed = false;
-        } else {
-          _targetFailed = true;
-        }
-      }
+      _setUpdatedWeightingComponents();
+      _setRecalculateTarget();
     });
   }
 
@@ -95,16 +85,8 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
       } else {
         _addedManual.add(newGradeEntry);
       }
-
-      if (_targetEnabled) {
-        var added = _recalculateTarget(newGradeEntry);
-        if (added != null) {
-          _addedManual = added;
-          _targetFailed = false;
-        } else {
-          _targetFailed = true;
-        }
-      }
+      _setUpdatedWeightingComponents();
+      _setRecalculateTarget();
     });
   }
 
@@ -112,34 +94,40 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
     setState(() {
       _targetEnabled = true;
       _target = newTarget;
-      var added = _recalculateTarget(null);
-      if (added != null) _addedManual = added;
-      _targetFailed = added == null;
+      _setRecalculateTarget();
     });
   }
 
   void _toggleTargetEnabled() {
     setState(() {
       _targetEnabled = !_targetEnabled;
-      if (_targetEnabled) {
-        var added = _recalculateTarget(null);
-        if (added != null) _addedManual = added;
-        _targetFailed = added == null;
-      }
+      _setRecalculateTarget();
     });
   }
 
-  GradesList? _recalculateTarget(GradeEntry? keep) {
-    var added = _recalculateTargetRecursively(0, keep != null ? [keep] : [], keep);
-    return added;
+  void _setRecalculateTarget() {
+    if (_targetEnabled) {
+      var added = _recalculateTarget();
+      if (added != null) {
+        _addedTarget = added;
+      }
+      _targetFailed = added == null;
+    } else {
+      _addedTarget = [];
+      _targetFailed = false;
+    }
   }
 
-  GradesList? _recalculateTargetRecursively(int componentIndex, GradesList added, GradeEntry? keep) {
-    const maxN = 25; // max grades to add per component (limit)
+  GradesList? _recalculateTarget() {
+    return _recalculateTargetRecursively(0, []);
+  }
+
+  GradesList? _recalculateTargetRecursively(int componentIndex, GradesList added) {
+    const maxN = 10; // max grades to add per component (limit)
 
     if (componentIndex >= components.length) {
-      var average = weighting.calculateAverage([...widget.grades, ...added]);
-      var result = GradeHelper.roundResult(average);
+      var average = weighting.calculateAverage([...widget.grades, ..._addedManual, ...added]);
+      var result = GradeHelper.roundResult(average) / widget.semester.semesterCountEquivalent;
       if (result >= _target) {
         return added;
       }
@@ -147,20 +135,10 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
     }
 
     var component = components[componentIndex];
-    bool isFinal = component.singleGrade && component.filter(widget.grades).isNotEmpty;
+    bool isFinal = component.singleGrade && component.filter([...widget.grades, ..._addedManual]).isNotEmpty;
     if (isFinal) {
-      return _recalculateTargetRecursively(componentIndex + 1, added, keep);
+      return _recalculateTargetRecursively(componentIndex + 1, added);
     } else {
-      if (keep != null) {
-        var keepN = component.filter(_addedManual).indexOf(keep);
-        if (keepN != -1) {
-          var result = _recalculateTargetRecursively(componentIndex + 1, added, keep);
-          if (result != null) {
-            return result;
-          }
-        }
-      }
-
       for (int n = 0; n < maxN; n++) {
         for (int grade = 0; grade <= 15; grade++) {
           var newGrade = GradeEntry(grade, component.getRepresentativeGradeType(), DateTime.now());
@@ -169,7 +147,7 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
             newAdded.add(GradeEntry(grade, component.getRepresentativeGradeType(), DateTime.now()));
           }
 
-          var result = _recalculateTargetRecursively(componentIndex + 1, newAdded, keep);
+          var result = _recalculateTargetRecursively(componentIndex + 1, newAdded);
           if (result != null) {
             return result;
           }
@@ -196,7 +174,7 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final grades = [...widget.grades, ..._addedManual];
+    final grades = allGrades;
 
     final average = weighting.calculateAverage(grades);
     final result = GradeHelper.roundResult(average);
@@ -212,7 +190,7 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
         ),
         children: [
           SubjectSemesterSubtitle(subtitle: "Notencheck", choice: widget.choice, subject: widget.subject, semester: widget.semester),
-          const SizedBox(height: 20,),
+          const SizedBox(height: 16,),
 
           Row(
             children: [
@@ -221,7 +199,7 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
                   Text("Ø", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w300, color: theme.primaryColor)),
                   const SizedBox(width: 4),
                   SizedBox(
-                    width: 50,
+                    width: 54,
                     child: Text(GradeHelper.formatNumber(average, decimals: 2, allowZero: true), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, color: theme.primaryColor))
                   ),
                   if (widget.semester.semesterCountEquivalent > 1) ...[
@@ -264,7 +242,7 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Wunschnote", style: theme.textTheme.bodySmall),
+              Text("Zielnote", style: theme.textTheme.bodySmall),
               const SizedBox(height: 4,),
               Row(
                 children: [
@@ -310,9 +288,12 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(Icons.warning_amber_rounded, size: 20, color: theme.disabledColor),
-                    const SizedBox(width: 8,),
-                    Expanded(
-                      child: Text("Zielnote ist mit den aktuellen Noten nicht mehr realistisch erreichbar", style: theme.textTheme.bodySmall?.copyWith(color: theme.disabledColor, height: 1.25), softWrap: true, maxLines: 3,)
+                    const SizedBox(width: 10,),
+                    Flexible(
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 3),
+                        child: Text("Zielnote ist mit diesen Noten nicht mehr realistisch erreichbar", style: theme.textTheme.bodySmall?.copyWith(color: theme.disabledColor, height: 1), softWrap: true, maxLines: 3,),
+                      )
                     ),
                   ],
                 )
@@ -349,14 +330,7 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
                       runSpacing: 8,
                       children: [
                         for (GradeEntry grade in entry.value)
-                          if (!_addedManual.contains(grade)) Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: theme.primaryColor,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text("${grade.grade}", style: theme.textTheme.labelMedium),
-                          ) else Column(
+                          if (_addedManual.contains(grade)) Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
@@ -369,33 +343,48 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     SizedBox(
-                                      width: 20,
-                                      child: Text(grade.grade.toString(), style: theme.textTheme.bodyMedium?.copyWith(color: theme.primaryColor), textAlign: TextAlign.center,)
+                                    width: 20,
+                                    child: Text(grade.grade.toString(), style: theme.textTheme.bodyMedium?.copyWith(color: theme.primaryColor), textAlign: TextAlign.center,)
                                     ),
-                                    const SizedBox(width: 4,),
-                                    GestureDetector(
-                                      onTap: () => _deleteGrade(grade),
-                                      child: Icon(Icons.delete_rounded, size: 19, color: theme.shadowColor)
-                                    ),
+                                  const SizedBox(width: 4,),
+                                  GestureDetector(
+                                    onTap: () => _deleteGrade(grade),
+                                    child: Icon(Icons.delete_rounded, size: 19, color: theme.shadowColor)
+                                  ),
                                   ],
                                 ),
-                              ),
-                              const SizedBox(height: 3,),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () => _replaceGrade(grade, min(grade.grade + 1, 15)),
-                                    child: Icon(Icons.add_circle_outline_rounded, size: 20, color: theme.shadowColor)
-                                  ),
-                                  const SizedBox(width: 8,),
-                                  GestureDetector(
-                                    onTap: () => _replaceGrade(grade, max(grade.grade - 1, 0)),
-                                    child: Icon(Icons.remove_circle_outline_rounded, size: 20, color: theme.shadowColor)
-                                  ),
-                                ],
-                              )
-                            ],
+                                ),
+                                const SizedBox(height: 3,),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => _replaceGrade(grade, min(grade.grade + 1, 15)),
+                                      child: Icon(Icons.add_circle_outline_rounded, size: 20, color: theme.shadowColor)
+                                    ),
+                                    const SizedBox(width: 8,),
+                                    GestureDetector(
+                                      onTap: () => _replaceGrade(grade, max(grade.grade - 1, 0)),
+                                      child: Icon(Icons.remove_circle_outline_rounded, size: 20, color: theme.shadowColor)
+                                    ),
+                                  ],
+                                )
+                              ],
+                            )
+                          else if (_addedTarget.contains(grade)) Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: theme.dividerColor,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text("${grade.grade}", style: theme.textTheme.bodyMedium),
+                          ) else Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: theme.primaryColor,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text("${grade.grade}", style: theme.textTheme.labelMedium),
                           ),
                         if (!entry.key.singleGrade || entry.value.isEmpty)
                           GestureDetector(

@@ -3,8 +3,10 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../logic/choice.dart';
 import '../logic/types.dart';
 import '../pages/customize.dart';
+import '../provider/grades.dart';
 import 'subpage.dart';
 
 class SubjectPageTitle extends StatelessWidget {
@@ -31,6 +33,45 @@ class SubjectPageTitle extends StatelessWidget {
     ));
   }
 }
+
+class SubjectSemesterSubtitle extends StatelessWidget {
+  const SubjectSemesterSubtitle({super.key, required this.subtitle, required this.choice, required this.subject, required this.semester});
+
+  final String subtitle;
+  final Choice choice;
+  final Subject subject;
+  final Semester semester;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Wrap(
+      spacing: 12,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text(subtitle, softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1, style: theme.textTheme.bodyMedium),
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(color: theme.dividerColor, borderRadius: BorderRadius.circular(6)),
+              child: Text(semester.detailedDisplay, style: theme.textTheme.displayMedium?.copyWith(height: 1.25),)
+            ),
+            if (choice.lk == subject) Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(color: theme.dividerColor, borderRadius: BorderRadius.circular(6)),
+              child: Text("Leistungsfach", style: theme.textTheme.displayMedium?.copyWith(height: 1.25),)
+            ),
+          ],
+        )
+      ],
+    );
+  }
+}
+
 
 // hacky fix for ios web blur filter issues
 class SafeBackdropFilter extends StatefulWidget {

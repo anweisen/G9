@@ -27,42 +27,11 @@ class WeightingPage extends StatelessWidget {
     final weighting = GradeHelper.getWeightingFor(subject, semester, choice!, grades);
 
     return SubpageSkeleton(
-        title: Text("Notengewichtung", style: theme.textTheme.headlineMedium),
+        title: SubjectPageTitle(subject: subject),
         children: [
-          Wrap(
-            verticalDirection: VerticalDirection.up,
-            spacing: 12,
-            runSpacing: 6,
-            children: [
-              Row(crossAxisAlignment: CrossAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
-                Container(
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), color: subject.color),
-                  width: 18,
-                  height: 18,
-                ),
-                const SizedBox(width: 8),
-                Text(subject.name, softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1, style: theme.textTheme.bodyMedium),
-              ]),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: theme.dividerColor, borderRadius: BorderRadius.circular(6)),
-                      child: Text(semester.detailedDisplay, style: theme.textTheme.displayMedium?.copyWith(height: 1.25),)
-                  ),
-                  const SizedBox(width: 8),
-                  if (choice.lk == subject) Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: theme.dividerColor, borderRadius: BorderRadius.circular(6)),
-                      child: Text("Leistungsfach", style: theme.textTheme.displayMedium?.copyWith(height: 1.25),)
-                  ),
-                ],
-              )
-            ],
-          ),
+          SubjectSemesterSubtitle(subtitle: "Notengewichtung", choice: choice, subject: subject, semester: semester),
 
-          const SizedBox(height: 8,),
+          const SizedBox(height: 16,),
           WeightingDisplay(grades: grades, weighting: weighting,),
 
           const SizedBox(height: 8,),

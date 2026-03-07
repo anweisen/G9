@@ -29,6 +29,7 @@ func main() {
   accountGroup.Post("/sync", embed.HandlePostAccountSync)
   accountGroup.Post("/grades/:subject/:semester", embed.HandlePostAccountSubjectSemesterGrades)
   accountGroup.Post("/abi-prediction/:subject", embed.HandlePostAccountSubjectAbiPrediction)
+  accountGroup.Post("/subject/:subject", embed.HandlePostAccountSubjectSettings)
   accountGroup.Post("/choice", embed.HandlePostAccountChoice)
   accountGroup.Post("/semester", embed.HandlePostAccountSemester)
   accountGroup.Get("/sessions", embed.HandleGetAccountSessions)

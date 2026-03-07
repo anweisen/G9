@@ -61,13 +61,14 @@ type PrivateUserProfile struct { // in addition to public profile
 }
 
 type UserStorage struct { // stored in database part of User (users)
-  LastSync   *time.Time `json:"last_sync" bson:"last_sync"`
-  Choice     *Choice    `json:"choice,omitempty" bson:"choice,omitempty"`
-  Semester   *Semester  `json:"semester,omitempty" bson:"semester,omitempty"`
-  UsesSlider *bool      `json:"uses_slider,omitempty" bson:"uses_slider,omitempty"`
+  LastSync        *time.Time               `json:"last_sync" bson:"last_sync"`
+  Choice          *Choice                  `json:"choice,omitempty" bson:"choice,omitempty"`
+  Semester        *Semester                `json:"semester,omitempty" bson:"semester,omitempty"`
+  UsesSlider      *bool                    `json:"uses_slider,omitempty" bson:"uses_slider,omitempty"`
+  AbiPredictions  AbiPredictionMap         `json:"abi_predictions,omitempty" bson:"abi_predictions,omitempty"`
+  Grades          SemesterSubjectGradesMap `json:"grades,omitempty" bson:"grades,omitempty"`
+  SubjectSettings SubjectSettingsMap       `json:"subject_settings,omitempty" bson:"subject_settings,omitempty"`
   //Theme *uint8 `json:"theme,omitempty" bson:"theme,omitempty"`
-  AbiPredictions AbiPredictionMap         `json:"abi_predictions,omitempty" bson:"abi_predictions,omitempty"`
-  Grades         SemesterSubjectGradesMap `json:"grades,omitempty" bson:"grades,omitempty"`
 }
 
 type Choice struct {
@@ -94,11 +95,16 @@ type GradeEntry struct {
   Date  string `json:"d" bson:"d"` // only date (year-month-day), no time, in ISO format
 }
 
+type SubjectSettings struct {
+  Color uint32 `json:"color" bson:"color"`
+}
+
 type StashedChanges struct {
-  Choice         *StashedChoice         `json:"choice,omitempty"`
-  Grades         *StashedGrades         `json:"grades,omitempty"`
-  AbiPredictions *StashedAbiPredictions `json:"abi_predictions,omitempty"`
-  Semester       *StashedSemester       `json:"semester,omitempty"`
+  Choice          *StashedChoice             `json:"choice,omitempty"`
+  Grades          *StashedGrades             `json:"grades,omitempty"`
+  AbiPredictions  *StashedAbiPredictions     `json:"abi_predictions,omitempty"`
+  Semester        *StashedSemester           `json:"semester,omitempty"`
+  SubjectSettings *StashedSubjectSettingsMap `json:"subject_settings,omitempty"`
 }
 
 type StashedValueChange[T any] struct {
@@ -112,12 +118,16 @@ type StashedChoice = StashedValueChange[Choice]
 type StashedAbiPredictions = map[SubjectId]StashedSubjectAbiPrediction
 type StashedSubjectAbiPrediction = StashedValueChange[uint8]
 type StashedSemester = StashedValueChange[Semester]
+type StashedSubjectSettingsMap = map[SubjectId]StashedSubjectSettings
+type StashedSubjectSettings = StashedValueChange[SubjectSettings]
 
 type UserId = bson.ObjectID
 
 type GradesList = []GradeEntry
 type SubjectGradesMap = map[SubjectId]GradesList
 type SemesterSubjectGradesMap = map[Semester]SubjectGradesMap
+
+type SubjectSettingsMap = map[SubjectId]SubjectSettings
 
 type AbiPredictionMap = map[SubjectId]uint8
 

@@ -29,6 +29,10 @@ type AccountSemesterPostBody struct {
   Semester provider.Semester `json:"semester"`
 }
 
+type AccountSubjectPostBody struct {
+  Settings provider.SubjectSettings `json:"settings"`
+}
+
 func (app AppEmbed) HandlePostAccountSync(ctx fiber.Ctx) error {
   userId, err := ExtractUserId(ctx)
   if err != nil {
@@ -235,6 +239,48 @@ func (app AppEmbed) HandlePostAccountSemester(ctx fiber.Ctx) error {
   }
 
   err = app.Database.UpdateUserStorage(userId, updateStorage)
+  if err != nil {
+    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
+  }
+
+  return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success"})
+}
+
+func (app AppEmbed) HandlePostAccountSubjectSettings(ctx fiber.Ctx) error {
+  userId, err := ExtractUserId(ctx)
+  if err != nil {
+    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
+  }
+
+  var body AccountSubjectPostBody
+  err = ctx.Bind().Body(&body)
+  if err != nil {
+    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+  }
+
+  subjectParam := ctx.Params("subject")
+
+  subjectId, err := utils.ParseUint8(subjectParam)
+  if err != nil {
+    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid subject id"})
+  }
+
+  user, err := app.Database.FindUserById(userId)
+  if err != nil {
+    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to find user"})
+  }
+
+  var subjectSettings = user.UserStorage.SubjectSettings
+  if subjectSettings == nil {
+    subjectSettings = make(provider.SubjectSettingsMap)
+  }
+  subjectSettings[subjectId] = body.Settings
+
+  updatedStorage := provider.UserStorage{
+    SubjectSettings: subjectSettings,
+  }
+
+  err = app.Database.UpdateUserStorage(userId, updatedStorage)
   if err != nil {
     return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
   }

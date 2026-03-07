@@ -125,6 +125,16 @@ func MergeUserStorageAndChanges(existing UserStorage, update UserStorage, change
         println("applied semester change, new semester:", changes.Semester.To)
       }
     }
+    if changes.SubjectSettings != nil {
+      for subjectId, settingsChange := range *changes.SubjectSettings {
+        if IsAfter(settingsChange.At, lastSync) {
+          if existing.SubjectSettings == nil {
+            existing.SubjectSettings = make(SubjectSettingsMap)
+          }
+          existing.SubjectSettings[subjectId] = settingsChange.To
+        }
+      }
+    }
   }
 
   var mergedGrades SemesterSubjectGradesMap
@@ -176,6 +186,19 @@ func MergeUserStorageAndChanges(existing UserStorage, update UserStorage, change
   mergedAbiPredictionsJson, _ := json.Marshal(mergedAbiPredictions)
   println("merged abi predictions:", string(mergedAbiPredictionsJson))
 
+  var mergedSubjectSettings SubjectSettingsMap
+  if existing.SubjectSettings != nil && update.SubjectSettings == nil {
+    mergedSubjectSettings = existing.SubjectSettings
+  } else if existing.SubjectSettings == nil && update.SubjectSettings != nil {
+    mergedSubjectSettings = update.SubjectSettings
+  } else if existing.SubjectSettings != nil && update.SubjectSettings != nil {
+    // Server-side existing subject settings are more up to date, apply them on top of the client-side subject settings
+    mergedSubjectSettings = update.SubjectSettings
+    for subjectId, settings := range existing.SubjectSettings {
+      mergedSubjectSettings[subjectId] = settings
+    }
+  }
+
   // Server-side data is more up to date, prefer them
   var updatedChoice *Choice
   if existing.Grades != nil {
@@ -206,12 +229,13 @@ func MergeUserStorageAndChanges(existing UserStorage, update UserStorage, change
   //}
 
   newStorage := UserStorage{
-    Semester:   &updatedSemester,
-    UsesSlider: &updatedUsesSlider,
+    Semester:        &updatedSemester,
+    UsesSlider:      &updatedUsesSlider,
+    Choice:          updatedChoice,
+    AbiPredictions:  mergedAbiPredictions,
+    Grades:          mergedGrades,
+    SubjectSettings: mergedSubjectSettings,
     //Theme: &updatedTheme,
-    Choice:         updatedChoice,
-    AbiPredictions: mergedAbiPredictions,
-    Grades:         mergedGrades,
   }
   return newStorage
 }

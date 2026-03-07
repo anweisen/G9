@@ -78,6 +78,9 @@ class GradeWeighting {
   GradeWeighting(this.semesterCountEquivalent, this.components);
 
   double calculateAverage(GradesList grades) {
+    if (grades.length == 1 && grades.first.type == GradeType.result) {
+      return grades.first.grade.toDouble();
+    }
     return GradeWeightingComponent.calculateSubComponentsAverage(grades, components) * semesterCountEquivalent;
   }
 
@@ -247,10 +250,6 @@ class GradeWeightingComponent {
   }
 
   double calculateAverage(GradesList grades) {
-    if (grades.length == 1 && grades.first.type == GradeType.result) {
-      return grades.first.grade.toDouble();
-    }
-
     final filteredGrades = filter(grades);
     if (subcomponents == null) return GradeHelper.unweightedAverageOf(filteredGrades);
     return calculateSubComponentsAverage(filteredGrades, subcomponents!);

@@ -14,6 +14,7 @@ import '../widgets/skeleton.dart';
 import '../widgets/subpage.dart';
 import '../logic/grades.dart';
 import 'account.dart';
+import 'change.dart';
 import 'grade.dart';
 import 'hurdles.dart';
 import 'switcher.dart';
@@ -39,6 +40,9 @@ class HomePage extends StatelessWidget {
     var currentSemesterAvgUsed = GradeHelper.averageOfSemesterUsed(results, grades.currentSemester);
     var gradesDistribution = _calculateSingleGradesDistribution(settings, currentSemesterGrades);
 
+    var currentResult = ChangeAbiChoiceResult.createChoiceResult(settings.choice!, grades);
+    var betterChoice = ChangeAbiChoiceResult.getBetterChoiceResult(settings.choice!, currentResult, grades);
+
     Map<Semester, double> pastSemestersAvg = {};
     Map<Semester, double> pastSemestersAvgUsed = {};
     for (Semester semester in Semester.qPhase) {
@@ -48,7 +52,6 @@ class HomePage extends StatelessWidget {
       double avgUsed = GradeHelper.averageOfSemesterUsed(results, semester);
       if (avgUsed > 0) pastSemestersAvgUsed[semester] = avgUsed;
     }
-    var underscored = _calculateUnderscoredResults(results);
 
     var admissionHurdleCheckResults = AdmissionHurdle.check(settings.choice!, results, flags, grades);
     var graduationHurdleCheckResults = GraduationHurdle.check(settings.choice!, results, flags, grades);
@@ -142,10 +145,10 @@ class HomePage extends StatelessWidget {
 
             Text("Zulassung", style: theme.textTheme.bodySmall),
             _buildTextLine(Text("Unterpunktungen", style: theme.textTheme.bodyMedium, overflow: TextOverflow.fade), [
-              Text("$underscored / 8", style: theme.textTheme.bodyMedium)
+              Text("${flags.underscored} / 8", style: theme.textTheme.bodyMedium)
             ]),
             const SizedBox(height: 4),
-            _buildHurdleChart(context, underscored),
+            _buildHurdleChart(context, flags.underscored),
 
             if (pastSemestersAvg.isNotEmpty) ...[
               const SizedBox(height: 20),
@@ -215,6 +218,8 @@ class HomePage extends StatelessWidget {
           ]
         )
       ),
+
+      ..._buildImproveAbiChoice(theme, betterChoice, currentResult),
 
       if (graduationHurdleCheckResults.isEmpty && admissionHurdleCheckResults.isEmpty)
         ..._buildHurdlePassingInfo(theme),
@@ -341,6 +346,57 @@ class HomePage extends StatelessWidget {
                 Text("Alle nötigen Hürden erfüllt", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1)),
               ]),
               Icon(Icons.check_circle_rounded, size: 20, color: theme.primaryColor,),
+            ],
+          ),
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildImproveAbiChoice(ThemeData theme, ChangeAbiChoiceResult? betterChoice, ChangeAbiChoiceResult currentChoice) {
+    final pointsDifference = betterChoice != null ? betterChoice.flags.pointsTotal - currentChoice.flags.pointsTotal : 0;
+    final changedPair = ChangeAbiChoiceResult.findChangedAbiSubjects(currentChoice.choice, betterChoice?.choice);
+    return [
+      const SizedBox(height: 20),
+      SubpageTrigger(
+        createSubpage: () => const ChangeAbiSubpage(),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: theme.dividerColor,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(
+                  children: [
+                    Icon(Icons.swap_horiz_rounded, size: 17, color: theme.textTheme.bodySmall?.color,),
+                    const SizedBox(width: 3,),
+                    Text("Abiturwahl verbessern", style: theme.textTheme.bodySmall),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                if (betterChoice == null)
+                  Text("Bereits bestmögliche Wahl", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1))
+                else ... [
+                  SmallSubjectWidget(subject: changedPair!.$1, old: true, choice: currentChoice.choice),
+                  SmallSubjectWidget(subject: changedPair.$2, old: false, choice: betterChoice.choice),
+                ],
+              ]),
+              if (betterChoice == null)
+                Icon(Icons.info_outline_rounded, size: 20, color: theme.primaryColor,)
+              else Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("${betterChoice.flags.pointsTotal}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 15)),
+                  Text("${pointsDifference >= 0 ? "+" : ""}$pointsDifference",
+                      style: theme.textTheme.displayMedium?.copyWith(fontSize: 14, color: pointsDifference > 0 ? theme.indicatorColor : pointsDifference < 0 ? theme.disabledColor : theme.primaryColor)),
+                ],
+              ),
             ],
           ),
         ),
@@ -491,19 +547,6 @@ class HomePage extends StatelessWidget {
     // sort descending
     return gradesDistribution.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
-  }
-
-  int _calculateUnderscoredResults(Map<Subject, Map<Semester, SemesterResult>> results) {
-    int count = 0;
-    for (var subjectResults in results.values) {
-      for (var semesterResult in subjectResults.values) {
-        if (semesterResult.semester == Semester.abi) continue; // nur Q-Phase (und Seminar)
-        if (!semesterResult.prediction && semesterResult.used && semesterResult.effectiveGrade < 5) {
-          count += semesterResult.semester.semesterCountEquivalent;
-        }
-      }
-    }
-    return count;
   }
 }
 

@@ -118,10 +118,8 @@ class SemesterResult {
 
       // ???????
       if (result[subject]?.isEmpty ?? true) {
-        return ResultsFlags(forcedSemesters, 0, 0, true);
+        return ResultsFlags.empty();
       }
-
-      print("Subject: ${subject.name} - ${result[subject]}");
 
       List<SemesterResult> sorted = result[subject]!.entries
           .where((entry) => Semester.qPhaseEquivalents(subject.category).contains(entry.key))
@@ -149,7 +147,7 @@ class SemesterResult {
 
     // Noch keine Noten eingetragen
     if (usedSemesterGrades.isEmpty) {
-      return ResultsFlags(forcedSemesters, 0, 0, true);
+      return ResultsFlags.empty();
     }
 
     freeSemesterGrades.sort((a, b) => b.value.grade.compareTo(a.value.grade));
@@ -213,7 +211,22 @@ class SemesterResult {
       }
     }
 
-    return ResultsFlags(forcedSemesters, pointsQ, pointsAbi, (pointsQ + pointsAbi) == 0);
+    int underscored = calculateUnderscoredResultCount(result);
+
+    return ResultsFlags(forcedSemesters, pointsQ, pointsAbi, underscored, (pointsQ + pointsAbi) == 0);
+  }
+
+  static int calculateUnderscoredResultCount(Map<Subject, Map<Semester, SemesterResult>> results) {
+    int count = 0;
+    for (var subjectResults in results.values) {
+      for (var semesterResult in subjectResults.values) {
+        if (semesterResult.semester == Semester.abi) continue; // nur Q-Phase (und Seminar)
+        if (!semesterResult.prediction && semesterResult.used && semesterResult.effectiveGrade < 5) {
+          count += semesterResult.semester.semesterCountEquivalent;
+        }
+      }
+    }
+    return count;
   }
 
   static Map<Subject, Map<Semester, SemesterResult>> calculateResultsWithPredictions(Choice choice, GradesDataProvider provider) {
@@ -453,11 +466,14 @@ class ResultsFlags {
   final int forcedSemesters;
   final int pointsQ;
   final int pointsAbi;
+  final int underscored;
   final bool isEmpty;
 
   get pointsTotal => pointsQ + pointsAbi;
 
-  ResultsFlags(this.forcedSemesters, this.pointsQ, this.pointsAbi, this.isEmpty);
+  ResultsFlags(this.forcedSemesters, this.pointsQ, this.pointsAbi, this.underscored, this.isEmpty);
+
+  ResultsFlags.empty() : this(0, 0, 0, 0, true);
 }
 
 class Statistics {

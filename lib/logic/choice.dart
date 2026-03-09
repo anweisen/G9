@@ -87,27 +87,27 @@ class ChoiceBuilder {
     seminar = Subject.seminar;
 
     return Choice(
-        // required
-        lk!.id,
-        sg1!.id,
-        mint1!.id,
-        mintSg2!.id,
-        pug13!,
-        geoWr!.id,
-        musikKunst!.id,
+      // required
+      lk!.id,
+      sg1!.id,
+      mint1!.id,
+      mintSg2!.id,
+      pug13!,
+      geoWr!.id,
+      musikKunst!.id,
 
-        seminar!.id,
+      seminar!.id,
 
-        // optional
-        vk?.id,
-        profil12?.id,
-        profil13?.id,
+      // optional
+      vk?.id,
+      profil12?.id,
+      profil13?.id,
 
-        // abi
-        substituteMathe ?? false,
-        substituteDeutsch ?? false,
-        abi4!.id,
-        abi5!.id,
+      // abi
+      substituteMathe ?? false,
+      substituteDeutsch ?? false,
+      abi4!.id,
+      abi5!.id,
     );
   }
 }
@@ -302,5 +302,140 @@ class Choice extends HiveObject {
   @override
   String toString() {
     return 'Choice{lk: $lkId, sg1: $sg1Id, ntg1: $ntg1Id, mintSg2: $mintSg2Id, pug13: $pug13, geoWr: $geoWrId, musikKunst: $musikKunstId, vk: $vkId, seminar: $seminarId, profil12: $profil12Id, profil13: $profil13Id, substituteMathe: $substituteMathe, substituteDeutsch: $substituteDeutsch, abi4: $abi4Id, abi5: $abi5Id}';
+  }
+}
+
+enum ChoiceRestriction {
+  impossible(null),
+
+  abiGpr("Es muss mindestens eine Gesellschaftswissenschaft als Abiturprüfungsfach gewählt werden"),
+  abiSgNtg("Es muss mindestens eine fortgeführte Fremdsprache oder eine Naturwissenschaft als Abiturprüfungsfach gewählt werden"),
+  abiSgSubM("Bei Substitution von Mathematik muss eine fortgeführte Fremdsprache als Abiturprüfungsfach gewählt werden"),
+  abiAny(null),
+  ;
+
+  final String? text;
+
+  const ChoiceRestriction(this.text);
+}
+
+class ChoiceOptions {
+  final ChoiceRestriction restriction;
+  final List<Subject> subjects;
+  final bool allowNone;
+
+  bool get isEmpty => subjects.isEmpty;
+  bool get isSingle => subjects.length == 1 && !allowNone;
+
+  ChoiceOptions(this.restriction, this.subjects, [this.allowNone = false]);
+
+  ChoiceOptions.empty() : this(ChoiceRestriction.impossible, []);
+}
+
+// https://www.gesetze-bayern.de/Content/Document/BayGSO-48
+// (1) 1. Die Abiturprüfung erstreckt sich auf fünf verschiedene Fächer.
+//     2. Verpflichtende Abiturprüfungsfächer sind Deutsch, Mathematik und das Leistungsfach.
+//     3. Sie werden auf erhöhtem Anforderungsniveau geprüft.
+//     4. Unter den fünf Abiturprüfungsfächern müssen mindestens eine fortgeführte Fremdsprache oder eine Naturwissenschaft
+//        sowie mindestens ein Fach aus dem gesellschaftswissenschaftlichen Aufgabenfeld als Abiturprüfungsfächer gewählt werden.
+//     5. Deutsch kann durch die Wahl zweier fortgeführter Fremdsprachen als Abiturprüfungsfächer, eines davon als Leistungsfach,
+//        Mathematik durch die Wahl zweier Naturwissenschaften oder einer Naturwissenschaft und der Informatik als Abiturprüfungsfächer,
+//        jeweils eines davon als Leistungsfach, nach Wahl der Schülerinnen und Schüler ersetzt werden (Substitution).
+//     6. Bei Substitution von Mathematik ist die Abiturprüfung in einer Fremdsprache verpflichtend
+class ChoiceHelper {
+
+  // Für das 4. Abiturfach werden folgende Einschränkungen abgedeckt, in absteigender Priorität:
+  // 1. GPR-Fach [danach vollständig erfüllt]
+  //    (wenn kein GPR-LK)
+  // 2. fortgeführte Fremdsprache / Naturwissenschaft (Informatik zählt nicht) [rutsch bei NICHT-GPR-LK auf 5. Abi-Fach]
+  //    (wenn kein SG/NTG-LK)
+  //    (+ keine Substitution von Mathe oder Deutsch, was aber nur bei SG/NTG/INFO-LK möglich ist, also kein GPR-LK!)
+  // (eine der beiden eingeschränkten Optionen findet immer Anwendung, da man nicht gleichzeitig einen GPR-LK und einen SG/NTG/INFO-LK haben kann)
+  // (Substitution von Mathe/Deutsch nur bei SG/NTG/INFO-LK möglich, also nicht bei GPR-LK!)
+  //
+  // Für das 5. Abiturfach werden folgende Einschränkungen abgedeckt, in absteigender Priorität:
+  // 1. fortgeführte Fremdsprache [danach vollständig erfüllt]
+  //    (wenn Substitution von Mathe)
+  // 2. fortgeführte Fremdsprache / Naturwissenschaft (Informatik zählt nicht) [danach vollständig erfüllt]
+  //    (wenn kein SG/NTG-LK )
+  //    (+ keine Substitution von Mathe oder Deutsch)
+  //    (+ wenn kein GPR-LK, da sonst schon bei 4. Abi-Fach eingeschränkt gewählt!)
+  // 3. beliebiges Fach
+  //    (ist nur bei GPR/NTG/SG-LK ohne Substitution von Mathe möglich)
+
+  static ChoiceOptions getAbi4Options(ChoiceBuilder choiceBuilder) {
+    // Abiturprüfung in einer Gesellschaftswissenschaft verpflichtend, (bei GPR-LK schon erfüllt)
+    if (choiceBuilder.lk?.category != SubjectCategory.gpr) {
+      return ChoiceOptions(ChoiceRestriction.abiGpr, [
+        Subject.reli,
+        Subject.geschi,
+        if (choiceBuilder.pug13 ?? false) Subject.pug
+        else if (choiceBuilder.geoWr != null) choiceBuilder.geoWr!,
+      ]);
+    }
+
+    // Abiturprüfung in einer fortgeführten Fremdsprache oder Naturwissenschaft verpflichtend (Informatik zählt nicht als Naturwissenschaft),
+    // (bei SG/NTG-LK schon erfüllt, bei Substitution auch da eine weitere Naturwissenschaft/Fremdsprache verpflichtend ist (statt Mathe/Deutsch), also auch schon erfüllt)
+    if (choiceBuilder.lk?.category != SubjectCategory.ntg && choiceBuilder.lk?.category != SubjectCategory.sg
+        && !(choiceBuilder.substituteDeutsch ?? false) && !(choiceBuilder.substituteMathe ?? false)) {
+      return ChoiceOptions(ChoiceRestriction.abiSgNtg, [
+        if (choiceBuilder.mint1 != null) choiceBuilder.mint1!,
+        if (choiceBuilder.sg1 != null) choiceBuilder.sg1!,
+        if (choiceBuilder.vk == null && choiceBuilder.mintSg2 != null && !(choiceBuilder.substituteDeutsch ?? false) && !(choiceBuilder.substituteMathe ?? false))
+          choiceBuilder.mintSg2!,
+      ]);
+    }
+
+    // Fallback: sollte nie erreicht werden, da nicht beide Bedingungen gleichzeitig erfüllt sein können
+    return ChoiceOptions.empty();
+  }
+
+  static ChoiceOptions getAbi5Options(ChoiceBuilder choiceBuilder) {
+    // Bei Substitution von Mathe ist eine fortgeführte Fremdsprache verpflichtend (bei Deutsch ist keine Naturwissenschaft verpflichtend)
+    if (choiceBuilder.substituteMathe ?? false) {
+      return ChoiceOptions(ChoiceRestriction.abiSgSubM, [
+        if (choiceBuilder.sg1 != null)
+          choiceBuilder.sg1!,
+        // wird immer false sein, da um überhaupt Mathe subsituieren zu können, müssen 2 Naturwissenschaften gewählt werden (ntg1=lk, mintSg2=substitut)
+        if (choiceBuilder.mintSg2 != null && choiceBuilder.mintSg2!.category == SubjectCategory.sg)
+          choiceBuilder.mintSg2!,
+      ]);
+    }
+
+    // Abiturprüfung in einer fortgeführten Fremdsprache oder Naturwissenschaft verpflichtend (Informatik zählt nicht als Naturwissenschaft),
+    // (bei SG/NTG-LK schon erfüllt, bei GPR-LK schon bei abi4 erfüllt)
+    if (choiceBuilder.lk?.category != SubjectCategory.ntg && choiceBuilder.lk?.category != SubjectCategory.sg && choiceBuilder.lk?.category != SubjectCategory.gpr
+        && !(choiceBuilder.substituteDeutsch ?? false) && !(choiceBuilder.substituteMathe ?? false)) {
+      return ChoiceOptions(ChoiceRestriction.abiSgNtg, [
+        if (choiceBuilder.mint1 != null)
+          choiceBuilder.mint1!,
+        if (choiceBuilder.sg1 != null)
+          choiceBuilder.sg1!,
+        if (choiceBuilder.vk == null && choiceBuilder.mintSg2 != null && !(choiceBuilder.substituteDeutsch ?? false) && !(choiceBuilder.substituteMathe ?? false))
+          choiceBuilder.mintSg2!,
+      ]);
+    }
+
+    // Sind die verpflichtenden Abiturprüfungsfächer bereits gewählt, kann ein weiteres beliebiges Fach gewählt werden
+    // jedoch keine bereits als Abiturprüfungsfach gewählten Fächer (inkl. Substitutionen) mehr, da es insgesamt 5 verschiedene Fächer sein müssen
+    return ChoiceOptions(ChoiceRestriction.abiAny, [
+      if (choiceBuilder.lk != Subject.reli && choiceBuilder.abi4 != Subject.reli)
+        Subject.reli,
+      if (choiceBuilder.lk != Subject.geschi && choiceBuilder.abi4 != Subject.geschi)
+        Subject.geschi,
+      if (choiceBuilder.lk != choiceBuilder.mint1 && choiceBuilder.abi4 != choiceBuilder.mint1 && choiceBuilder.mint1 != null)
+        choiceBuilder.mint1!,
+      if (choiceBuilder.lk != choiceBuilder.sg1 && choiceBuilder.abi4 != choiceBuilder.sg1 && choiceBuilder.sg1 != null)
+        choiceBuilder.sg1!,
+
+      if (choiceBuilder.abi4 != choiceBuilder.mintSg2 && choiceBuilder.vk == null && !(choiceBuilder.substituteDeutsch ?? false) && !(choiceBuilder.substituteMathe ?? false) && choiceBuilder.mintSg2 != null)
+        choiceBuilder.mintSg2!,
+      if (choiceBuilder.lk != Subject.pug && choiceBuilder.abi4 != Subject.pug && (choiceBuilder.pug13 ?? false))
+        Subject.pug
+      else if (choiceBuilder.lk != choiceBuilder.geoWr && choiceBuilder.abi4 != choiceBuilder.geoWr && choiceBuilder.geoWr != null)
+        choiceBuilder.geoWr!,
+      if (choiceBuilder.lk != choiceBuilder.musikKunst && choiceBuilder.musikKunst != null)
+        choiceBuilder.musikKunst!,
+    ]);
   }
 }

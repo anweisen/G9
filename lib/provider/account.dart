@@ -315,17 +315,18 @@ class AccountDataProvider extends ChangeNotifier {
   }
 
   void updateSubjectSettings(SubjectId subjectId, SubjectSettings settings) async {
+    final nullableSettings = settings.isEmpty ? null : settings;
     print("Updating subject settings for subject $subjectId. Settings: ${settings.toJson()}");
     if (!isLoggedIn) {
       print("not logged in, stashing subject settings");
-      stashSubjectSettings(subjectId, settings);
+      stashSubjectSettings(subjectId, nullableSettings);
       return;
     }
 
-    final success = await api.postSubjectSettings(subjectId, settings);
+    final success = await api.postSubjectSettings(subjectId, nullableSettings);
     print("Subject settings update successful: $success");
     if (!success) {
-      stashSubjectSettings(subjectId, settings);
+      stashSubjectSettings(subjectId, nullableSettings);
     }
   }
 
@@ -356,7 +357,7 @@ class AccountDataProvider extends ChangeNotifier {
     saveStash();
   }
 
-  void stashSubjectSettings(SubjectId subjectId, SubjectSettings settings) {
+  void stashSubjectSettings(SubjectId subjectId, SubjectSettings? settings) {
     _stashedChanges ??= StashedChanges.empty();
     _stashedChanges!.stashedSubjectSettings ??= {};
     _stashedChanges!.stashedSubjectSettings![subjectId] = StashedSubjectSettingsChange.now(settings);
@@ -447,7 +448,7 @@ class StashedSemesterChange extends StashedValueChange<Semester> {
 
 @HiveType(typeId: 45)
 @JsonSerializable()
-class StashedSubjectSettingsChange extends StashedValueChange<SubjectSettings> {
+class StashedSubjectSettingsChange extends StashedValueChange<SubjectSettings?> {
   StashedSubjectSettingsChange(super.at, super.to);
   StashedSubjectSettingsChange.now(super.to) : super.now();
 

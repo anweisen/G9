@@ -15,7 +15,7 @@ type Database interface {
   CreateIdentity(identity *Identity) error
   CreateSession(session *Session) error
 
-  UpdateUserStorage(userId UserId, storage UserStorage) error
+  UpdateUserStorage(userId UserId, storage UserStorage, include IncludeUserStorageUpdate) error
   UpdateSession(sessionId UserId, newExpiresAt time.Time, newJti string, newDeviceName string) error
 
   DeleteUser(userId UserId) error
@@ -62,13 +62,33 @@ type PrivateUserProfile struct { // in addition to public profile
 
 type UserStorage struct { // stored in database part of User (users)
   LastSync        *time.Time               `json:"last_sync" bson:"last_sync"`
-  Choice          *Choice                  `json:"choice,omitempty" bson:"choice,omitempty"`
-  Semester        *Semester                `json:"semester,omitempty" bson:"semester,omitempty"`
-  UsesSlider      *bool                    `json:"uses_slider,omitempty" bson:"uses_slider,omitempty"`
-  AbiPredictions  AbiPredictionMap         `json:"abi_predictions,omitempty" bson:"abi_predictions,omitempty"`
-  Grades          SemesterSubjectGradesMap `json:"grades,omitempty" bson:"grades,omitempty"`
-  SubjectSettings SubjectSettingsMap       `json:"subject_settings,omitempty" bson:"subject_settings,omitempty"`
-  //Theme *uint8 `json:"theme,omitempty" bson:"theme,omitempty"`
+  Choice          *Choice                  `json:"choice" bson:"choice"`
+  Semester        *Semester                `json:"semester" bson:"semester"`
+  UsesSlider      *bool                    `json:"uses_slider" bson:"uses_slider"`
+  AbiPredictions  AbiPredictionMap         `json:"abi_predictions" bson:"abi_predictions"`
+  Grades          SemesterSubjectGradesMap `json:"grades" bson:"grades"`
+  SubjectSettings SubjectSettingsMap       `json:"subject_settings" bson:"subject_settings"`
+  //Theme *uint8 `json:"theme" bson:"theme"`
+}
+
+type IncludeUserStorageUpdate struct {
+  IncludeChoice          bool
+  IncludeSemester        bool
+  IncludeUsesSlider      bool
+  IncludeAbiPredictions  bool
+  IncludeGrades          bool
+  IncludeSubjectSettings bool
+}
+
+func IncludeAllUserStorageUpdate() IncludeUserStorageUpdate {
+  return IncludeUserStorageUpdate{
+    IncludeChoice:          true,
+    IncludeSemester:        true,
+    IncludeUsesSlider:      true,
+    IncludeAbiPredictions:  true,
+    IncludeGrades:          true,
+    IncludeSubjectSettings: true,
+  }
 }
 
 type Choice struct {
@@ -96,7 +116,7 @@ type GradeEntry struct {
 }
 
 type SubjectSettings struct {
-  Color uint32 `json:"color" bson:"color"`
+  Color *uint32 `json:"color" bson:"color"`
 }
 
 type StashedChanges struct {
@@ -119,7 +139,7 @@ type StashedAbiPredictions = map[SubjectId]StashedSubjectAbiPrediction
 type StashedSubjectAbiPrediction = StashedValueChange[uint8]
 type StashedSemester = StashedValueChange[Semester]
 type StashedSubjectSettingsMap = map[SubjectId]StashedSubjectSettings
-type StashedSubjectSettings = StashedValueChange[SubjectSettings]
+type StashedSubjectSettings = StashedValueChange[*SubjectSettings]
 
 type UserId = bson.ObjectID
 

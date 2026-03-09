@@ -100,7 +100,7 @@ class SettingsDataProvider extends ChangeNotifier {
   }
 
   void applySubjectSetting(Subject subject, SubjectSettings? settings) {
-    if (settings == null) {
+    if (settings == null || settings.colorValue == null) {
       subject.color = Subject.originalColors[subject.id]!;
     } else {
       subject.color = Color(settings.colorValue!);
@@ -110,7 +110,7 @@ class SettingsDataProvider extends ChangeNotifier {
   void setSubjectSettings(SubjectId subjectId, SubjectSettings? settings) {
     applySubjectSetting(Subject.byId[subjectId]!, settings);
     _data?.subjectSettings ??= {};
-    if (settings == null) {
+    if (settings == null || settings.isEmpty) {
       _data?.subjectSettings!.remove(subjectId);
     } else {
       _data?.subjectSettings![subjectId] = settings;
@@ -146,6 +146,8 @@ class SubjectSettings {
   final int? colorValue;
 
   SubjectSettings({this.colorValue});
+
+  bool get isEmpty => colorValue == null;
 
   factory SubjectSettings.fromJson(Map<String, dynamic> json) => _$SubjectSettingsFromJson(json);
   Map<String, dynamic> toJson() => _$SubjectSettingsToJson(this);

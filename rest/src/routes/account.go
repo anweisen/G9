@@ -30,7 +30,7 @@ type AccountSemesterPostBody struct {
 }
 
 type AccountSubjectPostBody struct {
-  Settings provider.SubjectSettings `json:"settings"`
+  Settings *provider.SubjectSettings `json:"settings"`
 }
 
 func (app AppEmbed) HandlePostAccountSync(ctx fiber.Ctx) error {
@@ -65,7 +65,7 @@ func (app AppEmbed) HandlePostAccountSync(ctx fiber.Ctx) error {
   mergedStorageJson, _ := json.Marshal(mergedStorage)
   println("merged storage:", string(mergedStorageJson))
 
-  err = app.Database.UpdateUserStorage(userId, mergedStorage)
+  err = app.Database.UpdateUserStorage(userId, mergedStorage, provider.IncludeAllUserStorageUpdate())
   if err != nil {
     return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
   }
@@ -106,7 +106,7 @@ func (app AppEmbed) HandlePostAccountSubjectSemesterGrades(ctx fiber.Ctx) error 
   }
   user.UserStorage.Grades[semesterParam][subjectId] = body.GradesList
 
-  err = app.Database.UpdateUserStorage(userId, user.UserStorage)
+  err = app.Database.UpdateUserStorage(userId, user.UserStorage, provider.IncludeUserStorageUpdate{IncludeGrades: true})
   if err != nil {
     return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
   }
@@ -130,7 +130,7 @@ func (app AppEmbed) HandlePostAccountChoice(ctx fiber.Ctx) error {
     Choice: &body.Choice,
   }
 
-  err = app.Database.UpdateUserStorage(userId, updateStorage)
+  err = app.Database.UpdateUserStorage(userId, updateStorage, provider.IncludeUserStorageUpdate{IncludeChoice: true})
   if err != nil {
     return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
   }
@@ -176,7 +176,7 @@ func (app AppEmbed) HandlePostAccountSubjectAbiPrediction(ctx fiber.Ctx) error {
     AbiPredictions: abiPredictions,
   }
 
-  err = app.Database.UpdateUserStorage(userId, updatedStorage)
+  err = app.Database.UpdateUserStorage(userId, updatedStorage, provider.IncludeUserStorageUpdate{IncludeAbiPredictions: true})
   if err != nil {
     return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
   }
@@ -238,7 +238,7 @@ func (app AppEmbed) HandlePostAccountSemester(ctx fiber.Ctx) error {
     Semester: &body.Semester,
   }
 
-  err = app.Database.UpdateUserStorage(userId, updateStorage)
+  err = app.Database.UpdateUserStorage(userId, updateStorage, provider.IncludeUserStorageUpdate{IncludeSemester: true})
   if err != nil {
     return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
   }
@@ -274,13 +274,17 @@ func (app AppEmbed) HandlePostAccountSubjectSettings(ctx fiber.Ctx) error {
   if subjectSettings == nil {
     subjectSettings = make(provider.SubjectSettingsMap)
   }
-  subjectSettings[subjectId] = body.Settings
+  if body.Settings == nil {
+    delete(subjectSettings, subjectId)
+  } else {
+    subjectSettings[subjectId] = *body.Settings
+  }
 
   updatedStorage := provider.UserStorage{
     SubjectSettings: subjectSettings,
   }
 
-  err = app.Database.UpdateUserStorage(userId, updatedStorage)
+  err = app.Database.UpdateUserStorage(userId, updatedStorage, provider.IncludeUserStorageUpdate{IncludeSubjectSettings: true})
   if err != nil {
     return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
   }

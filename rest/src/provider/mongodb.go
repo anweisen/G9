@@ -7,6 +7,7 @@ import (
   "go.mongodb.org/mongo-driver/v2/mongo"
   "go.mongodb.org/mongo-driver/v2/mongo/options"
   "os"
+  "reflect"
   "time"
 )
 
@@ -123,15 +124,42 @@ func (database MongoDatabase) CreateSession(session *Session) error {
   return err
 }
 
-func (database MongoDatabase) UpdateUserStorage(userId UserId, storage UserStorage) error {
+func (database MongoDatabase) UpdateUserStorage(userId UserId, storage UserStorage, include IncludeUserStorageUpdate) error {
   syncTime := time.Now()
   storage.LastSync = &syncTime
-  update := bson.M{
-    "$set": storage,
-  }
+  set := bson.M{}
+  unset := bson.M{}
 
+  ApplyInclude("choice", include.IncludeChoice, storage.Choice, set, unset)
+  ApplyInclude("semester", include.IncludeSemester, storage.Semester, set, unset)
+  ApplyInclude("uses_slider", include.IncludeUsesSlider, storage.UsesSlider, set, unset)
+  ApplyInclude("abi_predictions", include.IncludeAbiPredictions, storage.AbiPredictions, set, unset)
+  ApplyInclude("grades", include.IncludeGrades, storage.Grades, set, unset)
+  ApplyInclude("subject_settings", include.IncludeSubjectSettings, storage.SubjectSettings, set, unset)
+
+  set["last_sync"] = storage.LastSync
+  update := bson.M{}
+  if len(set) > 0 {
+    update["$set"] = set
+  }
+  if len(unset) > 0 {
+    update["$unset"] = unset
+  }
   _, err := database.UserCollection.UpdateOne(database.Context, bson.M{"_id": userId}, update)
   return err
+}
+
+func ApplyInclude(field string, include bool, value any, set bson.M, unset bson.M) {
+  if !include {
+    return
+  }
+
+  val := reflect.ValueOf(value) // ccheck nil pointer
+  if (val.Kind() == reflect.Ptr || val.Kind() == reflect.Map || val.Kind() == reflect.Slice) && val.IsNil() {
+    unset[field] = ""
+  } else {
+    set[field] = value
+  }
 }
 
 func (database MongoDatabase) UpdateSession(sessionId UserId, newExpiresAt time.Time, newJti string, newDeviceName string) error {

@@ -133,7 +133,11 @@ func MergeUserStorageAndChanges(existing UserStorage, update UserStorage, change
           if existing.SubjectSettings == nil {
             existing.SubjectSettings = make(SubjectSettingsMap)
           }
-          existing.SubjectSettings[subjectId] = settingsChange.To
+          if settingsChange.To == nil {
+            delete(existing.SubjectSettings, subjectId)
+          } else {
+            existing.SubjectSettings[subjectId] = *settingsChange.To
+          }
         }
       }
     }

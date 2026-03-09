@@ -32,7 +32,7 @@ class _CustomizeSubjectPageState extends State<CustomizeSubjectPage> {
   bool get isDefaultColor => _color == null || _color == defaultColor;
 
   SubjectSettings createSettings() {
-    return SubjectSettings(colorValue: currentColor.value);
+    return SubjectSettings(colorValue: _color?.value);
   }
 
   @override
@@ -89,7 +89,7 @@ class _CustomizeSubjectPageState extends State<CustomizeSubjectPage> {
           GestureDetector(
             onTap: () {
               setState(() {
-                _color = defaultColor;
+                _color = null;
               });
             },
             child: Container(

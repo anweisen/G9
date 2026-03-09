@@ -22,19 +22,18 @@ class SetupPage extends StatefulWidget {
 class _SetupPageState extends State<SetupPage> {
   late PageController _pageController;
   late ChoiceBuilder _choiceBuilder;
+  late bool _isFromExisting;
   late int _step;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: 0);
-    _choiceBuilder = ChoiceBuilder();
     _step = 0;
 
     final choice = Provider.of<SettingsDataProvider>(context, listen: false).choice;
-    if (choice != null) {
-      _choiceBuilder = ChoiceBuilder.fromChoice(choice);
-    }
+    _isFromExisting = choice != null;
+    _choiceBuilder = choice != null ? ChoiceBuilder.fromChoice(choice) : ChoiceBuilder();
   }
 
   void allowNextStep() {
@@ -190,6 +189,7 @@ class _SetupPageState extends State<SetupPage> {
         subjectsPool: Subject.lks,
         callback: setLk,
         currentlySelected: _choiceBuilder.lk,
+        isFromExisting: _isFromExisting,
       ),
       if (getLkCategory() != SubjectCategory.kumu)
         SetupStepPage(
@@ -200,6 +200,7 @@ class _SetupPageState extends State<SetupPage> {
           allowNextStep: allowNextStep,
           callback: setMusikKunst,
           currentlySelected: _choiceBuilder.musikKunst,
+          isFromExisting: _isFromExisting,
         ),
 
       // 1. Naturwissenschaft/Sprache,
@@ -213,6 +214,7 @@ class _SetupPageState extends State<SetupPage> {
           subjectsPool: Subject.allOf(SubjectCategory.sg),
           callback: setSg1,
           currentlySelected: _choiceBuilder.sg1,
+          isFromExisting: _isFromExisting,
         ),
       if (getLkCategory() != SubjectCategory.ntg)
         SetupStepPage(
@@ -223,6 +225,7 @@ class _SetupPageState extends State<SetupPage> {
           subjectsPool: Subject.allOf(SubjectCategory.ntg),
           callback: setMint1,
           currentlySelected: _choiceBuilder.mint1,
+          isFromExisting: _isFromExisting,
         ),
 
       // spät beginnende Fremdsprache/Informatik als 2. Fremdsprache/Naturwissenschaft
@@ -236,6 +239,7 @@ class _SetupPageState extends State<SetupPage> {
           canSkip: true,
           callback: setSbs,
           currentlySelected: _choiceBuilder.sbs,
+          isFromExisting: _isFromExisting,
         ),
 
       // 2. Fremdsprache oder Naturwissenschaft oder Informatik,
@@ -249,6 +253,7 @@ class _SetupPageState extends State<SetupPage> {
           subjectsPool: _without(Subject.allOf(SubjectCategory.ntg, SubjectCategory.info, SubjectCategory.sg), _choiceBuilder.lk, _choiceBuilder.sg1, _choiceBuilder.mint1),
           callback: setMintSg2,
           currentlySelected: _choiceBuilder.mintSg2,
+          isFromExisting: _isFromExisting,
         ),
       if (_choiceBuilder.sbs == null && _choiceBuilder.lk != Subject.info)
         SetupStepPage(
@@ -260,6 +265,7 @@ class _SetupPageState extends State<SetupPage> {
           canSkip: true,
           callback: setVk,
           currentlySelected: _choiceBuilder.vk,
+          isFromExisting: _isFromExisting,
         ),
 
       if (_choiceBuilder.lk != Subject.wr && _choiceBuilder.lk != Subject.geo)
@@ -271,6 +277,7 @@ class _SetupPageState extends State<SetupPage> {
           subjectsPool: [Subject.geo, Subject.wr],
           callback: setGeoWr,
           currentlySelected: getGeoWr(),
+          isFromExisting: _isFromExisting,
         ),
 
       if (_choiceBuilder.lk != Subject.wr && _choiceBuilder.lk != Subject.geo && _choiceBuilder.lk != Subject.pug)
@@ -282,6 +289,7 @@ class _SetupPageState extends State<SetupPage> {
           subjectsPool: [Subject.pug, if (getGeoWr() != null) getGeoWr()!,],
           callback: setPug13,
           currentlySelected: _choiceBuilder.pug13 == null ? null : (_choiceBuilder.pug13! ? Subject.pug : getGeoWr()),
+          isFromExisting: _isFromExisting,
         ),
 
       // Profilfach in Q13 (Wahlfach, Vertiefungskurse wenn noch nicht gewählt, bisher unbelegte Kurse)
@@ -294,6 +302,7 @@ class _SetupPageState extends State<SetupPage> {
         canSkip: true,
         callback: setProfil12,
         currentlySelected: _choiceBuilder.profil12,
+        isFromExisting: _isFromExisting,
       ),
 
       // Profilfach in Q13 (Wahlfach, bisher unbelegte Kurse), Vertiefungskurse nur in Q12 möglich
@@ -306,6 +315,7 @@ class _SetupPageState extends State<SetupPage> {
         canSkip: true,
         callback: setProfil13,
         currentlySelected: _choiceBuilder.profil13,
+        isFromExisting: _isFromExisting,
       ),
 
       //
@@ -334,6 +344,7 @@ class _SetupPageState extends State<SetupPage> {
           canSkip: true,
           callback: (subject) => setSubstituteDeutsch(subject != null),
           currentlySelected: _choiceBuilder.substituteDeutsch ?? false ? _choiceBuilder.mintSg2 : null,
+          isFromExisting: _isFromExisting,
         ),
       if ((_choiceBuilder.lk?.category == SubjectCategory.ntg && (_choiceBuilder.mintSg2?.category == SubjectCategory.ntg || _choiceBuilder.mintSg2?.category == SubjectCategory.info)
           || _choiceBuilder.lk?.category == SubjectCategory.info && _choiceBuilder.mint1?.category == SubjectCategory.ntg)
@@ -348,6 +359,7 @@ class _SetupPageState extends State<SetupPage> {
           canSkip: true,
           callback: (subject) => setSubstituteMathe(subject != null),
           currentlySelected: _choiceBuilder.substituteMathe ?? false ? _choiceBuilder.mintSg2 : null,
+          isFromExisting: _isFromExisting,
         ),
       // Bei Substitution von Mathe ist eine weitere Fremdsprache verpflichtend (bei Deutsch ist keine Naturwissenschaft verpflichtend)
       if (_choiceBuilder.substituteMathe ?? false)
@@ -361,6 +373,7 @@ class _SetupPageState extends State<SetupPage> {
           subjectsPool: [_choiceBuilder.sg1!, if (_choiceBuilder.mintSg2 != null && (_choiceBuilder.mintSg2!.category == SubjectCategory.sg)) _choiceBuilder.mintSg2!],
           callback: (subject) => setAbi5(subject),
           currentlySelected: _choiceBuilder.abi5,
+          isFromExisting: _isFromExisting,
         ),
 
       // Abiturprüfung in einem GPR-Fach verpflichtend
@@ -379,6 +392,7 @@ class _SetupPageState extends State<SetupPage> {
           ]),
           callback: setAbi4,
           currentlySelected: _choiceBuilder.abi4,
+          isFromExisting: _isFromExisting,
         ),
       // Abiturprüfung in einer fortgeführten Fremdsprache oder Naturwissenschaft verpflichtend (Informatik zählt nicht als Naturwissenschaft)
       if (_choiceBuilder.lk?.category != SubjectCategory.ntg && _choiceBuilder.lk?.category != SubjectCategory.sg
@@ -399,6 +413,7 @@ class _SetupPageState extends State<SetupPage> {
           ]),
           callback: _choiceBuilder.lk?.category == SubjectCategory.gpr ? setAbi4 : setAbi5,
           currentlySelected: _choiceBuilder.lk?.category == SubjectCategory.gpr ? _choiceBuilder.abi4 : _choiceBuilder.abi5,
+          isFromExisting: _isFromExisting,
         ),
 
       // Sind die verpflichtenden Abiturprüfungsfächer bereits gewählt, kann ein weiteres beliebiges Fach gewählt werden
@@ -426,6 +441,7 @@ class _SetupPageState extends State<SetupPage> {
               ]), _choiceBuilder.abi4, _choiceBuilder.lk),
           callback: setAbi5,
           currentlySelected: _choiceBuilder.abi5,
+          isFromExisting: _isFromExisting,
         ),
     ];
   }
@@ -442,6 +458,7 @@ class SetupStepPage extends StatefulWidget {
   final String? infobox;
   final bool canSkip;
   final bool abi;
+  final bool isFromExisting;
   final Subject? currentlySelected;
 
   const SetupStepPage({
@@ -452,6 +469,7 @@ class SetupStepPage extends StatefulWidget {
     required this.title,
     required this.currentlySelected,
     required this.allowNextStep,
+    required this.isFromExisting,
     this.infobox,
     this.abi = false,
     this.canSkip = false,
@@ -511,7 +529,7 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
   void initState() {
     super.initState();
     _resetSubjectPool();
-    _selected = _subjects.contains(widget.currentlySelected) ? widget.currentlySelected : null;
+    _selected = _subjects.contains(widget.currentlySelected) ? widget.currentlySelected : (widget.canSkip && widget.isFromExisting ? SetupStepPage.skipSubject :  null);
     _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 750));
     _fadeAnimation = Tween<double>(begin: 1, end: 0).animate(CurvedAnimation(parent: _controller, curve: const Interval(0, 0.45, curve: Curves.easeIn)));
     _slideAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _controller, curve: const Interval(0.3, 1, curve: Curves.ease)));
@@ -690,14 +708,15 @@ class SubjectWidget extends StatelessWidget {
             Row(
               children: [
                 if (subject == SetupStepPage.skipSubject)
-                  Icon(Icons.close_rounded, size: 22, color: Theme.of(context).textTheme.bodyMedium?.color, weight: 800,)
+                  Icon(Icons.close_rounded, size: 24, color: Theme.of(context).textTheme.bodyMedium?.color, weight: 800,)
                 else
                   Container(
+                    margin: const EdgeInsets.only(right: 2),
                     decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: subject.color),
                     width: 22,
                     height: 22,
                   ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Text(subject.name, style: Theme.of(context).textTheme.bodyMedium),
               ],
             ),
@@ -944,7 +963,7 @@ class SetupFinishPage extends StatelessWidget {
           SubjectWidget(subject: e),
           const SizedBox(height: subjectSpacing),
         ],
-      )).toList(),
+      )),
 
     ];
   }

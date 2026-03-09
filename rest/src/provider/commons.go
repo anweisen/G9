@@ -7,27 +7,29 @@ import (
 )
 
 func CreateUserAndIdentity(database Database, provider string, providerUserId string, name string, email string, picture string) (*User, *Identity, error) {
-  user := User{
-    Email:     email,
-    Name:      name,
-    Picture:   picture,
-    CreatedAt: time.Now(),
-  }
-
-  userId, err := database.CreateUser(&user)
-  if err != nil {
-    return nil, nil, err
-  }
-  user.Id = *userId
+  createdAt := time.Now()
 
   identity := Identity{
     Id:             bson.NilObjectID,
-    UserId:         user.Id,
+    UserId:         bson.NewObjectIDFromTimestamp(createdAt),
     Provider:       provider,
     ProviderUserId: providerUserId,
   }
 
-  err = database.CreateIdentity(&identity)
+  err := database.CreateIdentity(&identity)
+  if err != nil {
+    return nil, nil, err
+  }
+
+  user := User{
+    Id:        identity.UserId,
+    Email:     email,
+    Name:      name,
+    Picture:   picture,
+    CreatedAt: createdAt,
+  }
+
+  _, err = database.CreateUser(&user)
   if err != nil {
     return nil, nil, err
   }

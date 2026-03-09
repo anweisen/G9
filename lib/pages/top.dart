@@ -28,10 +28,13 @@ class TopSubjectsSubpage extends StatelessWidget {
                       margin: const EdgeInsets.fromLTRB(0, 0, 4, 0),
                       width: 21,
                       height: 19,
-                      decoration: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? BoxDecoration(color: semester.semesterCountEquivalent > 1 ? theme.primaryColor : theme.shadowColor, borderRadius: BorderRadius.circular(4)) : null,
+                      decoration: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? BoxDecoration(color: semester.semesterCountEquivalent > 1 ? theme.shadowColor : theme.primaryColor, borderRadius: BorderRadius.circular(4)) : null,
                       child: Center(child: Text(results[stats.bestSubjects[i].$1]?[semester]?.effectiveGrade.toString() ?? "-",
-                        style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, fontWeight: FontWeight.w600, color: semester.semesterCountEquivalent > 1 ? theme.scaffoldBackgroundColor : theme.primaryColor), textAlign: TextAlign.center,)
-                      )
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: 13, fontWeight: FontWeight.w600,
+                            color: semester.semesterCountEquivalent > 1 ? theme.primaryColor : !(results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? theme.primaryColor : theme.scaffoldBackgroundColor),
+                        textAlign: TextAlign.center,
+                      ))
                   ),
               ]),
               const SizedBox(width: 8),
@@ -62,12 +65,12 @@ class TopSubjectsSubpage extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), color: subject.color),
-            width: 24,
-            height: 22,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(7), color: subject.color),
+            width: 26,
+            height: 23,
             child: Text(
               place.toString(),
-              style: textTheme.bodyMedium?.copyWith(fontSize: 13, height: 1.625, fontWeight: FontWeight.w600, color: subject.color.computeLuminance() > 0.5 ? Colors.black : Colors.white),
+              style: textTheme.bodyMedium?.copyWith(fontSize: 13, height: 1.66, fontWeight: FontWeight.w600, color: subject.color.computeLuminance() > 0.5 ? Colors.black : Colors.white),
               textAlign: TextAlign.center,
             ),
           ),

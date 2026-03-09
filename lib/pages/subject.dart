@@ -202,7 +202,10 @@ class _SubjectPageState extends State<SubjectPage> {
                 },
                 child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: grade.grade <= 0 ? Colors.transparent : theme.textTheme.labelSmall!.color!, width: 1.5))),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.fromBorderSide(BorderSide(color: grade.grade <= 0 ? Colors.transparent : theme.dividerColor, width: 1.5))
+                    ),
                     child: Icon(Icons.remove_rounded, size: 16, color: grade.grade <= 0 ? Colors.transparent : theme.textTheme.labelSmall?.color)
                 ),
               ),
@@ -222,7 +225,10 @@ class _SubjectPageState extends State<SubjectPage> {
                 },
                 child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: grade.grade >= 15 * _currentSemester!.semesterCountEquivalent ? Colors.transparent : theme.textTheme.labelSmall!.color!, width: 1.5))),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.fromBorderSide(BorderSide(color: grade.grade >= 15 * _currentSemester!.semesterCountEquivalent ? Colors.transparent : theme.dividerColor, width: 1.5))
+                    ),
                     child: Icon(Icons.add_rounded, size: 16, color: grade.grade >= 15 * _currentSemester!.semesterCountEquivalent ? Colors.transparent : theme.textTheme.labelSmall?.color)
                 ),
               ),

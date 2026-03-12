@@ -291,3 +291,17 @@ func (app AppEmbed) HandlePostAccountSubjectSettings(ctx fiber.Ctx) error {
 
   return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success"})
 }
+
+func (app AppEmbed) HandleGetAccountExport(ctx fiber.Ctx) error {
+  userId, err := ExtractUserId(ctx)
+  if err != nil {
+    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
+  }
+
+  user, err := app.Database.FindUserById(userId)
+  if err != nil {
+    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to find user"})
+  }
+
+  return ctx.Status(fiber.StatusOK).JSON(user)
+}

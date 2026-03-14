@@ -431,8 +431,8 @@ class ChoiceHelper {
       if (choiceBuilder.abi4 != choiceBuilder.mintSg2 && choiceBuilder.vk == null && !(choiceBuilder.substituteDeutsch ?? false) && !(choiceBuilder.substituteMathe ?? false) && choiceBuilder.mintSg2 != null)
         choiceBuilder.mintSg2!,
       if (choiceBuilder.lk != Subject.pug && choiceBuilder.abi4 != Subject.pug && (choiceBuilder.pug13 ?? false))
-        Subject.pug
-      else if (choiceBuilder.lk != choiceBuilder.geoWr && choiceBuilder.abi4 != choiceBuilder.geoWr && choiceBuilder.geoWr != null)
+        Subject.pug,
+      if (choiceBuilder.lk != choiceBuilder.geoWr && choiceBuilder.abi4 != choiceBuilder.geoWr && !(choiceBuilder.pug13 ?? false) && choiceBuilder.geoWr != null)
         choiceBuilder.geoWr!,
       if (choiceBuilder.lk != choiceBuilder.musikKunst && choiceBuilder.musikKunst != null)
         choiceBuilder.musikKunst!,

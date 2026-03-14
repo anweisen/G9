@@ -21,7 +21,7 @@ class ChangeAbiSubpage extends StatelessWidget {
     final choice = Provider.of<SettingsDataProvider>(context).choice;
 
     final currentResult = ChangeAbiChoiceResult.createChoiceResult(choice!, gradesProvider);
-    final choices = ChangeAbiChoiceResult.getSortedChoiceResultsForAbi(choice, currentResult, gradesProvider);
+    final choices = ChangeAbiChoiceResult.getSortedChoiceResultsForAbi(choice, gradesProvider);
 
     return SubpageSkeleton(
       title: const Row(
@@ -64,14 +64,14 @@ class ChangeAbiChoiceResult {
 
   ChangeAbiChoiceResult(this.choice, this.results, this.flags, this.hurdles);
 
-  static ChangeAbiChoiceResult? getBetterChoiceResult(Choice currentChoice, ChangeAbiChoiceResult currentResult, GradesDataProvider gradesProvider) {
-    List<ChangeAbiChoiceResult> results = getSortedChoiceResultsForAbi(currentChoice, currentResult, gradesProvider);
+  static ChangeAbiChoiceResult? getBetterChoiceResult(Choice currentChoice, ResultsFlags currentResultFlags, GradesDataProvider gradesProvider) {
+    List<ChangeAbiChoiceResult> results = getSortedChoiceResultsForAbi(currentChoice, gradesProvider);
     if (results.isEmpty) return null;
-    if (results.first.flags.pointsTotal > currentResult.flags.pointsTotal) return results.first;
+    if (results.first.flags.pointsTotal > currentResultFlags.pointsTotal) return results.first;
     return null;
   }
 
-  static List<ChangeAbiChoiceResult> getSortedChoiceResultsForAbi(Choice currentChoice, ChangeAbiChoiceResult currentResult, GradesDataProvider gradesProvider) {
+  static List<ChangeAbiChoiceResult> getSortedChoiceResultsForAbi(Choice currentChoice, GradesDataProvider gradesProvider) {
     List<ChangeAbiChoiceResult> results = getChoiceResultsForAbi4(currentChoice, gradesProvider) + getChoiceResultsForAbi5(currentChoice, gradesProvider);
     results.sort((a, b) {
       if (a.hurdles.isEmpty && b.hurdles.isNotEmpty) return -1;

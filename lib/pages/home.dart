@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/api.dart';
+import '../logic/choice.dart';
 import '../logic/hurdles.dart';
 import '../logic/types.dart';
 import '../logic/results.dart';
@@ -40,9 +41,6 @@ class HomePage extends StatelessWidget {
     var currentSemesterAvgUsed = GradeHelper.averageOfSemesterUsed(results, grades.currentSemester);
     var gradesDistribution = _calculateSingleGradesDistribution(settings, currentSemesterGrades);
 
-    var currentResult = ChangeAbiChoiceResult.createChoiceResult(settings.choice!, grades);
-    var betterChoice = ChangeAbiChoiceResult.getBetterChoiceResult(settings.choice!, currentResult, grades);
-
     Map<Semester, double> pastSemestersAvg = {};
     Map<Semester, double> pastSemestersAvgUsed = {};
     for (Semester semester in Semester.qPhase) {
@@ -55,6 +53,8 @@ class HomePage extends StatelessWidget {
 
     var admissionHurdleCheckResults = AdmissionHurdle.check(settings.choice!, results, flags, grades);
     var graduationHurdleCheckResults = GraduationHurdle.check(settings.choice!, results, flags, grades);
+
+    var betterChoice = ChangeAbiChoiceResult.getBetterChoiceResult(settings.choice!, flags, grades);
 
     return PageSkeleton(title: const PageTitle(
         title: "Übersicht",
@@ -219,7 +219,7 @@ class HomePage extends StatelessWidget {
         )
       ),
 
-      ..._buildImproveAbiChoice(theme, betterChoice, currentResult),
+      ..._buildImproveAbiChoice(theme, betterChoice, settings.choice!, flags),
 
       if (graduationHurdleCheckResults.isEmpty && admissionHurdleCheckResults.isEmpty)
         ..._buildHurdlePassingInfo(theme),
@@ -353,9 +353,9 @@ class HomePage extends StatelessWidget {
     ];
   }
 
-  List<Widget> _buildImproveAbiChoice(ThemeData theme, ChangeAbiChoiceResult? betterChoice, ChangeAbiChoiceResult currentChoice) {
-    final pointsDifference = betterChoice != null ? betterChoice.flags.pointsTotal - currentChoice.flags.pointsTotal : 0;
-    final changedPair = ChangeAbiChoiceResult.findChangedAbiSubjects(currentChoice.choice, betterChoice?.choice);
+  List<Widget> _buildImproveAbiChoice(ThemeData theme, ChangeAbiChoiceResult? betterChoice, Choice currentChoice, ResultsFlags currentFlags) {
+    final pointsDifference = betterChoice != null ? betterChoice.flags.pointsTotal - currentFlags.pointsTotal : 0;
+    final changedPair = ChangeAbiChoiceResult.findChangedAbiSubjects(currentChoice, betterChoice?.choice);
     return [
       const SizedBox(height: 20),
       SubpageTrigger(
@@ -382,7 +382,7 @@ class HomePage extends StatelessWidget {
                 if (betterChoice == null)
                   Text("Bereits bestmögliche Wahl", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1))
                 else ... [
-                  SmallSubjectWidget(subject: changedPair!.$1, old: true, choice: currentChoice.choice),
+                  SmallSubjectWidget(subject: changedPair!.$1, old: true, choice: currentChoice),
                   SmallSubjectWidget(subject: changedPair.$2, old: false, choice: betterChoice.choice),
                 ],
               ]),

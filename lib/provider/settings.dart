@@ -70,7 +70,7 @@ class SettingsDataProvider extends ChangeNotifier {
     print("Loaded settings data: ${_data?.choice}");
 
     if (kDebugMode && _data?.choice == null) {
-      // _data?.choice = Choice.dummy;
+      _data?.choice = Choice.dummy();
     }
 
     applySubjectSettings(_data?.subjectSettings);

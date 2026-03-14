@@ -160,7 +160,7 @@ class Choice extends HiveObject {
   @HiveField(13) @JsonKey(name: "abi5")
   final SubjectId abi5Id;
 
-  static final Choice dummy = (ChoiceBuilder()
+  factory Choice.dummy() => (ChoiceBuilder()
       ..lk = Subject.english
       ..musikKunst = Subject.kunst
       ..mint1 = Subject.bio

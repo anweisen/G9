@@ -123,7 +123,12 @@ class PdfGenerator {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(subject.name, style: TextStyle(fontSize: 10, color: primaryColor, fontWeight: FontWeight.normal),),
+                  Row(
+                    children: [
+                      Text(subject.name, style: bodyTextStyle),
+                      if (subject == choice.lk) Text("  (LF)", style: TextStyle(fontSize: 8, color: primaryColor, fontWeight: FontWeight.bold),)
+                    ]
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [

@@ -821,29 +821,33 @@ class AccountWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final account = Provider.of<AccountDataProvider>(context);
-    return GestureDetector(
-      onTap: account.isLoggedIn ? () => SubpageController.of(context).openSubpage(const AccountPage()) : () => Api.doGoogleLoginAndSync(context),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-        decoration: BoxDecoration(
-          color: theme.dividerColor.withOpacity(0.66),
-          borderRadius: BorderRadius.circular(9),
-        ),
-        child: Row(
-          children: [
-            if (account.isLoggedIn) ...[
-              Text(account.userProfile!.name, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,),
-              const SizedBox(width: 6,),
-              ClipRRect(
-                  borderRadius: BorderRadius.circular(9),
-                  child: Image.network(account.userProfile!.picture, width:22, height: 22, errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_circle_rounded, size: 18))
-              ),
-            ] else ...[
-              const Icon(Icons.account_circle_rounded, size: 18),
-              const SizedBox(width: 8,),
-              Text("Login", style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,),
-            ]
-          ],
+    return Flexible(
+      fit: FlexFit.loose,
+      child: GestureDetector(
+        onTap: account.isLoggedIn ? () => SubpageController.of(context).openSubpage(const AccountPage()) : () => Api.doGoogleLoginAndSync(context),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          decoration: BoxDecoration(
+            color: theme.dividerColor.withOpacity(0.66),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (account.isLoggedIn) ...[
+                Flexible(child: Text(account.userProfile!.name, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis, softWrap: true, maxLines: 1,)),
+                const SizedBox(width: 6,),
+                ClipRRect(
+                    borderRadius: BorderRadius.circular(9),
+                    child: Image.network(account.userProfile!.picture, width:22, height: 22, errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_circle_rounded, size: 18))
+                ),
+              ] else ...[
+                const Icon(Icons.account_circle_rounded, size: 18),
+                const SizedBox(width: 8,),
+                Text("Login", style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,),
+              ]
+            ],
+          ),
         ),
       ),
     );

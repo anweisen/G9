@@ -23,6 +23,7 @@ class ApiRoutes {
   static const String accountChoice = "/account/choice";
   static const String accountSemester = "/account/semester";
   static const String deleteAccount = "/account";
+  static const String accountExport = "/account/export";
   static String accountSubjectSemesterGrades(SubjectId subjectId, Semester semester) => "/account/grades/$subjectId/${semester.name}";
   static String accountSubjectSettings(SubjectId subjectId) => "/account/subject/$subjectId";
   static String accountSubjectAbiPrediction(SubjectId subjectId) => "/account/abi-prediction/$subjectId";
@@ -143,7 +144,7 @@ class Api {
     dataProvider.authenticating = false;
   }
 
-  static void postLogout(AccountDataProvider dataProvider) async {
+  static Future<void> postLogout(AccountDataProvider dataProvider) async {
     try {
       await http.post(
         Uri.parse("$apiBaseUrl${ApiRoutes.authLogout}"),
@@ -270,6 +271,11 @@ class AuthenticatedApi {
     print("Response from posting subject settings: ${response.statusCode} - ${response.body}");
 
     return response.statusCode == 200;
+  }
+
+  Future<String> getExportData() async {
+    final response = await get(ApiRoutes.accountExport);
+    return response.body;
   }
 
 }

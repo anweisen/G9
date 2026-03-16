@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/api.dart';
+import '../api/files.dart';
 import '../logic/grades.dart';
 import '../provider/account.dart';
 import '../provider/grades.dart';
@@ -104,6 +105,25 @@ class AccountPage extends StatelessWidget {
                     )
                   ],
                 ),
+
+                const SizedBox(height: 20,),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    AccountActionButton(
+                        text: "Daten exportieren",
+                        icon: Icons.download_rounded,
+                        textColor: theme.primaryColor,
+                        backgroundColor: null,
+                        borderColor: theme.dividerColor,
+                        onTap: () async {
+                          final data = await account.api.getExportData();
+                          await FileExportService.exportJson("user_data", data);
+                        }
+                    ),
+                  ],
+                ),
               ],
             )
           else
@@ -195,7 +215,7 @@ class ConfirmDeleteAccountDialoge extends StatelessWidget {
     return SubpageSkeleton(
       title: Text("Account löschen", style: theme.textTheme.headlineMedium),
       children: [
-        Text("Bist du sicher, dass du deinen Account löschen möchtest? Diese Aktion ist unwiderruflich.", style: Theme.of(context).textTheme.displayMedium,),
+        Text("Bist du sicher, dass du deinen Account löschen möchtest? Diese Aktion ist unwiderruflich. Deine Daten sind weiterhin lokal in der App verfügbar.", style: Theme.of(context).textTheme.displayMedium,),
         const SizedBox(height: 24,),
         Wrap(
           spacing: 12,

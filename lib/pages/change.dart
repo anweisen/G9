@@ -42,6 +42,19 @@ class ChangeAbiSubpage extends StatelessWidget {
           )).toList()
         ),
 
+        if (gradesProvider.abiPredictions?.isNotEmpty ?? false) ...[
+          const SizedBox(height: 8,),
+          Flexible(
+            child: Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, size: 20, color: theme.disabledColor,),
+                const SizedBox(width: 10),
+                Flexible(child: Text("Eingetragene Abiturvorhersagen in den aktuell gewählten Fächern haben maßgeblichen Einfluss auf die Berechnung der prognostizierten Leistungen und ihre Differenzen", style: theme.textTheme.displayMedium?.copyWith(color: theme.disabledColor))),
+              ],
+            ),
+          ),
+        ],
+
         for (ChangeAbiChoiceResult choiceResult in choices) ...[
           const SizedBox(height: 16),
           ChangeAbiChoiceResultWidget(modifiedResult: choiceResult, originalResult: currentResult,),
@@ -72,7 +85,7 @@ class ChangeAbiChoiceResult {
   }
 
   static List<ChangeAbiChoiceResult> getSortedChoiceResultsForAbi(Choice currentChoice, GradesDataProvider gradesProvider) {
-    List<ChangeAbiChoiceResult> results = getChoiceResultsForAbi4(currentChoice, gradesProvider) + getChoiceResultsForAbi5(currentChoice, gradesProvider);
+    List<ChangeAbiChoiceResult> results = getChoiceResultsForSubstitution(currentChoice, gradesProvider) + getChoiceResultsForAbi4(currentChoice, gradesProvider) + getChoiceResultsForAbi5(currentChoice, gradesProvider);
     results.sort((a, b) {
       if (a.hurdles.isEmpty && b.hurdles.isNotEmpty) return -1;
       if (a.hurdles.isNotEmpty && b.hurdles.isEmpty) return 1;
@@ -82,17 +95,35 @@ class ChangeAbiChoiceResult {
     return results;
   }
 
-  static List<ChangeAbiChoiceResult> getChoiceResultsForAbi4(Choice choice, GradesDataProvider gradesProvider) {
+  static List<ChangeAbiChoiceResult> getChoiceResultsForSubstitution(Choice choice, GradesDataProvider gradesProvider) {
+    // Für abi4 ist in diesen beiden fällen immer eine Gesellschaftswissenschaft verpflichtend (da Substitution nur bei NTG/SG-LK möglich ist)
+    // daher ändern sich die Beschränkungen für abi4 nicht, in abi5 kann nun ein weiteres Fach gewählt werden (bei Mathe muss eine Fremdsprache gewählt werden)
+    ChoiceOptions optionsMathe = ChoiceHelper.getSubMatheOptions(ChoiceBuilder.fromChoice(choice));
+    if (!optionsMathe.isEmpty) {
+      bool changedSub = !choice.substituteMathe;
+      ChoiceBuilder changedBuilder = ChoiceBuilder.fromChoice(choice)..substituteMathe = changedSub;
+      return getChoiceResultsForAbi5(changedBuilder.build(), gradesProvider, true);
+    }
+    ChoiceOptions optionsDeutsch = ChoiceHelper.getSubDeutschOptions(ChoiceBuilder.fromChoice(choice));
+    if (!optionsDeutsch.isEmpty) {
+      bool changedSub = !choice.substituteDeutsch;
+      ChoiceBuilder changedBuilder = ChoiceBuilder.fromChoice(choice)..substituteDeutsch = changedSub;
+      return getChoiceResultsForAbi5(changedBuilder.build(), gradesProvider, true);
+    }
+    return [];
+  }
+
+  static List<ChangeAbiChoiceResult> getChoiceResultsForAbi4(Choice choice, GradesDataProvider gradesProvider, [includeSame = false]) {
     ChoiceOptions options = ChoiceHelper.getAbi4Options(ChoiceBuilder.fromChoice(choice));
-    return options.subjects.where((subject) => subject != choice.abi4).map((subject) {
+    return options.subjects.where((subject) => includeSame || subject != choice.abi4).map((subject) {
       final modifiedChoice = (ChoiceBuilder.fromChoice(choice)..abi4 = subject).build();
       return createChoiceResult(modifiedChoice, gradesProvider);
     }).toList();
   }
 
-  static List<ChangeAbiChoiceResult> getChoiceResultsForAbi5(Choice choice, GradesDataProvider gradesProvider) {
+  static List<ChangeAbiChoiceResult> getChoiceResultsForAbi5(Choice choice, GradesDataProvider gradesProvider, [includeSame = false]) {
     ChoiceOptions options = ChoiceHelper.getAbi5Options(ChoiceBuilder.fromChoice(choice));
-    return options.subjects.where((subject) => subject != choice.abi5).map((subject) {
+    return options.subjects.where((subject) => includeSame || subject != choice.abi5).map((subject) {
       final modifiedChoice = (ChoiceBuilder.fromChoice(choice)..abi5 = subject).build();
       return createChoiceResult(modifiedChoice, gradesProvider);
     }).toList();

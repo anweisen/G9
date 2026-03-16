@@ -308,6 +308,9 @@ class Choice extends HiveObject {
 enum ChoiceRestriction {
   impossible(null),
 
+  subD(null),
+  subM("Bei Substitution von Mathe muss eine fortgeführte Fremdsprache oder eine Naturwissenschaft als Abiturprüfungsfach gewählt werden"),
+
   abiGpr("Es muss mindestens eine Gesellschaftswissenschaft als Abiturprüfungsfach gewählt werden"),
   abiSgNtg("Es muss mindestens eine fortgeführte Fremdsprache oder eine Naturwissenschaft als Abiturprüfungsfach gewählt werden"),
   abiSgSubM("Bei Substitution von Mathematik muss eine fortgeführte Fremdsprache als Abiturprüfungsfach gewählt werden"),
@@ -343,6 +346,26 @@ class ChoiceOptions {
 //        jeweils eines davon als Leistungsfach, nach Wahl der Schülerinnen und Schüler ersetzt werden (Substitution).
 //     6. Bei Substitution von Mathematik ist die Abiturprüfung in einer Fremdsprache verpflichtend
 class ChoiceHelper {
+
+  static ChoiceOptions getSubMatheOptions(ChoiceBuilder choiceBuilder) {
+    if ((choiceBuilder.lk?.category == SubjectCategory.ntg && (choiceBuilder.mintSg2?.category == SubjectCategory.ntg || choiceBuilder.mintSg2?.category == SubjectCategory.info)
+        || choiceBuilder.lk?.category == SubjectCategory.info && choiceBuilder.mint1?.category == SubjectCategory.ntg)
+        && choiceBuilder.vk == null) {
+      return ChoiceOptions(ChoiceRestriction.subM, [
+        if (choiceBuilder.mintSg2 != null) choiceBuilder.mintSg2!,
+      ], true);
+    }
+    return ChoiceOptions.empty();
+  }
+
+  static ChoiceOptions getSubDeutschOptions(ChoiceBuilder choiceBuilder) {
+    if (choiceBuilder.lk?.category == SubjectCategory.sg && choiceBuilder.mintSg2?.category == SubjectCategory.sg && choiceBuilder.vk == null) {
+      return ChoiceOptions(ChoiceRestriction.subD, [
+        if (choiceBuilder.mintSg2 != null) choiceBuilder.mintSg2!,
+      ], true);
+    }
+    return ChoiceOptions.empty();
+  }
 
   // Für das 4. Abiturfach werden folgende Einschränkungen abgedeckt, in absteigender Priorität:
   // 1. GPR-Fach [danach vollständig erfüllt]

@@ -172,7 +172,11 @@ class AccountActionButton extends StatelessWidget {
             Icon(icon, size: 22, color: textColor,),
             if (text != null) ...[
               const SizedBox(width: 8,),
-              Text(text!, style: theme.textTheme.bodyMedium?.copyWith(color: textColor, fontSize: 15), softWrap: true, maxLines: 2, overflow: TextOverflow.ellipsis,),
+              Text(text!, style: theme.textTheme.bodyMedium?.copyWith(color: textColor, fontSize: 15, height: 1.5), softWrap: true, maxLines: 2, overflow: TextOverflow.ellipsis,),
+            ],
+            if (suffix != null) ...[
+              const SizedBox(width: 5,),
+              suffix!,
             ]
           ],
         ),

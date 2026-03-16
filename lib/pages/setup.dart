@@ -448,8 +448,6 @@ class _SetupPageState extends State<SetupPage> {
 }
 
 class SetupStepPage extends StatefulWidget {
-  static final Subject skipSubject = Subject(id: -1, name: "Nicht gewählt", color: Colors.transparent, category: SubjectCategory.none);
-
   final PageController pageController;
   final void Function(Subject?) callback;
   final void Function() allowNextStep;
@@ -522,14 +520,14 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
   }
 
   void _resetSubjectPool() {
-    _subjects = (widget.canSkip) ? [SetupStepPage.skipSubject, ...widget.subjectsPool] : widget.subjectsPool;
+    _subjects = (widget.canSkip) ? [Subject.skipSubject, ...widget.subjectsPool] : widget.subjectsPool;
   }
 
   @override
   void initState() {
     super.initState();
     _resetSubjectPool();
-    _selected = _subjects.contains(widget.currentlySelected) ? widget.currentlySelected : (widget.canSkip && widget.isFromExisting ? SetupStepPage.skipSubject :  null);
+    _selected = _subjects.contains(widget.currentlySelected) ? widget.currentlySelected : (widget.canSkip && widget.isFromExisting ? Subject.skipSubject :  null);
     _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 750));
     _fadeAnimation = Tween<double>(begin: 1, end: 0).animate(CurvedAnimation(parent: _controller, curve: const Interval(0, 0.45, curve: Curves.easeIn)));
     _slideAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _controller, curve: const Interval(0.3, 1, curve: Curves.ease)));
@@ -607,7 +605,7 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
                       animation: _controller,
                       builder: (context, child) => Transform(
                         transform: Matrix4.translationValues(0,
-                            ((27.0 + 7*2) * _subjects.indexOf(_selected!) + (widget.canSkip && _selected != SetupStepPage.skipSubject ? 8 : 0)) * (1 - _slideAnimation.value)
+                            ((27.0 + 7*2) * _subjects.indexOf(_selected!) + (widget.canSkip && _selected != Subject.skipSubject ? 8 : 0)) * (1 - _slideAnimation.value)
                             - (_scrollController.positions.isNotEmpty ? _scrollController.offset : 0), 0),
                         child: GestureDetector(
                           onTap: () => selectSubject(_selected),
@@ -671,7 +669,7 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
                               if (!widget.canSkip && _selected == null) return;
                               widget.allowNextStep();
                               if (widget.canSkip) {
-                                widget.callback(_selected == SetupStepPage.skipSubject ? null : _selected!);
+                                widget.callback(_selected == Subject.skipSubject ? null : _selected!);
                               } else {
                                 widget.callback(_selected!);
                               }
@@ -699,7 +697,7 @@ class SubjectWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: subject == SetupStepPage.skipSubject ? const EdgeInsets.fromLTRB(0, 0, 0, 8) : const EdgeInsets.all(0),
+      padding: subject == Subject.skipSubject ? const EdgeInsets.fromLTRB(0, 0, 0, 8) : const EdgeInsets.all(0),
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 27, maxHeight: 27),
         child: Row(
@@ -707,7 +705,7 @@ class SubjectWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                if (subject == SetupStepPage.skipSubject)
+                if (subject == Subject.skipSubject)
                   Icon(Icons.close_rounded, size: 24, color: Theme.of(context).textTheme.bodyMedium?.color, weight: 800,)
                 else
                   Container(
@@ -945,14 +943,14 @@ class SetupFinishPage extends StatelessWidget {
       // Vertiefungskurs (optional, ersetzt mintSg2 in Q13), nicht mit spät beginnender Fremdsprache/Informatik
       Text("Vertiefungskurs", style: theme.textTheme.bodySmall),
       const SizedBox(height: labelSpacing),
-      SubjectWidget(subject: choice.vk ?? SetupStepPage.skipSubject),
+      SubjectWidget(subject: choice.vk ?? Subject.skipSubject),
       const SizedBox(height: sectionSpacing),
 
       // Profilfach (optional)
       Text("Profilfach Q12 / Q13", style: theme.textTheme.bodySmall),
       const SizedBox(height: labelSpacing),
-      SubjectWidget(subject: choice.profil12 ?? SetupStepPage.skipSubject),
-      SubjectWidget(subject: choice.profil13 ?? SetupStepPage.skipSubject),
+      SubjectWidget(subject: choice.profil12 ?? Subject.skipSubject),
+      SubjectWidget(subject: choice.profil13 ?? Subject.skipSubject),
       const SizedBox(height: sectionSpacing),
 
       // Prüfungsfächer

@@ -72,7 +72,9 @@ class Subject {
 
     seminar = Subject(id: 91, name: "W-Seminar", color: const Color.fromRGBO(231, 236, 239, 1.0), category: SubjectCategory.seminar),
 
-    wahl = Subject(id: 100, name: "Wahlfach", color: const Color.fromRGBO(0, 233, 255, 1.0), category: SubjectCategory.profil)
+    wahl = Subject(id: 100, name: "Wahlfach", color: const Color.fromRGBO(0, 233, 255, 1.0), category: SubjectCategory.profil),
+
+    skipSubject = Subject(id: -1, name: "Nicht gewählt", color: Colors.transparent, category: SubjectCategory.none)
   ;
 
   static final Map<SubjectId, Subject> byId = {};

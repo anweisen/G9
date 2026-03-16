@@ -44,14 +44,12 @@ class ChangeAbiSubpage extends StatelessWidget {
 
         if (gradesProvider.abiPredictions?.isNotEmpty ?? false) ...[
           const SizedBox(height: 8,),
-          Flexible(
-            child: Row(
-              children: [
-                Icon(Icons.warning_amber_rounded, size: 20, color: theme.disabledColor,),
-                const SizedBox(width: 10),
-                Flexible(child: Text("Eingetragene Abiturvorhersagen in den aktuell gewählten Fächern haben maßgeblichen Einfluss auf die Berechnung der prognostizierten Leistungen und ihre Differenzen", style: theme.textTheme.displayMedium?.copyWith(color: theme.disabledColor))),
-              ],
-            ),
+          Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, size: 20, color: theme.disabledColor,),
+              const SizedBox(width: 10),
+              Flexible(child: Text("Eingetragene Abiturvorhersagen in den aktuell gewählten Fächern haben maßgeblichen Einfluss auf die Berechnung der prognostizierten Leistungen und ihre Differenzen", style: theme.textTheme.displayMedium?.copyWith(color: theme.disabledColor))),
+            ],
           ),
         ],
 

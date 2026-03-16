@@ -189,7 +189,7 @@ class ChangeAbiChoiceResultWidget extends StatelessWidget {
                     for (int i = 0; i < modifiedSubjects.length; i++)
                       if (originalSubjects[i] != modifiedSubjects[i]) ...[
                         const SizedBox(height: 3),
-                        SmallSubjectWidget(subject: originalSubjects[i], old: true, choice: modifiedResult.choice,),
+                        SmallSubjectWidget(subject: originalSubjects[i], old: true, choice: originalResult.choice,),
                         const SizedBox(height: 1),
                         Icon(Icons.keyboard_double_arrow_down_rounded, size: 14, color: theme.shadowColor),
                         SmallSubjectWidget(subject: modifiedSubjects[i], old: false, choice: modifiedResult.choice,),
@@ -268,6 +268,7 @@ class SmallSubjectWidget extends StatelessWidget {
         Text(subject.name, style: theme.textTheme.displayMedium?.copyWith(
             fontSize: 16, color: old ? theme.shadowColor : theme.primaryColor,
             decoration: old ? TextDecoration.lineThrough : null,
+            decorationColor: old ? theme.shadowColor : theme.primaryColor,
             decorationThickness: 2, fontWeight: old ? FontWeight.w500 : FontWeight.w600,
             height: 1.4), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,
         ),

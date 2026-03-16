@@ -352,7 +352,10 @@ class ChoiceHelper {
         || choiceBuilder.lk?.category == SubjectCategory.info && choiceBuilder.mint1?.category == SubjectCategory.ntg)
         && choiceBuilder.vk == null) {
       return ChoiceOptions(ChoiceRestriction.subM, [
-        if (choiceBuilder.mintSg2 != null) choiceBuilder.mintSg2!,
+        if (choiceBuilder.lk?.category == SubjectCategory.info && choiceBuilder.mint1 != null)
+          choiceBuilder.mint1!,
+        if (choiceBuilder.lk?.category == SubjectCategory.ntg && choiceBuilder.mintSg2 != null)
+          choiceBuilder.mintSg2!,
       ], true);
     }
     return ChoiceOptions.empty();
@@ -361,7 +364,8 @@ class ChoiceHelper {
   static ChoiceOptions getSubDeutschOptions(ChoiceBuilder choiceBuilder) {
     if (choiceBuilder.lk?.category == SubjectCategory.sg && choiceBuilder.mintSg2?.category == SubjectCategory.sg && choiceBuilder.vk == null) {
       return ChoiceOptions(ChoiceRestriction.subD, [
-        if (choiceBuilder.mintSg2 != null) choiceBuilder.mintSg2!,
+        if (choiceBuilder.mintSg2 != null)
+          choiceBuilder.mintSg2!,
       ], true);
     }
     return ChoiceOptions.empty();
@@ -402,9 +406,12 @@ class ChoiceHelper {
     if (choiceBuilder.lk?.category != SubjectCategory.ntg && choiceBuilder.lk?.category != SubjectCategory.sg
         && !(choiceBuilder.substituteDeutsch ?? false) && !(choiceBuilder.substituteMathe ?? false)) {
       return ChoiceOptions(ChoiceRestriction.abiSgNtg, [
-        if (choiceBuilder.mint1 != null) choiceBuilder.mint1!,
-        if (choiceBuilder.sg1 != null) choiceBuilder.sg1!,
-        if (choiceBuilder.vk == null && choiceBuilder.mintSg2 != null && !(choiceBuilder.substituteDeutsch ?? false) && !(choiceBuilder.substituteMathe ?? false))
+        if (choiceBuilder.mint1 != null)
+          choiceBuilder.mint1!,
+        if (choiceBuilder.sg1 != null)
+          choiceBuilder.sg1!,
+        if (choiceBuilder.vk == null && choiceBuilder.mintSg2 != null && (choiceBuilder.mintSg2!.category == SubjectCategory.ntg || choiceBuilder.mintSg2!.category == SubjectCategory.sg)
+            && !(choiceBuilder.substituteDeutsch ?? false) && !(choiceBuilder.substituteMathe ?? false))
           choiceBuilder.mintSg2!,
       ]);
     }
@@ -434,7 +441,8 @@ class ChoiceHelper {
           choiceBuilder.mint1!,
         if (choiceBuilder.sg1 != null)
           choiceBuilder.sg1!,
-        if (choiceBuilder.vk == null && choiceBuilder.mintSg2 != null && !(choiceBuilder.substituteDeutsch ?? false) && !(choiceBuilder.substituteMathe ?? false))
+        if (choiceBuilder.vk == null && choiceBuilder.mintSg2 != null && (choiceBuilder.mintSg2!.category == SubjectCategory.ntg || choiceBuilder.mintSg2!.category == SubjectCategory.sg)
+            && !(choiceBuilder.substituteDeutsch ?? false) && !(choiceBuilder.substituteMathe ?? false))
           choiceBuilder.mintSg2!,
       ]);
     }
@@ -451,7 +459,8 @@ class ChoiceHelper {
       if (choiceBuilder.lk != choiceBuilder.sg1 && choiceBuilder.abi4 != choiceBuilder.sg1 && choiceBuilder.sg1 != null)
         choiceBuilder.sg1!,
 
-      if (choiceBuilder.abi4 != choiceBuilder.mintSg2 && choiceBuilder.vk == null && !(choiceBuilder.substituteDeutsch ?? false) && !(choiceBuilder.substituteMathe ?? false) && choiceBuilder.mintSg2 != null)
+      if (choiceBuilder.abi4 != choiceBuilder.mintSg2 && choiceBuilder.lk != choiceBuilder.mintSg2 && choiceBuilder.vk == null
+          && !(choiceBuilder.substituteDeutsch ?? false) && !(choiceBuilder.substituteMathe ?? false) && choiceBuilder.mintSg2 != null)
         choiceBuilder.mintSg2!,
       if (choiceBuilder.lk != Subject.pug && choiceBuilder.abi4 != Subject.pug && (choiceBuilder.pug13 ?? false))
         Subject.pug,

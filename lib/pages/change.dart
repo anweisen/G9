@@ -10,8 +10,22 @@ import '../provider/grades.dart';
 import '../provider/settings.dart';
 import 'settings.dart';
 
-class ChangeAbiSubpage extends StatelessWidget {
+class ChangeAbiSubpage extends StatefulWidget {
   const ChangeAbiSubpage({super.key});
+
+  @override
+  State<ChangeAbiSubpage> createState() => _ChangeAbiSubpageState();
+}
+
+class _ChangeAbiSubpageState extends State<ChangeAbiSubpage> {
+
+  bool _applyAbiPredictions = true;
+
+  void _toggleApplyAbiPredictions() {
+    setState(() {
+      _applyAbiPredictions = !_applyAbiPredictions;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +34,8 @@ class ChangeAbiSubpage extends StatelessWidget {
     final gradesProvider = Provider.of<GradesDataProvider>(context);
     final choice = Provider.of<SettingsDataProvider>(context).choice;
 
-    final currentResult = ChangeAbiChoiceResult.createChoiceResult(choice!, gradesProvider);
-    final choices = ChangeAbiChoiceResult.getSortedChoiceResultsForAbi(choice, gradesProvider);
+    final currentResult = ChangeAbiChoiceResult.createChoiceResult(choice!, gradesProvider, applyAbiPredictions: _applyAbiPredictions);
+    final choices = ChangeAbiChoiceResult.getSortedChoiceResultsForAbi(choice, gradesProvider, applyAbiPredictions: _applyAbiPredictions);
 
     return SubpageSkeleton(
       title: const Row(
@@ -44,13 +58,48 @@ class ChangeAbiSubpage extends StatelessWidget {
 
         if (gradesProvider.abiPredictions?.isNotEmpty ?? false) ...[
           const SizedBox(height: 8,),
+          GestureDetector(
+            onTap: _toggleApplyAbiPredictions,
+            child: Row(
+              children: [
+                Icon(_applyAbiPredictions ? Icons.lock_outline_rounded : Icons.lock_open_rounded, size: 18, color: _applyAbiPredictions ? theme.disabledColor : theme.shadowColor,),
+                const SizedBox(width: 10),
+                Flexible(child: Text("Eingetragene Abiturvorhersagen in den aktuell gewählten Fächern haben maßgeblichen Einfluss auf die Berechnung der prognostizierten Leistungen und ihre Differenzen",
+                    style: theme.textTheme.bodySmall?.copyWith(color: _applyAbiPredictions ? theme.disabledColor : theme.shadowColor,))
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6,),
           Row(
             children: [
-              Icon(Icons.warning_amber_rounded, size: 20, color: theme.disabledColor,),
-              const SizedBox(width: 10),
-              Flexible(child: Text("Eingetragene Abiturvorhersagen in den aktuell gewählten Fächern haben maßgeblichen Einfluss auf die Berechnung der prognostizierten Leistungen und ihre Differenzen", style: theme.textTheme.displayMedium?.copyWith(color: theme.disabledColor))),
+              const SizedBox(width: 18 + 8,),
+              Flexible(
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    for (MapEntry<SubjectId, int> entry in gradesProvider.abiPredictions!.entries)
+                      if (gradesProvider.getGrades(entry.key, semester: Semester.abi).isEmpty) Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: theme.dividerColor,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(Subject.byId[entry.key]!.name, style: theme.textTheme.bodySmall?.copyWith(height: 1.25)),
+                            const SizedBox(width: 6),
+                            Text(entry.value.toString(), style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, height: 1.25)),
+                          ],
+                        ),
+                      )
+                  ],
+                ),
+              ),
             ],
-          ),
+          )
         ],
 
         for (ChangeAbiChoiceResult choiceResult in choices) ...[
@@ -64,7 +113,6 @@ class ChangeAbiSubpage extends StatelessWidget {
 
       ]);
   }
-
 }
 
 class ChangeAbiChoiceResult {
@@ -82,8 +130,10 @@ class ChangeAbiChoiceResult {
     return null;
   }
 
-  static List<ChangeAbiChoiceResult> getSortedChoiceResultsForAbi(Choice currentChoice, GradesDataProvider gradesProvider) {
-    List<ChangeAbiChoiceResult> results = getChoiceResultsForSubstitution(currentChoice, gradesProvider) + getChoiceResultsForAbi4(currentChoice, gradesProvider) + getChoiceResultsForAbi5(currentChoice, gradesProvider);
+  static List<ChangeAbiChoiceResult> getSortedChoiceResultsForAbi(Choice currentChoice, GradesDataProvider gradesProvider, {applyAbiPredictions = true}) {
+    List<ChangeAbiChoiceResult> results = getChoiceResultsForSubstitution(currentChoice, gradesProvider, applyAbiPredictions: applyAbiPredictions)
+        + getChoiceResultsForAbi4(currentChoice, gradesProvider, applyAbiPredictions: applyAbiPredictions)
+        + getChoiceResultsForAbi5(currentChoice, gradesProvider, applyAbiPredictions: applyAbiPredictions);
     results.sort((a, b) {
       if (a.hurdles.isEmpty && b.hurdles.isNotEmpty) return -1;
       if (a.hurdles.isNotEmpty && b.hurdles.isEmpty) return 1;
@@ -93,25 +143,25 @@ class ChangeAbiChoiceResult {
     return results;
   }
 
-  static List<ChangeAbiChoiceResult> getChoiceResultsForSubstitution(Choice choice, GradesDataProvider gradesProvider) {
+  static List<ChangeAbiChoiceResult> getChoiceResultsForSubstitution(Choice choice, GradesDataProvider gradesProvider, {applyAbiPredictions = true}) {
     // Für abi4 ist in diesen beiden fällen immer eine Gesellschaftswissenschaft verpflichtend (da Substitution nur bei NTG/SG-LK möglich ist)
     // daher ändern sich die Beschränkungen für abi4 nicht, in abi5 kann nun ein weiteres Fach gewählt werden (bei Mathe muss eine Fremdsprache gewählt werden)
     ChoiceOptions optionsMathe = ChoiceHelper.getSubMatheOptions(ChoiceBuilder.fromChoice(choice));
     if (!optionsMathe.isEmpty) {
       bool changedSub = !choice.substituteMathe;
       ChoiceBuilder changedBuilder = ChoiceBuilder.fromChoice(choice)..substituteMathe = changedSub;
-      return getChoiceResultsForAbi5(changedBuilder.build(), gradesProvider, true);
+      return getChoiceResultsForAbi5(changedBuilder.build(), gradesProvider, includeSame: true, applyAbiPredictions: applyAbiPredictions);
     }
     ChoiceOptions optionsDeutsch = ChoiceHelper.getSubDeutschOptions(ChoiceBuilder.fromChoice(choice));
     if (!optionsDeutsch.isEmpty) {
       bool changedSub = !choice.substituteDeutsch;
       ChoiceBuilder changedBuilder = ChoiceBuilder.fromChoice(choice)..substituteDeutsch = changedSub;
-      return getChoiceResultsForAbi5(changedBuilder.build(), gradesProvider, true);
+      return getChoiceResultsForAbi5(changedBuilder.build(), gradesProvider, includeSame: true, applyAbiPredictions: applyAbiPredictions);
     }
     return [];
   }
 
-  static List<ChangeAbiChoiceResult> getChoiceResultsForAbi4(Choice choice, GradesDataProvider gradesProvider, [includeSame = false]) {
+  static List<ChangeAbiChoiceResult> getChoiceResultsForAbi4(Choice choice, GradesDataProvider gradesProvider, {includeSame = false, applyAbiPredictions = true}) {
     ChoiceOptions options = ChoiceHelper.getAbi4Options(ChoiceBuilder.fromChoice(choice));
     // Sonderfall: Wenn für abi5 keine Beschränkungen bestehen kann für abi4 die Möglichkeit bestehen das selbe Fach zu wählen was derzeit
     //             für abi5 gewählt ist, da die Optionen/Beschränkungen in der gesetzen Reihenfolge geprüft werden (und somit im Nachhinein die Wahl für abi5 eingeschränkt werden würde, und dieses Fach für abi5 rausfallen würde)
@@ -119,20 +169,20 @@ class ChangeAbiChoiceResult {
     //             In der initialen Wahl (auf die ChoiceHelper ausgelegt ist) kann dieser Sonderfall nicht auftreten, da die Schritte und deren Beschränkungen nacheinander berechnet werden.
     return options.subjects.where((subject) => subject != choice.abi5 && (includeSame || subject != choice.abi4)).map((subject) {
       final modifiedChoice = (ChoiceBuilder.fromChoice(choice)..abi4 = subject).build();
-      return createChoiceResult(modifiedChoice, gradesProvider);
+      return createChoiceResult(modifiedChoice, gradesProvider, applyAbiPredictions: applyAbiPredictions);
     }).toList();
   }
 
-  static List<ChangeAbiChoiceResult> getChoiceResultsForAbi5(Choice choice, GradesDataProvider gradesProvider, [includeSame = false]) {
+  static List<ChangeAbiChoiceResult> getChoiceResultsForAbi5(Choice choice, GradesDataProvider gradesProvider, {includeSame = false, applyAbiPredictions = true}) {
     ChoiceOptions options = ChoiceHelper.getAbi5Options(ChoiceBuilder.fromChoice(choice));
     return options.subjects.where((subject) => includeSame || subject != choice.abi5).map((subject) {
       final modifiedChoice = (ChoiceBuilder.fromChoice(choice)..abi5 = subject).build();
-      return createChoiceResult(modifiedChoice, gradesProvider);
+      return createChoiceResult(modifiedChoice, gradesProvider, applyAbiPredictions: applyAbiPredictions);
     }).toList();
   }
 
-  static ChangeAbiChoiceResult createChoiceResult(Choice modifiedChoice, GradesDataProvider provider) {
-    final results = SemesterResult.calculateResultsWithPredictions(modifiedChoice, provider);
+  static ChangeAbiChoiceResult createChoiceResult(Choice modifiedChoice, GradesDataProvider provider, {applyAbiPredictions = true}) {
+    final results = SemesterResult.calculateResultsWithPredictions(modifiedChoice, provider, applyAbiPredictions: applyAbiPredictions);
     final flags = SemesterResult.applyUseFlags(modifiedChoice, results);
     final hurdles = [...AdmissionHurdle.check(modifiedChoice, results, flags, provider), ...GraduationHurdle.check(modifiedChoice, results, flags, provider)];
     return ChangeAbiChoiceResult(modifiedChoice, results, flags, hurdles);

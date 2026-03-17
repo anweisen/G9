@@ -229,7 +229,7 @@ class SemesterResult {
     return count;
   }
 
-  static Map<Subject, Map<Semester, SemesterResult>> calculateResultsWithPredictions(Choice choice, GradesDataProvider provider) {
+  static Map<Subject, Map<Semester, SemesterResult>> calculateResultsWithPredictions(Choice choice, GradesDataProvider provider, {applyAbiPredictions = true}) {
     Map<Semester, Map<SubjectId, List<GradeEntry>>> map = {};
     for (var semester in Semester.values) {
       map[semester] = provider.getGradesForSemester(choice, semester: semester);
@@ -275,7 +275,7 @@ class SemesterResult {
         if (!choice.hasSubjectInSemester(subject, semester)) {
           continue; // subject not taken that semester
         }
-        if (semester == Semester.abi && provider.getAbiPrediction(subject.id) != null) {
+        if (semester == Semester.abi && provider.getAbiPrediction(subject.id) != null && applyAbiPredictions) {
           continue; // apply abi prediction later
         }
         if (results[subject]![semester] == null) {
@@ -293,7 +293,7 @@ class SemesterResult {
           continue; // subject not taken that semester
         }
 
-        if (semester == Semester.abi && provider.getAbiPrediction(subject.id) != null) {
+        if (semester == Semester.abi && provider.getAbiPrediction(subject.id) != null && applyAbiPredictions) {
           results[subject]![semester] = SemesterResult(provider.getAbiPrediction(subject.id)! * 4, 0, semester);
         } else if (results[subject]![semester] == null) {
           results[subject]![semester] = SemesterResult(totalPrediction * semester.semesterCountEquivalent, 0, semester);

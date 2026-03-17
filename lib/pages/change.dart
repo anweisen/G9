@@ -5,6 +5,7 @@ import '../logic/choice.dart';
 import '../logic/hurdles.dart';
 import '../logic/results.dart';
 import '../logic/types.dart';
+import '../widgets/general.dart';
 import '../widgets/skeleton.dart';
 import '../provider/grades.dart';
 import '../provider/settings.dart';
@@ -70,35 +71,39 @@ class _ChangeAbiSubpageState extends State<ChangeAbiSubpage> {
               ],
             ),
           ),
-          const SizedBox(height: 6,),
-          Row(
-            children: [
-              const SizedBox(width: 18 + 8,),
-              Flexible(
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: [
-                    for (MapEntry<SubjectId, int> entry in gradesProvider.abiPredictions!.entries)
-                      if (gradesProvider.getGrades(entry.key, semester: Semester.abi).isEmpty) Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: theme.dividerColor,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(Subject.byId[entry.key]!.name, style: theme.textTheme.bodySmall?.copyWith(height: 1.25)),
-                            const SizedBox(width: 6),
-                            Text(entry.value.toString(), style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, height: 1.25)),
-                          ],
-                        ),
-                      )
-                  ],
+          AnimatedDrawerTransition(
+            expanded: _applyAbiPredictions,
+            duration: const Duration(milliseconds: 500),
+            margin: const EdgeInsets.only(top: 6),
+            child: Row(
+              children: [
+                const SizedBox(width: 18 + 8,),
+                Flexible(
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      for (MapEntry<SubjectId, int> entry in gradesProvider.abiPredictions!.entries)
+                        if (gradesProvider.getGrades(entry.key, semester: Semester.abi).isEmpty) Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: theme.dividerColor,
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(Subject.byId[entry.key]!.name, style: theme.textTheme.bodySmall?.copyWith(height: 1.25)),
+                              const SizedBox(width: 6),
+                              Text(entry.value.toString(), style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, height: 1.25)),
+                            ],
+                          ),
+                        )
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           )
         ],
 
@@ -199,101 +204,216 @@ class ChangeAbiChoiceResult {
   }
 }
 
-class ChangeAbiChoiceResultWidget extends StatelessWidget {
+class ChangeAbiChoiceResultWidget extends StatefulWidget {
   const ChangeAbiChoiceResultWidget({super.key, required this.modifiedResult, required this.originalResult});
 
   final ChangeAbiChoiceResult originalResult;
   final ChangeAbiChoiceResult modifiedResult;
 
   @override
+  State<ChangeAbiChoiceResultWidget> createState() => _ChangeAbiChoiceResultWidgetState();
+}
+
+class _ChangeAbiChoiceResultWidgetState extends State<ChangeAbiChoiceResultWidget> with SingleTickerProviderStateMixin {
+  bool _expanded = false;
+
+  Map<Subject, List<SemesterResult>> _filterModifiedSemesterResults(ChangeAbiChoiceResult from, ChangeAbiChoiceResult to) {
+    Map<Subject, List<SemesterResult>> filteredResults = {};
+    for (MapEntry<Subject, Map<Semester, SemesterResult>> subjectSemesterResultsEntry in from.results.entries) {
+      for (MapEntry<Semester, SemesterResult> semesterResultEntry in subjectSemesterResultsEntry.value.entries) {
+        SemesterResult? toResult = to.results[subjectSemesterResultsEntry.key]?[semesterResultEntry.key];
+        if (toResult == null || semesterResultEntry.value.used && !toResult.used || semesterResultEntry.value.grade != toResult.grade) {
+          filteredResults.putIfAbsent(subjectSemesterResultsEntry.key, () => []).add(semesterResultEntry.value);
+        }
+      }
+    }
+    return filteredResults;
+  }
+
+  void _toggleExpanded() {
+    setState(() {
+      _expanded = !_expanded;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final originalSubjects = originalResult.choice.abiSubjects;
-    final modifiedSubjects = modifiedResult.choice.abiSubjects;
+    final originalSubjects = widget.originalResult.choice.abiSubjects;
+    final modifiedSubjects = widget.modifiedResult.choice.abiSubjects;
 
-    final pointsDifference = modifiedResult.flags.pointsTotal - originalResult.flags.pointsTotal;
-    final underscoredDifference = modifiedResult.flags.underscored - originalResult.flags.underscored;
+    final pointsDifference = widget.modifiedResult.flags.pointsTotal - widget.originalResult.flags.pointsTotal;
+    final underscoredDifference = widget.modifiedResult.flags.underscored - widget.originalResult.flags.underscored;
 
     const wrapWidth = 300;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.dividerColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return Wrap(
-            direction: constraints.maxWidth > wrapWidth ? Axis.horizontal : Axis.vertical,
-            spacing: 8,
-            runSpacing: 16,
-            alignment: constraints.maxWidth > wrapWidth ? WrapAlignment.spaceBetween : WrapAlignment.start,
-            crossAxisAlignment: constraints.maxWidth > wrapWidth ? WrapCrossAlignment.center : WrapCrossAlignment.center,
-            children: [
-              SizedBox(
-                width: constraints.maxWidth > wrapWidth ? null : constraints.maxWidth,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: _toggleExpanded,
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.dividerColor,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Wrap(
+                  direction: constraints.maxWidth > wrapWidth ? Axis.horizontal : Axis.vertical,
+                  spacing: 8,
+                  runSpacing: 16,
+                  alignment: constraints.maxWidth > wrapWidth ? WrapAlignment.spaceBetween : WrapAlignment.start,
+                  crossAxisAlignment: constraints.maxWidth > wrapWidth ? WrapCrossAlignment.center : WrapCrossAlignment.center,
                   children: [
-                    for (int i = 0; i < modifiedSubjects.length; i++)
-                      if (originalSubjects[i] != modifiedSubjects[i]) ...[
-                        const SizedBox(height: 3),
-                        SmallSubjectWidget(subject: originalSubjects[i], old: true, choice: originalResult.choice,),
-                        const SizedBox(height: 1),
-                        Icon(Icons.keyboard_double_arrow_down_rounded, size: 14, color: theme.shadowColor),
-                        SmallSubjectWidget(subject: modifiedSubjects[i], old: false, choice: modifiedResult.choice,),
-                        const SizedBox(height: 3),
-                      ]
+                    SizedBox(
+                      width: constraints.maxWidth > wrapWidth ? null : constraints.maxWidth,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (int i = 0; i < modifiedSubjects.length; i++)
+                            if (originalSubjects[i] != modifiedSubjects[i]) ...[
+                              const SizedBox(height: 3),
+                              SmallSubjectWidget(subject: originalSubjects[i], old: true, choice: widget.originalResult.choice,),
+                              const SizedBox(height: 1),
+                              Icon(Icons.keyboard_double_arrow_down_rounded, size: 14, color: theme.shadowColor),
+                              SmallSubjectWidget(subject: modifiedSubjects[i], old: false, choice: widget.modifiedResult.choice,),
+                              const SizedBox(height: 3),
+                            ]
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: constraints.maxWidth > wrapWidth ? null : constraints.maxWidth,
+                      padding: constraints.maxWidth > wrapWidth ? null : const EdgeInsets.fromLTRB(12, 12, 12, 10),
+                      decoration: BoxDecoration(
+                        color: constraints.maxWidth > wrapWidth ? null : theme.shadowColor.withOpacity(.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 14,
+                        runSpacing: 12,
+                        children: [
+                          if (widget.modifiedResult.hurdles.isNotEmpty)
+                            Icon(Icons.warning_amber_rounded, size: 20, color: theme.disabledColor,)
+                          else Column(
+                            children: [
+                              const SizedBox(height: 6,),
+                              Text("Ø ${SemesterResult.pointsToAbiGrade(widget.modifiedResult.flags.pointsTotal)}", style: theme.textTheme.displayMedium?.copyWith(fontSize: 15, fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text("${widget.modifiedResult.flags.pointsTotal}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600)),
+                              Text("${pointsDifference >= 0 ? "+" : ""}$pointsDifference",
+                                  style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: pointsDifference > 0 ? theme.indicatorColor : pointsDifference < 0 ? theme.disabledColor : theme.primaryColor)),
+                            ],
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text("${widget.modifiedResult.flags.underscored} / 8", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600)),
+                              Text("${underscoredDifference >= 0 ? "+" : ""}$underscoredDifference",
+                                  style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: underscoredDifference > 0 ? theme.disabledColor : underscoredDifference < 0 ? theme.indicatorColor : theme.shadowColor)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              Container(
-                width: constraints.maxWidth > wrapWidth ? null : constraints.maxWidth,
-                padding: constraints.maxWidth > wrapWidth ? null : const EdgeInsets.fromLTRB(12, 12, 12, 10),
-                decoration: BoxDecoration(
-                  color: constraints.maxWidth > wrapWidth ? null : theme.shadowColor.withOpacity(.15),
-                  borderRadius: BorderRadius.circular(8),
+
+                AnimatedDrawerTransition(
+                  duration: const Duration(milliseconds: 500),
+                  margin: const EdgeInsets.only(top: 12),
+                  expanded: _expanded,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: constraints.maxWidth,
+                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+                        decoration: BoxDecoration(
+                          color: theme.shadowColor.withValues(alpha: .15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.max,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.remove_rounded, size: 16, color: theme.disabledColor),
+                                  ..._buildDifference(theme, _filterModifiedSemesterResults(widget.originalResult, widget.modifiedResult), CrossAxisAlignment.start, TextAlign.start),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12,),
+                            Flexible(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.max,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Icon(Icons.add_rounded, size: 16, color: theme.indicatorColor),
+                                  ..._buildDifference(theme, _filterModifiedSemesterResults(widget.modifiedResult, widget.originalResult), CrossAxisAlignment.end, TextAlign.end),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 14,
-                  runSpacing: 12,
-                  children: [
-                    if (modifiedResult.hurdles.isNotEmpty)
-                      Icon(Icons.warning_amber_rounded, size: 20, color: theme.disabledColor,)
-                    else Column(
-                      children: [
-                        const SizedBox(height: 6,),
-                        Text("Ø ${SemesterResult.pointsToAbiGrade(modifiedResult.flags.pointsTotal)}", style: theme.textTheme.displayMedium?.copyWith(fontSize: 15, fontWeight: FontWeight.w600)),
-                      ],
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("${modifiedResult.flags.pointsTotal}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        Text("${pointsDifference >= 0 ? "+" : ""}$pointsDifference",
-                            style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: pointsDifference > 0 ? theme.indicatorColor : pointsDifference < 0 ? theme.disabledColor : theme.primaryColor)),
-                      ],
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("${modifiedResult.flags.underscored} / 8", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        Text("${underscoredDifference >= 0 ? "+" : ""}$underscoredDifference",
-                            style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: underscoredDifference > 0 ? theme.disabledColor : underscoredDifference < 0 ? theme.indicatorColor : theme.shadowColor)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        }
+              ],
+            );
+          }
+        ),
       ),
     );
+  }
+
+  List<Widget> _buildDifference(ThemeData theme, Map<Subject, List<SemesterResult>> changedResults, CrossAxisAlignment crossAxisAlignment, TextAlign textAlign) {
+    return [
+      for (MapEntry<Subject, List<SemesterResult>> entry in changedResults.entries) ...[
+        const SizedBox(height: 6,),
+        Text(entry.key.name, style: theme.textTheme.bodySmall, textAlign: textAlign,),
+        Column(
+          crossAxisAlignment: crossAxisAlignment,
+          children: [
+            for (SemesterResult result in entry.value) Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("${result.grade}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.primaryColor, height: 1.6)),
+                if (result.semester.semesterCountEquivalent > 1) ...[
+                  const SizedBox(width: 4,),
+                  Text("(≈ ${result.effectiveGrade})", style: theme.textTheme.bodySmall?.copyWith(color: theme.primaryColor, height: 1.4))
+                ],
+                const SizedBox(width: 4,),
+                Container(
+                  height: 18,
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    color: theme.shadowColor.withValues(alpha: .15),
+                  ),
+                  child: Center(child: Text(result.semester.display, style: theme.textTheme.bodySmall?.copyWith(height: 1.4))),
+                )
+              ],
+            )
+          ],
+        ),
+      ],
+    ];
   }
 }
 

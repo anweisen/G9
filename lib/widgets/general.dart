@@ -210,3 +210,39 @@ class _DotLoadingIndicatorState extends State<DotLoadingIndicator> with SingleTi
     );
   }
 }
+
+class AnimatedDrawerTransition extends StatelessWidget {
+  const AnimatedDrawerTransition({super.key, required this.expanded, required this.duration, required this.child, this.margin});
+
+  final bool expanded;
+  final Duration duration;
+  final EdgeInsets? margin;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        duration: duration,
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          final fadeAnimation = CurvedAnimation(
+            parent: animation,
+            curve: const Interval(0.1, 1.0, curve: Curves.linear),
+          );
+
+          return SizeTransition(
+            sizeFactor: animation,
+            axis: Axis.vertical,
+            axisAlignment: -1.0,
+            child: FadeTransition(
+              opacity: fadeAnimation, // Uses the delayed animation
+              child: child,
+            ),
+          );
+        },
+        child: expanded ? (margin != null ? Padding(padding: margin!, child: child,) : child) : const SizedBox.shrink(),
+    );
+  }
+}
+

@@ -292,7 +292,6 @@ class Choice extends HiveObject {
     this.abi4Id,
     this.abi5Id,
   ) {
-    print("vkId: $vkId");
     Subject.all; // initialize subject instances
   }
 
@@ -346,6 +345,9 @@ class ChoiceOptions {
 //        jeweils eines davon als Leistungsfach, nach Wahl der Schülerinnen und Schüler ersetzt werden (Substitution).
 //     6. Bei Substitution von Mathematik ist die Abiturprüfung in einer Fremdsprache verpflichtend
 class ChoiceHelper {
+
+  // (!) Die einzelnen Optionen bauen aufeinander auf und müssen in der richtigen Reihenfolge geprüft werden,
+  //     da sie sich (teilweise) gegenseitig beeinflussen/einschränken (in der Reihenfolge der Methoden in dieser Klasse)
 
   static ChoiceOptions getSubMatheOptions(ChoiceBuilder choiceBuilder) {
     if ((choiceBuilder.lk?.category == SubjectCategory.ntg && (choiceBuilder.mintSg2?.category == SubjectCategory.ntg || choiceBuilder.mintSg2?.category == SubjectCategory.info)

@@ -113,7 +113,11 @@ class ChangeAbiChoiceResult {
 
   static List<ChangeAbiChoiceResult> getChoiceResultsForAbi4(Choice choice, GradesDataProvider gradesProvider, [includeSame = false]) {
     ChoiceOptions options = ChoiceHelper.getAbi4Options(ChoiceBuilder.fromChoice(choice));
-    return options.subjects.where((subject) => includeSame || subject != choice.abi4).map((subject) {
+    // Sonderfall: Wenn für abi5 keine Beschränkungen bestehen kann für abi4 die Möglichkeit bestehen das selbe Fach zu wählen was derzeit
+    //             für abi5 gewählt ist, da die Optionen/Beschränkungen in der gesetzen Reihenfolge geprüft werden (und somit im Nachhinein die Wahl für abi5 eingeschränkt werden würde, und dieses Fach für abi5 rausfallen würde)
+    //             Dieser effektive Tausch von abi4/abi5 hat jedoch keinen Einfluss auf das Ergebnis, und wird somit in diesem Sonderfall übersprungen, ohne die Beschränkungen für abi5 neu zu berechnen.
+    //             In der initialen Wahl (auf die ChoiceHelper ausgelegt ist) kann dieser Sonderfall nicht auftreten, da die Schritte und deren Beschränkungen nacheinander berechnet werden.
+    return options.subjects.where((subject) => subject != choice.abi5 && (includeSame || subject != choice.abi4)).map((subject) {
       final modifiedChoice = (ChoiceBuilder.fromChoice(choice)..abi4 = subject).build();
       return createChoiceResult(modifiedChoice, gradesProvider);
     }).toList();

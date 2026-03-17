@@ -19,6 +19,7 @@ class CustomizeSubjectPage extends StatefulWidget {
 class _CustomizeSubjectPageState extends State<CustomizeSubjectPage> {
 
   Color? _color;
+  int _resetKey = 0;
 
   @override
   void initState() {
@@ -78,7 +79,7 @@ class _CustomizeSubjectPageState extends State<CustomizeSubjectPage> {
 
           const SizedBox(height: 20,),
 
-          ColorPicker(initialColor: currentColor, onColorChanged: (color) {
+          ColorPicker(initialColor: currentColor, key: ValueKey(_resetKey), onColorChanged: (color) {
             setState(() {
               _color = color;
             });
@@ -90,6 +91,7 @@ class _CustomizeSubjectPageState extends State<CustomizeSubjectPage> {
             onTap: () {
               setState(() {
                 _color = null;
+                _resetKey++; // force reset of color picker state -> reset to initial/default color
               });
             },
             child: Container(

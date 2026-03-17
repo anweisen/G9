@@ -19,13 +19,17 @@ class _ColorPickerState extends State<ColorPicker> {
 
   @override
   void initState() {
-    HSVColor hsv = HSVColor.fromColor(widget.initialColor);
+    _initializeFromColor(widget.initialColor);
+    super.initState();
+  }
+
+  void _initializeFromColor(Color color) {
+    HSVColor hsv = HSVColor.fromColor(color);
     _hue = hsv.hue;
-    _color = widget.initialColor;
+    _color = color;
     _colorHue = HSVColor.fromAHSV(1, _hue, 1, 1).toColor();
     _relativeX = hsv.saturation;
     _relativeY = 1 - hsv.value;
-    super.initState();
   }
 
   void _setHue(double hue) {
@@ -76,59 +80,59 @@ class _ColorPickerState extends State<ColorPicker> {
                 ],
               ),
               const SizedBox(height: 10,),
-              Stack(
-                children: [
-                  GestureDetector(
-                    onVerticalDragUpdate: (details) => _handlePan(details.localPosition, constraints.maxWidth),
-                    onPanDown: (details) => _handlePan(details.localPosition, constraints.maxWidth),
-                    onPanUpdate: (details) => _handlePan(details.localPosition, constraints.maxWidth),
-                    onPanStart: (details) => _handlePan(details.localPosition, constraints.maxWidth),
-                    child: Container(
+              GestureDetector(
+                onVerticalDragUpdate: (details) => _handlePan(details.localPosition, constraints.maxWidth),
+                onPanDown: (details) => _handlePan(details.localPosition, constraints.maxWidth),
+                onPanUpdate: (details) => _handlePan(details.localPosition, constraints.maxWidth),
+                onPanStart: (details) => _handlePan(details.localPosition, constraints.maxWidth),
+                child: Stack(
+                  children: [
+                    Container(
                       constraints: BoxConstraints(
                         minWidth: constraints.maxWidth,
                         minHeight: 200,
                       ),
                       clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.all(Radius.circular(9)),
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.white,
-                              _colorHue,
-                            ],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          )
+                        borderRadius: const BorderRadius.all(Radius.circular(9)),
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.white,
+                            _colorHue,
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        )
                       ),
                       child: Container(
-                          decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.black,
-                                  Colors.transparent,
-                                ],
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
-                              )
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.black,
+                              Colors.transparent,
+                            ],
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
                           )
+                        )
                       ),
                     ),
-                  ),
 
-                  Positioned(
+                    Positioned(
                       left: (_relativeX * constraints.maxWidth) - 10,
                       top: (_relativeY * 200) - 10,
                       child: Container(
                         decoration: BoxDecoration(
-                          border: Border.all(color: theme.primaryColor, width: 2),
+                          border: Border.all(color: _color.computeLuminance() > 0.5 ? Colors.black : Colors.white, width: 2),
                           borderRadius: BorderRadius.circular(10),
                           color: _color,
                         ),
                         width: 20,
                         height: 20,
                       )
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 18),
               ColorPickerHueSlider(
@@ -173,13 +177,13 @@ class ColorPickerHueSlider extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Stack(
-      children: [
-        GestureDetector(
-          onPanDown: (details) => _handlePan(details.localPosition),
-          onPanUpdate: (details) => _handlePan(details.localPosition),
-          onPanStart: (details) => _handlePan(details.localPosition),
-          child: Container(
+    return GestureDetector(
+      onPanDown: (details) => _handlePan(details.localPosition),
+      onPanUpdate: (details) => _handlePan(details.localPosition),
+      onPanStart: (details) => _handlePan(details.localPosition),
+      child: Stack(
+        children: [
+          Container(
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.all(Radius.circular(9)),
               gradient: LinearGradient(
@@ -192,8 +196,7 @@ class ColorPickerHueSlider extends StatelessWidget {
             height: 20,
             margin: const EdgeInsets.symmetric(vertical: 5),
           ),
-        ),
-        Positioned(
+          Positioned(
             left: maxWidth * (hue / 360) - 5,
             top: 0,
             child: Container(
@@ -205,8 +208,9 @@ class ColorPickerHueSlider extends StatelessWidget {
               width: 10,
               height: 30,
             )
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }

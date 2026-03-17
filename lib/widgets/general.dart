@@ -12,6 +12,15 @@ import '../provider/grades.dart';
 import '../provider/settings.dart';
 import 'subpage.dart';
 
+extension StringExtension on String {
+  String truncateTo(int maxChars) {
+    if (length <= maxChars) {
+      return this;
+    }
+    return "${substring(0, maxChars)}...";
+  }
+}
+
 class SubjectPageTitle extends StatelessWidget {
   final Subject subject;
 
@@ -222,26 +231,26 @@ class AnimatedDrawerTransition extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        duration: duration,
-        transitionBuilder: (Widget child, Animation<double> animation) {
-          final fadeAnimation = CurvedAnimation(
-            parent: animation,
-            curve: const Interval(0.1, 1.0, curve: Curves.linear),
-          );
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      duration: duration,
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        final fadeAnimation = CurvedAnimation(
+          parent: animation,
+          curve: const Interval(0.1, 1.0, curve: Curves.linear),
+        );
 
-          return SizeTransition(
-            sizeFactor: animation,
-            axis: Axis.vertical,
-            axisAlignment: -1.0,
-            child: FadeTransition(
-              opacity: fadeAnimation, // Uses the delayed animation
-              child: child,
-            ),
-          );
-        },
-        child: expanded ? (margin != null ? Padding(padding: margin!, child: child,) : child) : const SizedBox.shrink(),
+        return SizeTransition(
+          sizeFactor: animation,
+          axis: Axis.vertical,
+          axisAlignment: -1.0,
+          child: FadeTransition(
+            opacity: fadeAnimation, // Uses the delayed animation
+            child: child,
+          ),
+        );
+      },
+      child: expanded ? (margin != null ? Padding(padding: margin!, child: child,) : child) : const SizedBox.shrink(),
     );
   }
 }

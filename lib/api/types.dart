@@ -73,7 +73,38 @@ class RefreshResponseBody {
 }
 
 @JsonSerializable()
+class AccountSessionsResponseBody {
+  @JsonKey(name: "sessions")
+  List<AccountSession> sessions;
+
+  @JsonKey(name: "current_session_id")
+  String? currentSessionId;
+
+  AccountSessionsResponseBody({required this.sessions, required this.currentSessionId});
+
+  factory AccountSessionsResponseBody.fromJson(Map<String, dynamic> json) => _$AccountSessionsResponseBodyFromJson(json);
+  Map<String, dynamic> toJson() => _$AccountSessionsResponseBodyToJson(this);
+}
+
+@JsonSerializable()
 class AccountSession {
+
+  @JsonKey(name: "id")
+  String id;
+
+  @JsonKey(name: "identity_id")
+  String identityId;
+
+  @JsonKey(name: "device_name")
+  String deviceName;
+
+  @JsonKey(name: "expires_at") @GoDateTimeConverter()
+  DateTime expiry;
+
+  AccountSession({required this.id, required this.identityId, required this.deviceName, required this.expiry});
+
+  factory AccountSession.fromJson(Map<String, dynamic> json) => _$AccountSessionFromJson(json);
+  Map<String, dynamic> toJson() => _$AccountSessionToJson(this);
 }
 
 @JsonSerializable()

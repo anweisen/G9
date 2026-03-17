@@ -3,13 +3,26 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 
+String formatBrowserName(BrowserName browserName) {
+  switch (browserName) {
+    case BrowserName.chrome: return "Chrome";
+    case BrowserName.edge: return "Edge";
+    case BrowserName.firefox: return "Firefox";
+    case BrowserName.safari: return "Safari";
+    case BrowserName.opera: return "Opera";
+    case BrowserName.msie: return "Internet Explorer";
+    case BrowserName.samsungInternet: return "Samsung Internet";
+    default: return "Unknown Browser";
+  }
+}
+
 Future<String> getDeviceName() async {
   DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
 
   if (kIsWeb) {
     WebBrowserInfo web = await deviceInfo.webBrowserInfo;
     // Result: "Chrome 122 (Windows)"
-    return "${web.browserName.name} (${web.platform})";
+    return "${formatBrowserName(web.browserName)} (${web.platform})";
   }
 
   if (Platform.isAndroid) {

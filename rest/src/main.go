@@ -33,6 +33,7 @@ func main() {
   accountGroup.Post("/choice", embed.HandlePostAccountChoice)
   accountGroup.Post("/semester", embed.HandlePostAccountSemester)
   accountGroup.Get("/sessions", embed.HandleGetAccountSessions)
+  accountGroup.Delete("/session/:session", embed.HandleDeleteAccountSession)
   accountGroup.Get("/export", embed.HandleGetAccountExport)
 
   bind, present := os.LookupEnv("BIND_ADDR")

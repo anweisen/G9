@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:provider/provider.dart';
 
 import '../logic/choice.dart';
@@ -24,6 +25,8 @@ class ApiRoutes {
   static const String accountSemester = "/account/semester";
   static const String deleteAccount = "/account";
   static const String accountExport = "/account/export";
+  static const String accountSessions = "/account/sessions";
+  static String accountSession(String sessionId) => "/account/session/$sessionId";
   static String accountSubjectSemesterGrades(SubjectId subjectId, Semester semester) => "/account/grades/$subjectId/${semester.name}";
   static String accountSubjectSettings(SubjectId subjectId) => "/account/subject/$subjectId";
   static String accountSubjectAbiPrediction(SubjectId subjectId) => "/account/abi-prediction/$subjectId";
@@ -101,7 +104,7 @@ class Api {
     dataProvider.authenticating = false;
   }
 
-  static Future<void> refreshAccessTokenWithBackend(AccountDataProvider dataProvider) async {
+  static Future<void> refreshAccessTokenWithBackend(AccountDataProvider dataProvider, [tries = 0]) async {
     dataProvider.authenticating = true;
 
     String? deviceName;
@@ -138,7 +141,14 @@ class Api {
       }
 
     } catch (e) {
-      dataProvider.logout();
+      if (tries < 3) {
+        print("Error during token refresh: $e. Retrying in 5 seconds...");
+        await Future.delayed(const Duration(seconds: 5));
+        return await refreshAccessTokenWithBackend(dataProvider, tries + 1);
+      } else {
+        dataProvider.logout();
+        print("Error during token refresh after multiple attempts: $e");
+      }
     }
 
     dataProvider.authenticating = false;
@@ -193,11 +203,11 @@ class AuthenticatedApi {
     }
   }
 
-  Future<http.Response> get(String endpoint) async {
+  Future<http.Response> get(String endpoint, {Map<String, String>? headers}) async {
     try {
       return await http.get(
           Uri.parse("${Api.apiBaseUrl}$endpoint"),
-          headers: {"Authorization": "Bearer $accessToken", "Content-Type": "application/json"}
+          headers: {"Authorization": "Bearer $accessToken", "Content-Type": "application/json", ...?headers},
       );
     } catch (e) {
       print("Error encoding request body: $e");
@@ -276,6 +286,29 @@ class AuthenticatedApi {
   Future<String> getExportData() async {
     final response = await get(ApiRoutes.accountExport);
     return response.body;
+  }
+
+  Future<bool> postDeleteSession(String sessionId) async {
+    final response = await delete(ApiRoutes.accountSession(sessionId));
+    return response.statusCode == 200;
+  }
+
+  Future<AccountSessionsResponseBody?> getSessions(String? refreshToken) async {
+    Map<String, dynamic>? claims = refreshToken == null ? null : JwtDecoder.tryDecode(refreshToken);
+    String? jti = claims?["jti"];
+
+    final response = await get(ApiRoutes.accountSessions, headers: {
+      if (jti != null) "Current-Session-ID": jti
+    });
+
+    if (response.statusCode == 200) {
+      print("Successfully retrieved sessions: ${response.body}");
+      Map<String, dynamic> data = jsonDecode(response.body);
+      return AccountSessionsResponseBody.fromJson(data);
+    } else {
+      print("Failed to retrieve sessions: ${response.statusCode} - ${response.body}");
+      return Future.error(response.statusCode);
+    }
   }
 
 }

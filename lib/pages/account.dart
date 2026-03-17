@@ -1,8 +1,12 @@
+import 'dart:math';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/api.dart';
 import '../api/files.dart';
+import '../api/types.dart';
 import '../logic/grades.dart';
 import '../provider/account.dart';
 import '../provider/grades.dart';
@@ -12,8 +16,31 @@ import '../widgets/general.dart';
 import '../widgets/subpage.dart';
 import '../widgets/skeleton.dart';
 
-class AccountPage extends StatelessWidget {
+class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
+
+  @override
+  State<AccountPage> createState() => _AccountPageState();
+}
+
+class _AccountPageState extends State<AccountPage> {
+
+  late Future<AccountSessionsResponseBody?> _sessionsFuture;
+  bool expandedSessions = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final accountProvider = Provider.of<AccountDataProvider>(context, listen: false);
+    _sessionsFuture = accountProvider.api.getSessions(accountProvider.refreshToken);
+  }
+
+  void _reloadSessions() {
+    final accountProvider = Provider.of<AccountDataProvider>(context, listen: false);
+    setState(() {
+      _sessionsFuture = accountProvider.api.getSessions(accountProvider.refreshToken);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +103,7 @@ class AccountPage extends StatelessWidget {
                       textColor: account.isSyncing ? theme.shadowColor : theme.primaryColor,
                       backgroundColor: null,
                       borderColor: theme.dividerColor,
-                      onTap: account.isSyncing ? null : () => account.syncStoredData(settings, grades),
+                      onTap: account.isSyncing ? null : () => account.syncStoredData(settings, grades, notifyInstantly: true),
                     )
                   ],
                 ),
@@ -87,12 +114,12 @@ class AccountPage extends StatelessWidget {
                   runSpacing: 10,
                   children: [
                     AccountActionButton(
-                        text: "Abmelden",
-                        icon: Icons.logout_rounded,
-                        textColor: theme.disabledColor,
-                        backgroundColor: null,
-                        borderColor: theme.dividerColor,
-                        onTap: account.logout
+                      text: "Abmelden",
+                      icon: Icons.logout_rounded,
+                      textColor: theme.disabledColor,
+                      backgroundColor: null,
+                      borderColor: theme.dividerColor,
+                      onTap: account.logout
                     ),
                     AccountActionButton(
                       text: "Account löschen",
@@ -112,17 +139,121 @@ class AccountPage extends StatelessWidget {
                   runSpacing: 10,
                   children: [
                     AccountActionButton(
-                        text: "Daten exportieren",
-                        icon: Icons.download_rounded,
-                        textColor: theme.primaryColor,
-                        backgroundColor: null,
-                        borderColor: theme.dividerColor,
-                        onTap: () async {
-                          final data = await account.api.getExportData();
-                          await FileExportService.exportJson("user_data", data);
-                        }
+                      text: "Daten exportieren",
+                      icon: Icons.download_rounded,
+                      textColor: theme.primaryColor,
+                      backgroundColor: null,
+                      borderColor: theme.dividerColor,
+                      onTap: () async {
+                        final data = await account.api.getExportData();
+                        await FileExportService.exportJson("user_data", data);
+                      }
                     ),
                   ],
+                ),
+
+                const SizedBox(height: 30,),
+                GestureDetector(
+                  onTap: () => setState(() => expandedSessions = !expandedSessions),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(9),
+                      color: theme.dividerColor,
+                    ),
+                    child: FutureBuilder(
+                      future: _sessionsFuture,
+                      builder: (context, snapshot) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (snapshot.hasError) ...[
+                            Row(
+                              spacing: 4,
+                              children: [
+                                Text("Geräte", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.primaryColor, fontWeight: FontWeight.w600, fontSize: 15)),
+                                Icon(Icons.error_outline_rounded, size: 16, color: theme.disabledColor,),
+                              ],
+                            ),
+                          ] else if (!snapshot.hasData) ...[
+                            Row(
+                              spacing: 4,
+                              children: [
+                                Text("Geräte", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.primaryColor, fontWeight: FontWeight.w600, fontSize: 15)),
+                                DotLoadingIndicator(style: theme.textTheme.displayMedium!.copyWith(height: 0, fontWeight: FontWeight.w700, color: theme.primaryColor, fontSize: 15), duration: const Duration(milliseconds: 1000)),
+                              ],
+                            ),
+                          ] else ...[
+                            Row(
+                              spacing: 8,
+                              children: [
+                                Text("Geräte", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.primaryColor, fontWeight: FontWeight.w600, fontSize: 15)),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(6),
+                                    color: theme.shadowColor.withValues(alpha: 0.1),
+                                  ),
+                                  child: Text("${snapshot.data!.sessions.length}", style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700, height: 0))
+                                ),
+                              ],
+                            ),
+                            AnimatedDrawerTransition(
+                              expanded: expandedSessions,
+                              duration: Duration(milliseconds: snapshot.data!.sessions.isEmpty ? 500 : clampDouble(snapshot.data!.sessions.length * 30, 300, 750).toInt()),
+                              margin: const EdgeInsets.only(bottom: 4, top: 8),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: theme.shadowColor.withValues(alpha: 0.1),
+                                ),
+                                child: Column(
+                                  spacing: 5,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    for (var session in snapshot.data!.sessions)
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        spacing: 14,
+                                        children: [
+                                          Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              color: session.id == snapshot.data?.currentSessionId ? theme.indicatorColor : theme.shadowColor,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(session.deviceName.truncateTo(28), style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.primaryColor)),
+                                              Text("gültig bis ${GradeHelper.formatDate(session.expiry)}", style: theme.textTheme.bodySmall?.copyWith(height: 1.5), softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1),
+                                            ],
+                                          ),
+                                          const Spacer(),
+                                          if (session.id != snapshot.data?.currentSessionId)
+                                            GestureDetector(
+                                              onTap: () async {
+                                                setState(() {
+                                                  _sessionsFuture = Future.value(null);
+                                                });
+                                                await account.api.postDeleteSession(session.id);
+                                                _reloadSessions();
+                                              },
+                                              child: Icon(Icons.remove_circle_outline_outlined, size: 18, color: theme.disabledColor,)
+                                            ),
+                                        ],
+                                      )
+                                  ],
+                                ),
+                              )
+                            ),
+                          ],
+                        ],
+                      )
+                    ),
+                  ),
                 ),
               ],
             )
@@ -192,7 +323,7 @@ class AccountActionButton extends StatelessWidget {
             Icon(icon, size: 22, color: textColor,),
             if (text != null) ...[
               const SizedBox(width: 8,),
-              Text(text!, style: theme.textTheme.bodyMedium?.copyWith(color: textColor, fontSize: 15, height: 1.5), softWrap: true, maxLines: 2, overflow: TextOverflow.ellipsis,),
+              Flexible(child: Text(text!, style: theme.textTheme.bodyMedium?.copyWith(color: textColor, fontSize: 15, height: 0), softWrap: true, maxLines: 1, overflow: TextOverflow.ellipsis,)),
             ],
             if (suffix != null) ...[
               const SizedBox(width: 5,),

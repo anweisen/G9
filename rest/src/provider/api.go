@@ -22,6 +22,7 @@ type Database interface {
   DeleteIdentities(userId UserId) error
   DeleteSessions(userId UserId) error
   DeleteSessionByJti(jti string, userId UserId) error
+  DeleteSessionById(sessionId UserId, userId UserId) error
 }
 
 type User struct { // saved in database (users)

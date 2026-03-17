@@ -194,3 +194,8 @@ func (database MongoDatabase) DeleteSessionByJti(jti string, userId UserId) erro
   _, err := database.SessionCollection.DeleteOne(database.Context, bson.M{"active_jti": jti, "user_id": userId})
   return err
 }
+
+func (database MongoDatabase) DeleteSessionById(sessionId UserId, userId UserId) error {
+  _, err := database.SessionCollection.DeleteOne(database.Context, bson.M{"_id": sessionId, "user_id": userId})
+  return err
+}

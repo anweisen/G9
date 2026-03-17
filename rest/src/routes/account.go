@@ -5,6 +5,7 @@ import (
   "fmt"
   "github.com/gofiber/fiber/v3"
   "github.com/gofiber/utils/v2"
+  "go.mongodb.org/mongo-driver/v2/bson"
   "rest/src/provider"
 )
 
@@ -214,12 +215,42 @@ func (app AppEmbed) HandleGetAccountSessions(ctx fiber.Ctx) error {
     return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
   }
 
+  currentSessionJti := ctx.Get("Current-Session-ID", "")
+
   sessions, err := app.Database.FindAllSessionByUserId(userId)
   if err != nil {
     return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to retrieve user sessions"})
   }
 
-  return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"sessions": sessions})
+  var currentSessionId string
+  for _, session := range sessions {
+    if session.ActiveJti == currentSessionJti {
+      currentSessionId = session.Id.Hex()
+    }
+  }
+
+  return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"sessions": sessions, "current_session_id": currentSessionId})
+}
+
+func (app AppEmbed) HandleDeleteAccountSession(ctx fiber.Ctx) error {
+  userId, err := ExtractUserId(ctx)
+  if err != nil {
+    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
+  }
+
+  sessionIdParam := ctx.Params("session")
+
+  sessionId, err := bson.ObjectIDFromHex(sessionIdParam)
+  if err != nil {
+    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid session id"})
+  }
+
+  err = app.Database.DeleteSessionById(sessionId, userId)
+  if err != nil {
+    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to delete session"})
+  }
+
+  return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success"})
 }
 
 func (app AppEmbed) HandlePostAccountSemester(ctx fiber.Ctx) error {

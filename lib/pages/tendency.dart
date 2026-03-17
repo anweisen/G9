@@ -282,22 +282,24 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
                   )
                 ],
               ),
-              if (_targetEnabled && _targetFailed) ...[
-                const SizedBox(height: 6,),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(Icons.warning_amber_rounded, size: 20, color: theme.disabledColor),
-                    const SizedBox(width: 10,),
-                    Flexible(
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 3),
-                        child: Text("Zielnote ist mit diesen Noten nicht mehr realistisch erreichbar", style: theme.textTheme.bodySmall?.copyWith(color: theme.disabledColor, height: 1), softWrap: true, maxLines: 3,),
-                      )
-                    ),
-                  ],
-                )
-              ]
+              AnimatedDrawerTransition(
+                  expanded: _targetEnabled && _targetFailed,
+                  duration: const Duration(milliseconds: 400),
+                  margin: const EdgeInsets.only(top: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(Icons.warning_amber_rounded, size: 20, color: theme.disabledColor),
+                      const SizedBox(width: 10,),
+                      Flexible(
+                          child: Container(
+                            margin: const EdgeInsets.only(top: 3),
+                            child: Text("Zielnote ist mit diesen Noten nicht mehr realistisch erreichbar", style: theme.textTheme.bodySmall?.copyWith(color: theme.disabledColor, height: 1), softWrap: true, maxLines: 3,),
+                          )
+                      ),
+                    ],
+                  )
+              ),
             ],
           ),
 

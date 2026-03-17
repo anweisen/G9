@@ -67,11 +67,13 @@ class TopSubjectsSubpage extends StatelessWidget {
           Container(
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(7), color: subject.color),
             width: 26,
-            height: 23,
-            child: Text(
-              place.toString(),
-              style: textTheme.bodyMedium?.copyWith(fontSize: 13, height: 1.66, fontWeight: FontWeight.w600, color: subject.color.computeLuminance() > 0.5 ? Colors.black : Colors.white),
-              textAlign: TextAlign.center,
+            height: 22,
+            child: Center(
+              child: Text(
+                place.toString(),
+                style: textTheme.bodyMedium?.copyWith(fontSize: 13, height: 1.25, fontWeight: FontWeight.w600, color: subject.color.computeLuminance() > 0.5 ? Colors.black : Colors.white),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
           const SizedBox(width: 8),

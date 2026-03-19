@@ -207,7 +207,7 @@ func MergeUserStorageAndChanges(existing UserStorage, update UserStorage, change
 
   // Server-side data is more up to date, prefer them
   var updatedChoice *Choice
-  if existing.Grades != nil {
+  if existing.Choice != nil {
     updatedChoice = existing.Choice
   } else {
     updatedChoice = update.Choice

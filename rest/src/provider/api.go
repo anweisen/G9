@@ -10,6 +10,7 @@ type Database interface {
   FindUserById(id UserId) (*User, error)
   FindSessionByJti(jti string, userId UserId) (*Session, error)
   FindAllSessionByUserId(userId UserId) ([]Session, error)
+  FindAllIdentitiesByUserId(userId UserId) ([]Identity, error)
 
   CreateUser(user *User) (*UserId, error)
   CreateIdentity(identity *Identity) error

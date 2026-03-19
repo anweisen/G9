@@ -334,5 +334,15 @@ func (app AppEmbed) HandleGetAccountExport(ctx fiber.Ctx) error {
     return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to find user"})
   }
 
-  return ctx.Status(fiber.StatusOK).JSON(user)
+  sessions, err := app.Database.FindAllSessionByUserId(userId)
+  if err != nil {
+    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to retrieve user sessions"})
+  }
+
+  identities, err := app.Database.FindAllIdentitiesByUserId(userId)
+  if err != nil {
+    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to retrieve user identities"})
+  }
+
+  return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"user_data": user, "sessions": sessions, "identities": identities})
 }

@@ -104,6 +104,21 @@ func (database MongoDatabase) FindAllSessionByUserId(userId bson.ObjectID) ([]Se
   return results, nil
 }
 
+func (database MongoDatabase) FindAllIdentitiesByUserId(userId bson.ObjectID) ([]Identity, error) {
+  var results []Identity
+  cursor, err := database.IdentityCollection.Find(database.Context, bson.M{"user_id": userId})
+  if err != nil {
+    return nil, err
+  }
+
+  err = cursor.All(database.Context, &results)
+  if err != nil {
+    return nil, err
+  }
+  _ = cursor.Close(database.Context)
+  return results, nil
+}
+
 func (database MongoDatabase) CreateUser(user *User) (*UserId, error) {
   result, err := database.UserCollection.InsertOne(database.Context, user)
   if err != nil {

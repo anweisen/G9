@@ -86,6 +86,7 @@ class MyApp extends StatelessWidget {
       // themeMode: ThemeMode.light,
       color: Colors.white, // TODO?!
       darkTheme: ThemeData(
+          useMaterial3: false,
           brightness: Brightness.dark,
           fontFamily: 'Poppins',
           scaffoldBackgroundColor: Colors.black,
@@ -106,6 +107,7 @@ class MyApp extends StatelessWidget {
             labelSmall: TextStyle(fontWeight: normal, color: Color.fromRGBO(117, 116, 131, 1.0), fontSize: 18, letterSpacing: 0),
           )),
       theme: ThemeData(
+        useMaterial3: false,
         brightness: Brightness.light,
         fontFamily: 'Poppins',
         scaffoldBackgroundColor: Colors.white,

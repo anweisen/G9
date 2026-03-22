@@ -100,6 +100,8 @@ class PageSkeleton extends StatelessWidget {
                         stretch: true,
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
+                        foregroundColor: Colors.transparent,
+                        surfaceTintColor: Colors.transparent,
                         pinned: true,
                         centerTitle: true,
                         automaticallyImplyLeading: false,
@@ -201,6 +203,8 @@ class SubpageSkeleton extends StatelessWidget {
                 SliverAppBar(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
+                  foregroundColor: Colors.transparent,
+                  surfaceTintColor: Colors.transparent,
                   pinned: true,
                   centerTitle: true,
                   automaticallyImplyLeading: false,

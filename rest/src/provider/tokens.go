@@ -34,7 +34,7 @@ func CreateAccessJwtClaims(userId UserId) JwtClaims {
 }
 
 func CreateRefreshJwtClaims(userId UserId) JwtClaims {
-  // refresh tokens are valid for 4 months (120 days), a rather very long time for refresh tokens, but we don't deal with very sensitive data,
+  // refresh tokens are valid for 3 months (90 days), a rather long time for refresh tokens,
   // our main priority is to minimize the need for users to re-authenticate and improve user experience.
   // also, refresh tokens can be revoked before their expiration (jti stored in db)
   return JwtClaims{
@@ -42,7 +42,7 @@ func CreateRefreshJwtClaims(userId UserId) JwtClaims {
       Subject:   userId.Hex(),
       ID:        uuid.NewString(),
       IssuedAt:  jwt.NewNumericDate(time.Now()),
-      ExpiresAt: jwt.NewNumericDate(time.Now().Add(4 * 30 * 24 * time.Hour)),
+      ExpiresAt: jwt.NewNumericDate(time.Now().Add(3 * 30 * 24 * time.Hour)),
     },
   }
 }

@@ -43,12 +43,13 @@ type Identity struct { // stored in database (identities)
 }
 
 type Session struct { // stored in database (sessions)
-  Id         UserId    `json:"id" bson:"_id,omitempty"`
-  UserId     UserId    `json:"-" bson:"user_id"`
-  IdentityId UserId    `json:"identity_id" bson:"identity_id"`
-  ActiveJti  string    `json:"-" bson:"active_jti"`
-  DeviceName string    `json:"device_name" bson:"device_name"`
-  ExpiresAt  time.Time `json:"expires_at" bson:"expires_at"`
+  Id            UserId     `json:"id" bson:"_id,omitempty"`
+  UserId        UserId     `json:"-" bson:"user_id"`
+  IdentityId    UserId     `json:"identity_id" bson:"identity_id"`
+  ActiveJti     string     `json:"-" bson:"active_jti"`
+  DeviceName    string     `json:"device_name" bson:"device_name"`
+  ExpiresAt     time.Time  `json:"expires_at" bson:"expires_at"`
+  LastRefreshed *time.Time `json:"last_refreshed" bson:"last_refreshed"`
 }
 
 type PublicUserProfile struct { // returned to clients

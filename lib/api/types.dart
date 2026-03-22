@@ -101,7 +101,10 @@ class AccountSession {
   @JsonKey(name: "expires_at") @GoDateTimeConverter()
   DateTime expiry;
 
-  AccountSession({required this.id, required this.identityId, required this.deviceName, required this.expiry});
+  @JsonKey(name: "last_refreshed") @GoDateTimeConverter()
+  DateTime? lastRefreshed;
+
+  AccountSession({required this.id, required this.identityId, required this.deviceName, required this.expiry, this.lastRefreshed});
 
   factory AccountSession.fromJson(Map<String, dynamic> json) => _$AccountSessionFromJson(json);
   Map<String, dynamic> toJson() => _$AccountSessionToJson(this);

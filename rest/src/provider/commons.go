@@ -38,13 +38,15 @@ func CreateUserAndIdentity(database Database, provider string, providerUserId st
 }
 
 func CreateSession(database Database, identity *Identity, deviceName string, jti string, expiry time.Time) (*Session, error) {
+  timeNow := time.Now()
   session := Session{
-    Id:         bson.NilObjectID,
-    UserId:     identity.UserId,
-    ActiveJti:  jti,
-    DeviceName: deviceName,
-    IdentityId: identity.Id,
-    ExpiresAt:  expiry,
+    Id:            bson.NilObjectID,
+    UserId:        identity.UserId,
+    ActiveJti:     jti,
+    DeviceName:    deviceName,
+    IdentityId:    identity.Id,
+    ExpiresAt:     expiry,
+    LastRefreshed: &timeNow,
   }
 
   err := database.CreateSession(&session)

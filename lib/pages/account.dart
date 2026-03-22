@@ -220,7 +220,9 @@ class _AccountPageState extends State<AccountPage> {
                                             width: 8,
                                             height: 8,
                                             decoration: BoxDecoration(
-                                              color: session.id == snapshot.data?.currentSessionId ? theme.indicatorColor : theme.shadowColor,
+                                              color: session.id == snapshot.data?.currentSessionId ? theme.indicatorColor
+                                                  : (session.lastRefreshed != null && session.lastRefreshed!.difference(DateTime.now()).inHours <= 1) ? theme.primaryColor
+                                                  : theme.shadowColor,
                                               shape: BoxShape.circle,
                                             ),
                                           ),

@@ -180,9 +180,10 @@ func ApplyInclude(field string, include bool, value any, set bson.M, unset bson.
 func (database MongoDatabase) UpdateSession(sessionId UserId, newExpiresAt time.Time, newJti string, newDeviceName string) error {
   update := bson.M{
     "$set": bson.M{
-      "expires_at":  newExpiresAt,
-      "active_jti":  newJti,
-      "device_name": newDeviceName,
+      "last_refreshed": time.Now(),
+      "expires_at":     newExpiresAt,
+      "active_jti":     newJti,
+      "device_name":    newDeviceName,
     },
   }
 

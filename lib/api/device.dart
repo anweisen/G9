@@ -16,13 +16,22 @@ String formatBrowserName(BrowserName browserName) {
   }
 }
 
+String formatPlatformName(String? platform) {
+  if (platform == null) return "Unknown Platform";
+  String lowercase = platform.toLowerCase();
+  if (lowercase.contains("win")) return "Windows"; // "Win32" / "Win64"
+  if (lowercase.contains("macintel")) return "MacOS"; // "MacIntel"
+  if (lowercase.contains("linux armv8l") || lowercase.contains("linux aarch64")) return "Android"; // "Linux armv8l" / "Linux aarch64"
+  return platform;
+}
+
 Future<String> getDeviceName() async {
   DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
 
   if (kIsWeb) {
     WebBrowserInfo web = await deviceInfo.webBrowserInfo;
     // Result: "Chrome 122 (Windows)"
-    return "${formatBrowserName(web.browserName)} (${web.platform})";
+    return "${formatBrowserName(web.browserName)} (${formatPlatformName(web.platform)})";
   }
 
   if (Platform.isAndroid) {

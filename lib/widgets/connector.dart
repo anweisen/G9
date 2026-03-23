@@ -89,11 +89,6 @@ class _SyncApiConnectorLoadingWidgetState extends State<SyncApiConnectorLoadingW
   void setStage(int index) {
     if (index == _stageIndex) return;
 
-    if (!_visible && ConnectorLoadingStage.stages[index].isLoading) {
-      done = false;
-      show();
-    }
-
     _stageController.forward(from: 0);
 
     if (!ConnectorLoadingStage.stages[index].isLoading) {
@@ -104,6 +99,10 @@ class _SyncApiConnectorLoadingWidgetState extends State<SyncApiConnectorLoadingW
 
     setState(() {
       _stageIndex = index;
+      if (!_visible && ConnectorLoadingStage.stages[index].isLoading) {
+        done = false;
+        _visible = true;
+      }
     });
   }
 
@@ -188,14 +187,18 @@ class ConnectorLoadingStage {
   static const int loading = 0, authenticating = 1, syncing = 2, signin = 3, success = 4, error = 5, fallback = 6;
 
   static int determineStage(AccountDataProvider accountProvider, GradesDataProvider gradesProvider, SettingsDataProvider settingsProvider) {
-    return determine(accountProvider.hasLoaded && gradesProvider.hasLoaded && settingsProvider.hasLoaded, accountProvider.isAuthenticating, accountProvider.isSyncing, accountProvider.hasSynced, accountProvider.hasSyncingFailed, accountProvider.isLoggedIn);
+    return determine(
+        hasLoaded: accountProvider.hasLoaded && gradesProvider.hasLoaded && settingsProvider.hasLoaded,
+        isAuthenticating: accountProvider.isAuthenticating, isSyncing: accountProvider.isSyncing,
+        hasSynced: accountProvider.hasSynced, hasSyncingFailed: accountProvider.hasSyncingFailed, isLoggedIn: accountProvider.isLoggedIn
+    );
   }
 
   static ConnectorLoadingStage fromProviders(AccountDataProvider accountProvider, GradesDataProvider gradesProvider, SettingsDataProvider settingsProvider) {
     return stages[determineStage(accountProvider, gradesProvider, settingsProvider)];
   }
 
-  static int determine(bool hasLoaded, bool isAuthenticating, bool isSyncing, bool hasSynced, bool hasSyncingFailed, bool isLoggedIn) {
+  static int determine({required bool hasLoaded, required bool isAuthenticating, required bool isSyncing, required bool hasSynced, required bool hasSyncingFailed, required bool isLoggedIn}) {
     if (!hasLoaded) return loading;
     if (isAuthenticating) return authenticating;
     if (isSyncing) return syncing;

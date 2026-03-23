@@ -208,7 +208,7 @@ class _DotLoadingIndicatorState extends State<DotLoadingIndicator> with SingleTi
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 3 * widget.style.fontSize!, // Max width for "..."
+      width: 0.4 * 3 * widget.style.fontSize!, // Max width for "..."
       child: AnimatedBuilder(
         animation: _dotCount,
         builder: (context, child) {

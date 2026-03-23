@@ -13,6 +13,7 @@ import '../provider/grades.dart';
 import '../provider/settings.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/subpage.dart';
+import '../widgets/piechart.dart';
 import '../logic/grades.dart';
 import 'account.dart';
 import 'change.dart';
@@ -40,6 +41,7 @@ class HomePage extends StatelessWidget {
     var currentSemesterAvg = GradeHelper.averageOfSubjects(currentSemesterGrades, semester: grades.currentSemester);
     var currentSemesterAvgUsed = GradeHelper.averageOfSemesterUsed(results, grades.currentSemester);
     var gradesDistribution = _calculateSingleGradesDistribution(settings, currentSemesterGrades);
+    var usedSemesterResults = _flattenUsedResults(results);
 
     Map<Semester, double> pastSemestersAvg = {};
     Map<Semester, double> pastSemestersAvgUsed = {};
@@ -223,6 +225,18 @@ class HomePage extends StatelessWidget {
 
       if (graduationHurdleCheckResults.isEmpty && admissionHurdleCheckResults.isEmpty)
         ..._buildHurdlePassingInfo(theme),
+
+      if (!flags.isEmpty) ...[
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: theme.dividerColor,
+          ),
+          child: GradesPieChart(grades: grades.getAllGrades(), results: usedSemesterResults),
+        ),
+      ],
 
       const SizedBox(height: 20),
       HomeSemesterSwitchButtons(
@@ -518,6 +532,18 @@ class HomePage extends StatelessWidget {
           );
         }
     );
+  }
+
+  List<SemesterResult> _flattenUsedResults(Map<Subject, Map<Semester, SemesterResult>> results) {
+    List<SemesterResult> usedResults = [];
+    for (var subjectResults in results.values) {
+      for (var semesterResult in subjectResults.values) {
+        if (semesterResult.used && !semesterResult.prediction) {
+          usedResults.add(semesterResult);
+        }
+      }
+    }
+    return usedResults;
   }
 
   List<MapEntry<int, int>> _calculateSingleGradesDistribution(SettingsDataProvider settings, Map<SubjectId, GradesList> currentSemesterGrades) {

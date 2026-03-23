@@ -103,7 +103,7 @@ class GradesChartPainter extends CustomPainter {
             canvas: canvas,
             p1: Offset(dividerX, offsetY),
             p2: Offset(dividerX, height + offsetY),
-            pattern: [10, 8],
+            pattern: [8, 12],
             paint: dividerPaint
         );
       }

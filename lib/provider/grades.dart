@@ -64,6 +64,13 @@ class GradesDataProvider extends ChangeNotifier {
       .asMap().map((_, subject) => MapEntry(subject.id, currentMap[subject.id] ?? []));
   }
 
+  List<GradeEntry> getAllGrades() {
+    return data?.values
+      .expand((subjectGradesMap) => subjectGradesMap.values)
+      .expand((gradesList) => gradesList)
+      .toList() ?? [];
+  }
+
   Map<Semester, SubjectGradesMap> getRawGrades() {
     return data ?? {};
   }

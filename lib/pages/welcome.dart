@@ -34,7 +34,7 @@ class WelcomePage extends StatelessWidget {
                       LayoutBuilder(builder: (context, constraints) => _buildTitleBar(theme, context, constraints)),
                       const SizedBox(height: 25),
                       SettingsPage.buildButton(theme, "Starten", Icons.chevron_right_rounded, () => Navigator.of(context).pushNamed(settingsProvider.onboarding ? "/setup" : "/home")),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 25),
 
                       Expanded(
                         child: Column(
@@ -48,7 +48,7 @@ Falls du die App bereits genutzt hast, kannst du dich auch mit deinem Account an
                               style: theme.textTheme.bodySmall
                             ),
 
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 18),
 
                             Wrap(
                               spacing: 12,

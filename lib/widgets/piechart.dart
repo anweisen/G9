@@ -50,6 +50,15 @@ class _GradesPieChartState extends State<GradesPieChart> {
     return gradeCounts;
   }
 
+  Map<int, int> _countKlausuren() {
+    Map<int, int> counts = {};
+    for (var entry in widget.grades) {
+      if (entry.type != GradeType.klausur) continue;
+      counts[entry.grade] = (counts[entry.grade] ?? 0) + 1;
+    }
+    return counts;
+  }
+
   Map<int, int> _countResults() {
     Map<int, int> resultCounts = {};
     for (var entry in widget.results) {
@@ -76,14 +85,24 @@ class _GradesPieChartState extends State<GradesPieChart> {
     return collapsed;
   }
 
+  Map<int, int> _selectCurrentCounts(List<Map<int, int>> countsList) {
+    if (_controller.hasClients && _controller.page != null) {
+      int pageIndex = _controller.page!.round();
+      return countsList[pageIndex];
+    }
+    return countsList[0];
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     Map<int, int> gradeCounts = _countGrades();
     Map<int, int> resultCounts = _countResults();
+    Map<int, int> klausurenCounts = _countKlausuren();
     Map<int, int> collapsedGradeCounts = _withGroupedAsRemaining(gradeCounts);
     Map<int, int> collapsedResultCounts = _withGroupedAsRemaining(resultCounts);
+    Map<int, int> collapsedKlausurenCounts = _withGroupedAsRemaining(klausurenCounts);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,6 +151,7 @@ class _GradesPieChartState extends State<GradesPieChart> {
                               children: [
                                 _buildPage(theme, cappedMinSide, "einzelne Noten", GradesPieChartPainter(gradeCounts: collapsedGradeCounts, theme: theme)),
                                 _buildPage(theme, cappedMinSide, "Einbringungen", GradesPieChartPainter(gradeCounts: collapsedResultCounts, theme: theme)),
+                                _buildPage(theme, cappedMinSide, "Klausuren", GradesPieChartPainter(gradeCounts: collapsedKlausurenCounts, theme: theme)),
                               ],
                             ),
 
@@ -154,14 +174,14 @@ class _GradesPieChartState extends State<GradesPieChart> {
                         duration: const Duration(milliseconds: 500),
                         margin: const EdgeInsets.only(top: 10),
                         child: _buildExpandedDrawerContent(theme,
-                          _controller.hasClients && _controller.page != null && _controller.page! < 0.5 ? gradeCounts : resultCounts,
-                          _controller.hasClients && _controller.page != null && _controller.page! < 0.5 ? collapsedGradeCounts : collapsedResultCounts
+                            _selectCurrentCounts([gradeCounts, resultCounts, klausurenCounts]),
+                            _selectCurrentCounts([collapsedGradeCounts, collapsedResultCounts, collapsedKlausurenCounts])
                         ),
                       ),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(2, (index) => _buildDot(index, theme)),
+                        children: List.generate(3, (index) => _buildDot(index, theme)),
                       ),
                     ],
                   ),

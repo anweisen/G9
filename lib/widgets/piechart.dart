@@ -331,6 +331,17 @@ class GradesPieChartPainter extends CustomPainter {
     if (totalCount == 0) return;
     final keys = (gradeCounts.entries.where((e) => e.value > 0).toList()..sort((a, b) => b.value - a.value)).map<int>((e) => e.key).toList();
 
+    if (keys.length == 1) {
+      final paint = Paint()
+        ..style = PaintingStyle.fill
+        ..isAntiAlias = true
+        ..color = lerpEntryColor(theme, 0, 1);
+
+      canvas.drawCircle(center, radius, paint);
+      _drawLabel(canvas, "${keys[0]}", "${gradeCounts[keys[0]]}", center, 1.0);
+      return;
+    }
+
     double startAngle = -pi / 2;
     int index = 0;
     for (var key in keys) {
@@ -394,11 +405,11 @@ class GradesPieChartPainter extends CustomPainter {
 
       canvas.drawPath(path, paint);
 
-      if (share > 0.036) {
+      if (share > 0.036 && key != -1) {
         final double labelRadius = radius * 0.7; // position inside slice (distance from center)
         final double x = center.dx + labelRadius * cos(midAngle);
         final double y = center.dy + labelRadius * sin(midAngle);
-        _drawLabel(canvas, key == -1 ? "x" : "$key", "$count", Offset(x, y), share);
+        _drawLabel(canvas, "$key", "$count", Offset(x, y), share);
       }
 
       startAngle += sweepAngle;

@@ -68,10 +68,11 @@ class _SubjectPageState extends State<SubjectPage> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final Choice? choice = Provider.of<SettingsDataProvider>(context).choice;
+    final Choice choice = Provider.of<SettingsDataProvider>(context).choice!;
     final GradesDataProvider dataProvider = Provider.of<GradesDataProvider>(context);
     final AccountDataProvider accountProvider = Provider.of<AccountDataProvider>(context);
     final GradesList grades = dataProvider.getGrades(widget.subject.id, semester: _currentSemester);
+    final double average = GradeHelper.average(widget.subject, _currentSemester!, choice, grades);
 
     return SubpageSkeleton(
         title: Row(
@@ -82,11 +83,11 @@ class _SubjectPageState extends State<SubjectPage> {
             const SizedBox(width: 12),
             Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300, fontSize: 22)),
             const SizedBox(width: 6),
-            Text(GradeHelper.formatSemesterAverage(grades, decimals: (_currentSemester!.semesterCountEquivalent > 1 ? 1 : 2)), style: theme.textTheme.headlineMedium),
+            Text(GradeHelper.formatNumber(average, decimals: (_currentSemester!.semesterCountEquivalent > 1 ? 1 : 2)), style: theme.textTheme.headlineMedium),
             if (_currentSemester!.semesterCountEquivalent > 1) ...[
               const SizedBox(width: 6),
               Text("(≈ ", style: theme.textTheme.labelSmall),
-              Text(GradeHelper.formatSemesterAverage(grades, decimals: 1, semesterCountEquivalent: _currentSemester!.semesterCountEquivalent), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
+              Text(GradeHelper.formatNumber(average / _currentSemester!.semesterCountEquivalent, decimals: 1), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
               Text(")", style: theme.textTheme.labelSmall),
             ]
           ],
@@ -125,7 +126,7 @@ class _SubjectPageState extends State<SubjectPage> {
                   ),
                   const SizedBox(width: 8),
                   SubpageTrigger(
-                      createSubpage: () => GradesTendencyPage(subject: widget.subject, semester: _currentSemester!, choice: choice!, grades: grades, gradesProvider: dataProvider,),
+                      createSubpage: () => GradesTendencyPage(subject: widget.subject, semester: _currentSemester!, choice: choice, grades: grades, gradesProvider: dataProvider,),
                       child: const Icon(Icons.tips_and_updates_outlined, size: 18),
                   ),
                   const SizedBox(width: 8),
@@ -134,16 +135,16 @@ class _SubjectPageState extends State<SubjectPage> {
                       child: const Icon(Icons.timeline, size: 20),
                   ),
                   const Spacer(),
-                  GestureDetector(
-                      onTap: () => SubpageController.of(context).openSubpage(
-                          GradePage(subject: widget.subject, key: GlobalKey(), semester: _currentSemester!,),
-                          callback: (result) {
-                            if (result is GradeEditResult) {
-                              _addGrade(dataProvider, result);
-                              accountProvider.updateSubjectGradesFromResult(result, dataProvider);
-                            }
-                          }),
-                      child: Icon(Icons.add, color: theme.primaryColor, size: 30)),
+                  SubpageTrigger(
+                      createSubpage: () => GradePage(subject: widget.subject, key: GlobalKey(), semester: _currentSemester!,),
+                      callback: (result) {
+                        if (result is GradeEditResult) {
+                          _addGrade(dataProvider, result);
+                          accountProvider.updateSubjectGradesFromResult(result, dataProvider);
+                        }
+                      },
+                      child: Icon(Icons.add, color: theme.primaryColor, size: 30),
+                  ),
                 ],
               ),
             ],
@@ -265,13 +266,14 @@ class _SubjectPageState extends State<SubjectPage> {
     ];
   }
 
-  Widget _buildSemester(ThemeData theme, GradesDataProvider dataProvider, Choice? choice, Semester currentSemester, Semester semester, void Function(Semester) callback) {
+  Widget _buildSemester(ThemeData theme, GradesDataProvider dataProvider, Choice choice, Semester currentSemester, Semester semester, void Function(Semester) callback) {
     final grades = dataProvider.getGrades(widget.subject.id, semester: semester);
     final bool selected = currentSemester == semester;
+    final int result = GradeHelper.result(widget.subject, semester, choice, grades);
 
     return GestureDetector(
       onTap: () => {
-        if (choice!.hasSubjectInSemester(widget.subject, semester)) {
+        if (choice.hasSubjectInSemester(widget.subject, semester)) {
           callback(semester)
         }
       },
@@ -285,7 +287,7 @@ class _SubjectPageState extends State<SubjectPage> {
           ),
           child: Column(children: [
             Text(semester.display, style: theme.textTheme.bodySmall),
-            Text(grades.isEmpty ? "-" : GradeHelper.result(grades).toString(), style: theme.textTheme.labelMedium?.copyWith(color: selected ? theme.primaryColor : null)),
+            Text(grades.isEmpty ? "-" : result.toString(), style: theme.textTheme.labelMedium?.copyWith(color: selected ? theme.primaryColor : null)),
           ]),
         ),
       ),

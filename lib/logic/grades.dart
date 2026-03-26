@@ -78,6 +78,9 @@ class GradeWeighting {
   GradeWeighting(this.semesterCountEquivalent, this.components);
 
   double calculateAverage(GradesList grades) {
+    if (grades.isEmpty) {
+      return -1;
+    }
     if (grades.length == 1 && grades.first.type == GradeType.result) {
       return grades.first.grade.toDouble();
     }
@@ -317,7 +320,19 @@ class GradeHelper {
     return GradeWeighting.normal;
   }
 
-  static formatNumber(double avg, {int decimals = 1, bool allowZero = false}) {
+  // Punktebereich
+  // - Q-Semester: 0-15
+  // - Seminar13: 0-30
+  // - Abi-Semester: 0-60
+  static double average(Subject subject, Semester semester, Choice choice, GradesList grades) {
+    return getWeightingFor(subject, semester, choice, grades).calculateAverage(grades);
+  }
+
+  static int result(Subject subject, Semester semester, Choice choice, GradesList grades) {
+    return roundResult(average(subject, semester, choice, grades));
+  }
+
+  static String formatNumber(double avg, {int decimals = 1, bool allowZero = false}) {
     if (avg < 0 || (!allowZero && avg == 0)) {
       return "-";
     }
@@ -335,15 +350,20 @@ class GradeHelper {
     return roundResult(avg).toString();
   }
 
-  static double averageOfSubjects(SubjectGradesMap grades, {Semester? semester}) {
+  static int roundResult(double avg) {
+    return avg < 1 ? 0 : avg.round();
+  }
+
+  static double averageOfSemester(SubjectGradesMap grades, Semester semester, Choice choice) {
     double sum = 0;
     int count = 0;
 
     grades.forEach((subjectId, grades) {
-      if (grades.isNotEmpty) {
-        sum += result(grades) / (semester?.semesterCountEquivalent ?? 1);
-        count++;
-      }
+      var subject = Subject.byId[subjectId]!;
+      if (grades.isEmpty) return;
+      int result = GradeHelper.result(subject, semester, choice, grades);
+      sum += result / semester.semesterCountEquivalent;
+      count++;
     });
 
     if (count == 0) return 0;
@@ -366,116 +386,6 @@ class GradeHelper {
     return sum / count;
   }
 
-  static int result(GradesList grades) {
-    return roundResult(average(grades));
-  }
-
-  static int roundResult(double avg) {
-    return avg < 1 ? 0 : avg.round();
-  }
-
-  static String formatSemesterAverage(GradesList grades, {int decimals = 1, int semesterCountEquivalent = 1}) {
-    if (grades.isEmpty) {
-      return "-";
-    }
-
-    return formatNumber(average(grades) / semesterCountEquivalent, decimals: decimals, allowZero: true);
-  }
-
-  // Für Q-Semester: 0-15
-  // Für Seminar13: 0-30
-  // Für Abi-Semester: 0-60
-  static double average(GradesList grades) {
-    if (grades.isEmpty) {
-      return 0;
-    }
-
-    Set<GradeTypeArea> areas = grades.map((e) => e.type.area).toSet();
-    if (areas.contains(GradeTypeArea.seminar)) {
-      return averageSeminar(grades);
-    }
-    if (areas.contains(GradeTypeArea.sport)) {
-      return averageSportLk(grades);
-    }
-    if (areas.contains(GradeTypeArea.abi)) {
-      return averageAbi(grades);
-    }
-    if (areas.contains(GradeTypeArea.kunstLk)) {
-      return averageKunstLk(grades);
-    }
-    if (areas.contains(GradeTypeArea.musikLk)) {
-      return averageMusikLk(grades);
-    }
-
-    return averageNormal(grades);
-  }
-
-  static double averageNormal(GradesList grades) {
-    double klausuren = unweightedAverageOf(grades.where((e) => e.type == GradeType.klausur).toList());
-    double rest = unweightedAverageOf(grades.where((e) => e.type != GradeType.klausur).toList());
-    return averageWeighted(klausuren, rest, 1);
-  }
-
-  static double averageSportLk(GradesList grades) {
-    // Die jeweiligen Leistungen werden zu einer Note (gerundet ?!?)
-    double praxis = averageSportGk(grades.where((e) => e.type.area == GradeTypeArea.sport).toList());
-    double theorie = averageNormal(grades.where((e) => e.type.area != GradeTypeArea.sport).toList());
-    return averageWeighted(praxis, theorie, 1);
-  }
-
-  static double averageSportGk(GradesList grades) {
-    double praktisch = unweightedAverageOf(grades.where((e) => e.type != GradeType.theorie).toList());
-    double test = unweightedAverageOf(grades.where((e) => e.type == GradeType.theorie).toList());
-    return averageWeighted(praktisch, test, 2);
-  }
-
-  static double averageKunstLk(GradesList grades) {
-    double klausur = unweightedAverageOf(grades.where((e) => e.type == GradeType.klausur).toList());
-    double projekt = unweightedAverageOf(grades.where((e) => e.type == GradeType.kunstprojekt).toList());
-    double rest = unweightedAverageOf(grades.where((e) => e.type != GradeType.klausur && e.type != GradeType.kunstprojekt).toList());
-    return averageOfThree(klausur, projekt, rest);
-  }
-
-  static double averageMusikLk(GradesList grades) {
-    double klausur = unweightedAverageOf(grades.where((e) => e.type == GradeType.klausur).toList());
-    double praxis = unweightedAverageOf(grades.where((e) => e.type == GradeType.musikpruefung).toList());
-    double rest = unweightedAverageOf(grades.where((e) => e.type != GradeType.klausur && e.type != GradeType.musikpruefung).toList());
-    return averageOfThree(klausur, praxis, rest);
-  }
-
-  // (!) 2x HJ => Bis zu 30 Punkte
-  static double averageSeminar(GradesList grades) {
-    // Seminararbeit wird 3x gewichtet
-    double seminararbeit = unweightedAverageOf(grades.where((e) => e.type == GradeType.seminar).toList());
-    double seminarreferat = unweightedAverageOf(grades.where((e) => e.type == GradeType.seminarreferat).toList());
-    return averageWeighted(seminararbeit, seminarreferat, 3) * 2;
-  }
-
-  // https://www.gesetze-bayern.de/Content/Document/BayGSO-52
-  // https://www.gesetze-bayern.de/Content/Document/BayGSO-ANL_21
-  // (!) 4x HJ => Bis zu 60 Punkte
-  static double averageAbi(GradesList grades) {
-    // Normal mit Zusatzprüfung;        2:1 - schriftlich : zusatz
-    // Fachprüfung ohne Zusatzprüfung;  1:1 - schriftlich/mündlich : fach
-    // Fachprüfung mit Zusatzprüfung;   1:1:1 - schriftlich : fach : zusatz (kryptisch formuliert in BayGSO-52(2)2.)
-
-    double normal = unweightedAverageOf(grades.where((e) => e.type == GradeType.schriftlich || e.type == GradeType.muendlich).toList());
-    double zusatz = unweightedAverageOf(grades.where((e) => e.type == GradeType.zusatz).toList());
-
-    final types = grades.map((e) => e.type).toSet();
-    if (types.contains(GradeType.fach)) {
-      double fach = unweightedAverageOf(grades.where((e) => e.type == GradeType.fach).toList());
-
-      if (types.contains(GradeType.zusatz)) {
-        return ((normal + fach) * 4 + zusatz * 4) / 3; // 1:1:1
-      } else {
-        return (normal + fach) * 2; // 1:1
-      }
-    }
-
-    return averageWeighted(normal, zusatz, 2) * 4;
-  }
-
   // ! GradeType will be ignored !
   static double unweightedAverageOf(List<GradeEntry> grades) {
     if (grades.isEmpty) {
@@ -488,38 +398,6 @@ class GradeHelper {
     }
 
     return sum / grades.length;
-  }
-
-  static double averageWeighted(double a, double b, double weightAtoB) {
-    if (a == -1) {
-      return b;
-    }
-    if (b == -1) {
-      return a;
-    }
-
-    return (a * weightAtoB + b) / (weightAtoB + 1);
-  }
-
-  static double averageOfThree(double a, double b, double c) {
-    int count = 0;
-    double sum = 0;
-    if (a != -1) {
-      sum += a;
-      count++;
-    }
-    if (b != -1) {
-      sum += b;
-      count++;
-    }
-    if (c != -1) {
-      sum += c;
-      count++;
-    }
-    if (count == 0) {
-      return -1;
-    }
-    return sum / count;
   }
 
   static String formatDate(DateTime date, {includeYear = true, shortMonth = false, useRelative = true}) {

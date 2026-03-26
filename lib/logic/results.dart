@@ -243,7 +243,10 @@ class SemesterResult {
         results.putIfAbsent(subject, () => {});
 
         if (grades.isNotEmpty) {
-          results[subject]![semester] = SemesterResult(GradeHelper.result(grades), grades.length, semester);
+          results[subject]![semester] = SemesterResult(
+            GradeHelper.result(subject, semester, choice, grades),
+            grades.length, semester
+          );
         }
       });
     });

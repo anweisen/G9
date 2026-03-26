@@ -67,6 +67,7 @@ class SubjectResultPage extends StatelessWidget {
 
   Widget _buildSemester(Semester semester, ThemeData theme, GradesDataProvider gradesProvider) {
     SemesterResult? result = results[semester];
+    double average = GradeHelper.average(subject, semester, choice, gradesProvider.getGrades(subject.id, semester: semester));
 
     return SubpageTrigger(
       createSubpage: () => SubjectPage(subject: subject, semester: semester, key: GlobalKey(),),
@@ -91,7 +92,7 @@ class SubjectResultPage extends StatelessWidget {
                       children: [
                         Text("Ø", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w300)),
                         const SizedBox(width: 4),
-                        Text(GradeHelper.formatSemesterAverage(gradesProvider.getGrades(subject.id, semester: semester)), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
+                        Text(GradeHelper.formatNumber(average), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
                       ],
                     ),
                     if (semester.semesterCountEquivalent > 1)
@@ -237,6 +238,8 @@ class SubjectResultAbiPrediction extends StatelessWidget {
     bool prediction = result?.prediction ?? true;
     int predicted = gradesProvider.getAbiPrediction(subject.id) ?? result?.effectiveGrade ?? 1;
 
+    double average = GradeHelper.average(subject, Semester.abi, choice, gradesProvider.getGrades(subject.id, semester: Semester.abi));
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -289,7 +292,7 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                     children: [
                       Text("Ø", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w300)),
                       const SizedBox(width: 4),
-                      Text(GradeHelper.formatSemesterAverage(gradesProvider.getGrades(subject.id, semester: Semester.abi)), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
+                      Text(GradeHelper.formatNumber(average), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
                     ],
                   ),
                   const SizedBox(width: 10),

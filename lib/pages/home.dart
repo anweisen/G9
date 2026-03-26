@@ -38,7 +38,7 @@ class HomePage extends StatelessWidget {
     var stats = SemesterResult.calculateStatistics(settings.choice!, results);
 
     var currentSemesterGrades = grades.getGradesForSemester(settings.choice!);
-    var currentSemesterAvg = GradeHelper.averageOfSubjects(currentSemesterGrades, semester: grades.currentSemester);
+    var currentSemesterAvg = GradeHelper.averageOfSemester(currentSemesterGrades, grades.currentSemester, settings.choice!);
     var currentSemesterAvgUsed = GradeHelper.averageOfSemesterUsed(results, grades.currentSemester);
     var gradesDistribution = _calculateSingleGradesDistribution(settings, currentSemesterGrades);
     var usedSemesterResults = _flattenUsedResults(results);
@@ -47,7 +47,7 @@ class HomePage extends StatelessWidget {
     Map<Semester, double> pastSemestersAvgUsed = {};
     for (Semester semester in Semester.qPhase) {
       var pastSemesterGrades = grades.getGradesForSemester(settings.choice!, semester: semester);
-      double avg = GradeHelper.averageOfSubjects(pastSemesterGrades);
+      double avg = GradeHelper.averageOfSemester(pastSemesterGrades, semester, settings.choice!);
       if (avg > 0) pastSemestersAvg[semester] = avg;
       double avgUsed = GradeHelper.averageOfSemesterUsed(results, semester);
       if (avgUsed > 0) pastSemestersAvgUsed[semester] = avgUsed;

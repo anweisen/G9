@@ -427,7 +427,7 @@ class GradeHelper {
       10 => "Oktober",
       11 => "November",
       12 => "Dezember",
-      _ => "$month. ",
+      _ => "$month.",
     };
   }
 
@@ -445,7 +445,7 @@ class GradeHelper {
       10 => "Okt",
       11 => "Nov",
       12 => "Dez",
-      _ => "$month. ",
+      _ => "$month.",
     };
   }
 }

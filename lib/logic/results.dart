@@ -374,6 +374,7 @@ class SemesterResult {
     return Statistics(bestSubjects, numberGrades);
   }
 
+  // Punkte (15.0 - 0.0) -> Noten (0.67 - 6.0)
   static double convertAverage(double points) {
     if (points == 0) return 0;
     return 6 - (5 / 14) * points;

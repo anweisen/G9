@@ -122,7 +122,26 @@ Falls du die App bereits genutzt hast, kannst du dich auch mit deinem Account an
                             ),
 
                             const Spacer(),
-                            Center(child: Text("© 2025 anweisen", style: theme.textTheme.displayMedium)),
+                            Center(child: Column(
+                              children: [
+                                Text("© ${DateTime.now().year} anweisen", style: theme.textTheme.displayMedium),
+                                const SizedBox(height: 6,),
+                                Wrap(
+                                  spacing: 10,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => Navigator.of(context).pushNamed("/privacy"),
+                                      child: Text("Datenschutz", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600))
+                                    ),
+                                    GestureDetector(
+                                      onTap: () => Navigator.of(context).pushNamed("/imprint"),
+                                      child: Text("Impressum", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600))
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4,),
+                              ],
+                            )),
                           ],
                         ),
                   ),

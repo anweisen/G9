@@ -27,6 +27,7 @@ class _AccountPageState extends State<AccountPage> {
 
   late Future<AccountSessionsResponseBody?> _sessionsFuture;
   bool expandedSessions = false;
+  bool exportingActive = false;
 
   @override
   void initState() {
@@ -77,13 +78,6 @@ class _AccountPageState extends State<AccountPage> {
 
                 const SizedBox(height: 16,),
 
-                Text("Erstellt: ${GradeHelper.formatDate(account.privateProfile!.createdAt)}", style: theme.textTheme.displayMedium),
-                const SizedBox(height: 2,),
-                Text("Provider: ${account.provider}", style: theme.textTheme.displayMedium),
-                const SizedBox(height: 2,),
-                Text("Id: ${account.userProfile!.id}", style: theme.textTheme.displayMedium),
-                const SizedBox(height: 20,),
-
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
@@ -108,7 +102,7 @@ class _AccountPageState extends State<AccountPage> {
                   ],
                 ),
 
-                const SizedBox(height: 20,),
+                const SizedBox(height: 16,),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
@@ -133,7 +127,7 @@ class _AccountPageState extends State<AccountPage> {
                   ],
                 ),
 
-                const SizedBox(height: 20,),
+                const SizedBox(height: 16,),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
@@ -144,15 +138,18 @@ class _AccountPageState extends State<AccountPage> {
                       textColor: theme.primaryColor,
                       backgroundColor: null,
                       borderColor: theme.dividerColor,
+                      suffix: exportingActive ? DotLoadingIndicator(style: theme.textTheme.bodyMedium!.copyWith(fontSize: 15), duration: const Duration(milliseconds: 1500)) : null,
                       onTap: () async {
+                        setState(() => exportingActive = true);
                         final data = await account.api.getExportData();
                         await FileExportService.exportJson("user_data", data);
+                        setState(() => exportingActive = false);
                       }
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 30,),
+                const SizedBox(height: 20,),
                 GestureDetector(
                   onTap: () => setState(() => expandedSessions = !expandedSessions),
                   child: Container(
@@ -226,14 +223,17 @@ class _AccountPageState extends State<AccountPage> {
                                               shape: BoxShape.circle,
                                             ),
                                           ),
-                                          Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(session.deviceName.truncateTo(28), style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.primaryColor)),
-                                              Text("gültig bis ${GradeHelper.formatDate(session.expiry)}", style: theme.textTheme.bodySmall?.copyWith(height: 1.5), softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1),
-                                            ],
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(session.deviceName.truncateTo(28), style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.primaryColor), softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1),
+                                                Text("${session.lastRefreshed == null ? "" : "${GradeHelper.formatDateDifference(session.lastRefreshed!)}, "}gültig bis ${GradeHelper.formatDate(session.expiry)}", style: theme.textTheme.bodySmall?.copyWith(height: 1.5), softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1),
+                                              ],
+                                            ),
                                           ),
-                                          const Spacer(),
+                                          // const Spacer(),
                                           if (session.id != snapshot.data?.currentSessionId)
                                             GestureDetector(
                                               onTap: () async {
@@ -257,6 +257,13 @@ class _AccountPageState extends State<AccountPage> {
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 20,),
+                Text("Erstellt: ${GradeHelper.formatDate(account.privateProfile!.createdAt, useFullYear: true)}", style: theme.textTheme.displayMedium),
+                const SizedBox(height: 2,),
+                Text("Provider: ${account.provider}", style: theme.textTheme.displayMedium),
+                const SizedBox(height: 2,),
+                Text("Id: ${account.userProfile!.id}", style: theme.textTheme.displayMedium),
               ],
             )
           else

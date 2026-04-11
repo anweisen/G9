@@ -400,7 +400,7 @@ class GradeHelper {
     return sum / grades.length;
   }
 
-  static String formatDate(DateTime date, {includeYear = true, shortMonth = false, useRelative = true}) {
+  static String formatDate(DateTime date, {includeYear = true, shortMonth = false, useRelative = true, useFullYear = false}) {
     var now = DateTime.now();
 
     if (useRelative && date.day == now.day && date.month == now.month && date.year == now.year) {
@@ -410,7 +410,24 @@ class GradeHelper {
       return "Gestern";
     }
 
-    return "${date.day}. ${shortMonth ? shortNameOfMonth(date.month) : nameOfMonth(date.month)} ${includeYear ? date.year.toString().substring(2) : ""}".trimRight();
+    return "${date.day}. ${shortMonth ? shortNameOfMonth(date.month) : nameOfMonth(date.month)} ${includeYear ? date.year.toString().substring(useFullYear ? 0 : 2) : ""}".trimRight();
+  }
+
+    if (difference.inDays == 0) {
+      return "Heute";
+    }
+    if (difference.inDays == 1) {
+      return "Gestern";
+    }
+    if (difference.inDays < 30) {
+      return "vor ${difference.inDays} Tagen";
+    }
+    if (difference.inDays < 365) {
+      int months = (difference.inDays / 30).floor();
+      return "vor $months Monat${months > 1 ? "en" : ""}";
+    }
+    int years = (difference.inDays / 365).floor();
+    return "vor $years Jahr${years > 1 ? "e" : ""}";
   }
 
   static String nameOfMonth(int month) {

@@ -303,11 +303,15 @@ class GradeHelper {
     if (semester == Semester.abi) {
       final types = grades.map((e) => e.type).toSet();
       if (subject == choice.lk && (subject == Subject.sport || subject == Subject.musik)) {
-        if (types.contains(GradeType.muendlich)) return GradeWeighting.abiFach;
+        if (types.contains(GradeType.muendlich) || (choice.hasSelectedExamTypes && choice.isSubjectOral(subject))) {
+          return GradeWeighting.abiFach;
+        }
         return GradeWeighting.abiFachZusatz;
       }
 
-      if (types.contains(GradeType.schriftlich)) return GradeWeighting.abiZusatz;
+      if (types.contains(GradeType.schriftlich) || (choice.hasSelectedExamTypes && !choice.isSubjectOral(subject))) {
+        return GradeWeighting.abiZusatz;
+      }
       return GradeWeighting.abi;
     }
     if (subject == choice.seminar && semester == Semester.seminar13) return GradeWeighting.seminar;
@@ -540,10 +544,25 @@ enum GradeType {
   static List<GradeType> types(Choice choice, Subject subject, Semester semester) {
     if (semester == Semester.abi) {
       if (subject == choice.lk && (subject == Subject.sport || subject == Subject.musik)) {
-        // besondere Fachprüfung im LK: Sport, Musik
+        if (choice.hasSelectedExamTypes) {
+          if (choice.isSubjectOral(subject)) {
+            return [GradeType.muendlich, GradeType.fach]; // + besondere Fachprüfung
+          } else {
+            return [GradeType.schriftlich, GradeType.zusatz, GradeType.fach]; // + besondere Fachprüfung
+          }
+        }
+        // Fallback (keine Auswahl schriftlich/mündlich): besondere Fachprüfung im LK: Sport, Musik
         return listAbiBesFach;
       }
 
+      if (choice.hasSelectedExamTypes) {
+        if (choice.isSubjectOral(subject)) {
+          return [GradeType.muendlich];
+        } else {
+          return [GradeType.schriftlich, GradeType.zusatz];
+        }
+      }
+      // Fallback (keine Auswahl schriftlich/mündlich)
       return listAbiNormal;
     }
 

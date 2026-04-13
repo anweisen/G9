@@ -42,6 +42,9 @@ class ChoiceBuilder {
   Subject? abi4;
   Subject? abi5;
 
+  Subject? oral1;
+  Subject? oral2;
+
   ChoiceBuilder();
 
   ChoiceBuilder.fromChoice(Choice choice) {
@@ -62,6 +65,9 @@ class ChoiceBuilder {
     substituteDeutsch = choice.substituteDeutsch;
     abi4 = choice.abi4;
     abi5 = choice.abi5;
+
+    oral1 = choice.oral1;
+    oral2 = choice.oral2;
   }
 
   Choice build() {
@@ -108,6 +114,10 @@ class ChoiceBuilder {
       substituteDeutsch ?? false,
       abi4!.id,
       abi5!.id,
+
+      // oral abi
+      oral1?.id,
+      oral2?.id,
     );
   }
 }
@@ -160,6 +170,12 @@ class Choice extends HiveObject {
   @HiveField(13) @JsonKey(name: "abi5")
   final SubjectId abi5Id;
 
+  @HiveField(20) @JsonKey(name: "oral1")
+  final SubjectId? oral1Id;
+
+  @HiveField(21) @JsonKey(name: "oral2")
+  final SubjectId? oral2Id;
+
   factory Choice.dummy() => (ChoiceBuilder()
       ..lk = Subject.english
       ..musikKunst = Subject.kunst
@@ -186,6 +202,10 @@ class Choice extends HiveObject {
   Subject get seminar => _byId(seminarId);
   Subject get abi4 => _byId(abi4Id);
   Subject get abi5 => _byId(abi5Id);
+  Subject? get oral1 => _byIdOpt(oral1Id);
+  Subject? get oral2 => _byIdOpt(oral2Id);
+
+  bool get hasSelectedExamTypes => oral1Id != null && oral2Id != null;
 
   List<Subject> get subjects => [
     // lk is already represented by the corresponding subject category (ntg1 / sg1 / sport / kumu)
@@ -213,6 +233,17 @@ class Choice extends HiveObject {
     abi4,
     abi5,
   ];
+
+  List<Subject> get writtenAbiSubjects => abiSubjects.where((subject) => subject != oral1 && subject != oral2).toList();
+
+  bool isSubjectEa(Subject subject) {
+    // eA: LK, Deutsch, Mathe
+    return subject == lk || subject == Subject.deutsch || subject == Subject.mathe;
+  }
+
+  bool isSubjectOral(Subject subject) {
+    return subject == oral1 || subject == oral2;
+  }
 
   List<Subject> subjectsToDisplayForSemester(Semester semester) {
     return subjects.where((subject) => hasSubjectInSemester(subject, Semester.mapSemesterToDisplaySemester(semester, subject.category))).toList();
@@ -291,6 +322,8 @@ class Choice extends HiveObject {
     this.substituteDeutsch,
     this.abi4Id,
     this.abi5Id,
+    this.oral1Id,
+    this.oral2Id,
   ) {
     Subject.all; // initialize subject instances
   }
@@ -302,6 +335,55 @@ class Choice extends HiveObject {
   String toString() {
     return 'Choice{lk: $lkId, sg1: $sg1Id, ntg1: $ntg1Id, mintSg2: $mintSg2Id, pug13: $pug13, geoWr: $geoWrId, musikKunst: $musikKunstId, vk: $vkId, seminar: $seminarId, profil12: $profil12Id, profil13: $profil13Id, substituteMathe: $substituteMathe, substituteDeutsch: $substituteDeutsch, abi4: $abi4Id, abi5: $abi5Id}';
   }
+}
+
+// https://www.gesetze-bayern.de/Content/Document/BayGSO-48
+// (1) 1. Die Abiturprüfung erstreckt sich auf fünf verschiedene Fächer.
+//     8. Wählbar sind Fächer gemäß den Anlagen 3 und 4 Nr. 1. 9
+//        Es sind insbesondere folgende Bedingungen zu erfüllen:
+//        1. Die Fächer Kunst und Musik können als schriftliches und Sport kann als schriftliches oder mündliches Abiturprüfungsfach (besondere Fachprüfung)
+//           nur gewählt werden, wenn das jeweilige Fach als Leistungsfach belegt wird;
+//           die Fächer Kunst und Musik können nur dann als mündliche Abiturprüfungsfächer gewählt werden, wenn sie keine Leistungsfächer sind.
+//        2. Spät beginnende Fremdsprachen, spät beginnende Informatik sowie Wirtschaftsinformatik und Sozialwissenschaftliche Arbeitsfelder können
+//           nur auf grundlegendem Anforderungsniveau geprüft und als mündliches Abiturprüfungsfach gewählt werden.
+//        3. Bei der Wahl der Lehrplanalternative Biophysik kann Physik nur auf grundlegendem Anforderungsniveau geprüft und als mündliches Abiturprüfungsfach gewählt werden.
+//        4. Bei der Wahl der Lehrplanalternative Astrophysik kann Physik nur auf grundlegendem Anforderungsniveau geprüft werden.
+//        5. Bei der Wahl der Lehrplanalternative Geologie kann Geographie nur auf grundlegendem Anforderungsniveau geprüft und als mündliches Abiturprüfungsfach gewählt werden.
+// (2) 1. Die Abiturprüfung wird in drei Abiturprüfungsfächern in schriftlicher Form, in zwei Abiturprüfungsfächern in mündlicher Form (Kolloquium) durchgeführt.
+//     2. Die Schülerinnen und Schüler entscheiden, welche Fächer in schriftlicher Form und welche beiden Fächer in mündlicher Form geprüft werden.
+//     3. Die Festlegung ist so zu treffen, dass mindestens zwei Fächer auf erhöhtem Anforderungsniveau in schriftlicher Form geprüft werden.
+//     4. In den schriftlichen Abiturprüfungsfächern wird auf Antrag der Schülerinnen und Schüler oder auf Anordnung des Prüfungsausschusses eine mündliche Zusatzprüfung (§ 50 Abs. 1 und 3) durchgeführt.
+// (4) Ist Kunst oder Musik schriftliches Abiturprüfungsfach, tritt an die Stelle der schriftlichen Prüfung eine besondere Fachprüfung, die neben einem schriftlichen auch einen fachpraktischen Teil umfasst.
+// (5) 1. Ist Sport schriftliches oder mündliches Abiturprüfungsfach, besteht die Prüfung aus einer besonderen Fachprüfung, die auch einen fachpraktischen Teil umfasst.
+//     2. Der mündlich-theoretische Teil der mündlichen Abiturprüfung wird gemäß § 50 Abs. 1 und 2, der sportartspezifisch praxisbezogene Teil gemäß Anlage 8 Nr. 18 durchgeführt.
+enum ExamTypeChoice {
+  written("schriftlich"),
+  oral("mündlich"),
+  ;
+
+  final String name;
+
+  const ExamTypeChoice(this.name);
+
+  static List<ExamTypeChoice> getChoicesForSubject(Subject subject, ChoiceBuilder choiceBuilder) {
+    // (1) 8. 1.  [Kunst/Musik]: eA=schriftlich, gA=mündlich
+    //          ( [Sport]: eA=schriftlich/mündlich, gA=/ )
+    if (subject == Subject.kunst || subject == Subject.musik) {
+      if (choiceBuilder.lk == subject) {
+        return [ExamTypeChoice.written];
+      } else {
+        return [ExamTypeChoice.oral];
+      }
+    }
+    // (1) 8. 2.  [spät beginnende Fremdsprachen]: nur mündlich
+    // nicht implementiert: spät beginnende Informatik, Wirtschaftsinformatik und Sozialwissenschaftliche Arbeitsfelder
+    if (subject.category == SubjectCategory.sbs) {
+      return [ExamTypeChoice.oral];
+    }
+    // (1) 8. 3-5.  nicht implementiert: Biophysik/Astrophysik/Geologie
+    return values;
+  }
+
 }
 
 enum ChoiceRestriction {

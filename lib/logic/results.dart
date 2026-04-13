@@ -212,7 +212,6 @@ class SemesterResult {
     }
 
     int underscored = calculateUnderscoredResultCount(result);
-
     return ResultsFlags(forcedSemesters, pointsQ, pointsAbi, underscored, (pointsQ + pointsAbi) == 0);
   }
 
@@ -345,6 +344,23 @@ class SemesterResult {
     }
 
     return 7;
+  }
+
+  static bool isComplete(Choice choice, Map<Subject, Map<Semester, SemesterResult>> results) {
+    for (var subject in choice.subjects) {
+      for (var semester in Semester.qPhaseEquivalents(subject.category)) {
+        if (!choice.hasSubjectInSemester(subject, semester)) continue;
+        if (results[subject]?[semester] == null || results[subject]![semester]!.prediction) {
+          return false;
+        }
+      }
+      if (choice.abiSubjects.contains(subject)) {
+        if (results[subject]?[Semester.abi] == null || results[subject]![Semester.abi]!.prediction) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   static Statistics calculateStatistics(Choice choice, Map<Subject, Map<Semester, SemesterResult>> result) {

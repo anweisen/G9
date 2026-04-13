@@ -41,6 +41,8 @@ class HomePage extends StatelessWidget {
     var flags = SemesterResult.applyUseFlags(settings.choice!, results);
     var stats = SemesterResult.calculateStatistics(settings.choice!, results);
 
+    var completed = SemesterResult.isComplete(settings.choice!, results);
+
     var currentSemesterGrades = grades.getGradesForSemester(settings.choice!);
     var currentSemesterAvg = GradeHelper.averageOfSemester(currentSemesterGrades, grades.currentSemester, settings.choice!);
     var currentSemesterAvgUsed = GradeHelper.averageOfSemesterUsed(results, grades.currentSemester);
@@ -122,10 +124,13 @@ class HomePage extends StatelessWidget {
       else if (!flags.isEmpty && graduationHurdleCheckResults.isNotEmpty)
         ..._buildHurdleInfo(theme, "Anerkennungshürde", graduationHurdleCheckResults.first, [...admissionHurdleCheckResults, ...graduationHurdleCheckResults]),
 
-      if (grades.currentSemester == Semester.abi) ...[
+      if (grades.currentSemester == Semester.abi)...(completed ? [
+        CompletedWidget(flags: flags, noHurdles: admissionHurdleCheckResults.isEmpty && graduationHurdleCheckResults.isEmpty,),
+        const SizedBox(height: 20),
+      ] : [
         const AbiDatesWidget(),
         const SizedBox(height: 20),
-      ],
+      ]),
 
       // Abitur Vorhersage
       Container(
@@ -137,7 +142,7 @@ class HomePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Abitur Vorhersage", style: theme.textTheme.bodySmall),
+            Text(completed ? "Abitur Ergebnis" : "Abitur Vorhersage", style: theme.textTheme.bodySmall),
             _buildTextLine(Text("Note", style: theme.textTheme.bodyMedium), [
               if (graduationHurdleCheckResults.isNotEmpty || admissionHurdleCheckResults.isNotEmpty) ...[
                 Icon(Icons.warning_amber_rounded, size: 14, color: theme.disabledColor),
@@ -888,6 +893,80 @@ class AccountWidget extends StatelessWidget {
     );
   }
 }
+
+class CompletedWidget extends StatelessWidget {
+  const CompletedWidget({super.key, required this.flags, required this.noHurdles});
+
+  final ResultsFlags flags;
+  final bool noHurdles;
+
+  @override
+  Widget build(BuildContext context) {
+    var theme = Theme.of(context);
+    return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: theme.dividerColor,
+        ),
+        child: Column(
+          children: [
+            Row(
+              spacing: 10,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                noHurdles ? Flexible(
+                  child: Row(
+                    spacing: 12,
+                    children: [
+                      Icon(Icons.check_circle_outline_rounded, size: 28, color: noHurdles ? theme.indicatorColor : theme.disabledColor,),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Herzlichen Glückwunsch", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.indicatorColor), softWrap: true,),
+                            Text("zum bestanden Abitur", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600), softWrap: true,),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ) : Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Tut uns leid", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600), softWrap: true,),
+                      Text("Hürden nicht alle überwunden", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.disabledColor), softWrap: true,),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: noHurdles ? theme.primaryColor : theme.splashColor,
+                  ),
+                  child: noHurdles ? Column(
+                    children: [
+                      Text(SemesterResult.pointsToAbiGrade(flags.pointsTotal), style: theme.textTheme.headlineMedium?.copyWith(color: theme.scaffoldBackgroundColor)),
+                      Text("${flags.pointsTotal}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.scaffoldBackgroundColor)),
+                    ],
+                  ) : Column(
+                    children: [
+                      Icon(Icons.cancel_outlined, size: 28, color: theme.disabledColor),
+                      const SizedBox(height: 5,),
+                      Text("${flags.pointsTotal}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.primaryColor)),
+                    ],
+                  ),
+                )
+              ],
+            )
+          ],
+        )
+    );
+  }
+}
+
 
 class AbiDatesWidget extends StatelessWidget {
   const AbiDatesWidget({super.key});

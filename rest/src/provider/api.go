@@ -110,6 +110,8 @@ type Choice struct {
   Abi5              SubjectId  `json:"abi5" bson:"abi5"`
   SubstituteDeutsch bool       `json:"sub_d" bson:"sub_d"`
   SubstituteMathe   bool       `json:"sub_m" bson:"sub_m"`
+  Oral1             *SubjectId `json:"oral1,omitempty" bson:"oral1,omitempty"`
+  Oral2             *SubjectId `json:"oral2,omitempty" bson:"oral2,omitempty"`
 }
 
 type GradeEntry struct {

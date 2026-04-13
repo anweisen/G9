@@ -34,6 +34,7 @@ class _SetupPageState extends State<SetupPage> {
     final choice = Provider.of<SettingsDataProvider>(context, listen: false).choice;
     _isFromExisting = choice != null;
     _choiceBuilder = choice != null ? ChoiceBuilder.fromChoice(choice) : ChoiceBuilder();
+    _choiceBuilder.oral1 = _choiceBuilder.oral2 = null;
   }
 
   void allowNextStep() {

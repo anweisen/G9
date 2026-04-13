@@ -4,6 +4,7 @@ import 'package:hive/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../adapter/json_converters.dart';
+import '../api/kmapi.dart';
 import '../provider/grades.dart';
 import 'choice.dart';
 import 'types.dart';
@@ -417,21 +418,46 @@ class GradeHelper {
     return "${date.day}. ${shortMonth ? shortNameOfMonth(date.month) : nameOfMonth(date.month)} ${includeYear ? date.year.toString().substring(useFullYear ? 0 : 2) : ""}".trimRight();
   }
 
+  static String formatWeek(DateTime startDate, DateTime endDate) {
+    return "${startDate.day}. - ${formatDate(endDate, useRelative: false)}";
+  }
+
+  static String formatDateDifference(DateTime date) {
+    var now = DateTime.now();
+    var difference = now.difference(date);
+
+    String prefix = difference.isNegative ? "in" : "vor";
+    int days = difference.inDays.abs();
+
+    if (difference.inDays == -1) {
+      return "Morgen";
+    }
     if (difference.inDays == 0) {
       return "Heute";
     }
     if (difference.inDays == 1) {
       return "Gestern";
     }
-    if (difference.inDays < 30) {
-      return "vor ${difference.inDays} Tagen";
+    if (days < 30) {
+      return "$prefix $days Tagen";
     }
-    if (difference.inDays < 365) {
-      int months = (difference.inDays / 30).floor();
-      return "vor $months Monat${months > 1 ? "en" : ""}";
+    if (days < 365) {
+      int months = (days / 30).floor();
+      return "$prefix $months Monat${months > 1 ? "en" : ""}";
     }
-    int years = (difference.inDays / 365).floor();
-    return "vor $years Jahr${years > 1 ? "e" : ""}";
+    int years = (days / 365).floor();
+    return "$prefix $years Jahr${years > 1 ? "e" : ""}";
+  }
+
+  static String formatWeekDifference(DateTime startDate, DateTime endDate) {
+    var now = DateTime.now();
+    bool isOver = KmApi.isDatePassed(endDate);
+    bool isCurrentWeek = now.isAfter(startDate) && !isOver;
+    if (isCurrentWeek) {
+      return "Diese Woche";
+    }
+
+    return formatDateDifference(isOver ? endDate : startDate);
   }
 
   static String nameOfMonth(int month) {

@@ -424,6 +424,15 @@ class SmallSubjectWidget extends StatelessWidget {
   final Subject subject;
   final bool old;
 
+  static TextStyle getTextStyle(ThemeData theme, bool old) {
+    return theme.textTheme.displayMedium?.copyWith(
+        fontSize: 16, color: old ? theme.shadowColor : theme.primaryColor,
+        decoration: old ? TextDecoration.lineThrough : null,
+        decorationColor: old ? theme.shadowColor : theme.primaryColor,
+        decorationThickness: 2, fontWeight: old ? FontWeight.w500 : FontWeight.w600,
+        height: 1.4) ?? const TextStyle();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -437,12 +446,9 @@ class SmallSubjectWidget extends StatelessWidget {
           height: 14,
         ),
         const SizedBox(width: 6),
-        Text(subject.name, style: theme.textTheme.displayMedium?.copyWith(
-            fontSize: 16, color: old ? theme.shadowColor : theme.primaryColor,
-            decoration: old ? TextDecoration.lineThrough : null,
-            decorationColor: old ? theme.shadowColor : theme.primaryColor,
-            decorationThickness: 2, fontWeight: old ? FontWeight.w500 : FontWeight.w600,
-            height: 1.4), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,
+        Flexible(
+          child: Text(subject.name, style: getTextStyle(theme, old), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,
+          ),
         ),
         if (choice.lk == subject) ...[
           const SizedBox(width: 4),

@@ -255,3 +255,64 @@ class AnimatedDrawerTransition extends StatelessWidget {
   }
 }
 
+class ColorFadeContainer extends StatefulWidget {
+  const ColorFadeContainer({super.key, required this.colorFrom, required this.colorTo, required this.decoration, required this.width, required this.height, required this.duration});
+
+  static Widget create({required bool enabled, required Color colorFrom, required Color colorTo, required BoxDecoration decoration, required double width, required double height, required Duration duration}) {
+    return enabled
+        ? ColorFadeContainer(colorFrom: colorFrom, colorTo: colorTo, decoration: decoration, width: width, height: height, duration: duration)
+        : Container(width: width, height: height, decoration: decoration);
+  }
+
+  final Color colorFrom, colorTo;
+  final BoxDecoration decoration;
+  final double width, height;
+  final Duration duration;
+
+  @override
+  State<ColorFadeContainer> createState() => _ColorFadeContainerState();
+}
+
+class _ColorFadeContainerState extends State<ColorFadeContainer> with SingleTickerProviderStateMixin {
+
+  late AnimationController _controller;
+  late Animation<Color?> _colorAnimation;
+
+  @override
+  void initState() {
+    _controller = AnimationController(
+      duration: widget.duration,
+      vsync: this,
+    );
+    var curve = CurvedAnimation(parent: _controller, curve: Curves.easeInOutQuad);
+    _colorAnimation = ColorTween(
+        begin: widget.colorFrom,
+        end: widget.colorTo,
+    ).animate(curve);
+    _controller.repeat(reverse: true);
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _colorAnimation,
+      builder: (context, child) {
+        return Container(
+          width: widget.width,
+          height: widget.height,
+          decoration: widget.decoration.copyWith(color: _colorAnimation.value),
+        );
+      },
+    );
+  }
+}
+
+

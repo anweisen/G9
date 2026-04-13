@@ -18,6 +18,7 @@ import 'pages/setup.dart';
 import 'pages/subjects.dart';
 import 'provider/account.dart';
 import 'provider/grades.dart';
+import 'provider/kmapi.dart';
 import 'provider/settings.dart';
 import 'widgets/splash.dart';
 import 'widgets/skeleton.dart';
@@ -47,6 +48,7 @@ void main() async {
     ChangeNotifierProvider<SettingsDataProvider>(create: (context) => SettingsDataProvider()),
     ChangeNotifierProvider<GradesDataProvider>(create: (context) => GradesDataProvider()),
     ChangeNotifierProvider<AccountDataProvider>(create: (context) => AccountDataProvider()),
+    ChangeNotifierProvider<KmApiProvider>(create: (context) => KmApiProvider()),
 
     ProxyProvider3<SettingsDataProvider, GradesDataProvider, AccountDataProvider, Null>( // background sync on startup
       lazy: false,

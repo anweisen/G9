@@ -37,6 +37,7 @@ void main() async {
   Hive.registerAdapter(StashedGradesChangeAdapter());
   Hive.registerAdapter(StashedChoiceChangeAdapter());
   Hive.registerAdapter(StashedSemesterChangeAdapter());
+  Hive.registerAdapter(StashedAbiPredictionsChangeAdapter());
   Hive.registerAdapter(StashedSubjectSettingsChangeAdapter());
   Hive.registerAdapter(SemesterAdapter());
   Hive.registerAdapter(SubjectSettingsAdapter());

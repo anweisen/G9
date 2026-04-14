@@ -11,7 +11,9 @@ import '../widgets/subpage.dart';
 import 'grade.dart';
 
 class OralExamTypeSelectorPage extends StatefulWidget {
-  const OralExamTypeSelectorPage({super.key});
+  const OralExamTypeSelectorPage({super.key, required this.choice});
+
+  final Choice choice;
 
   @override
   State<OralExamTypeSelectorPage> createState() => _OralExamTypeSelectorPageState();
@@ -19,26 +21,21 @@ class OralExamTypeSelectorPage extends StatefulWidget {
 
 class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
 
-  late ChoiceBuilder _choiceBuilder;
-  late Map<Subject, ExamTypeChoice> _chosenExamTypes;
+  final Map<Subject, ExamTypeChoice> _chosenExamTypes = {};
 
   @override
   void initState() {
-    var settings = Provider.of<SettingsDataProvider>(context, listen: false);
-    var choice = settings.choice!;
-    _choiceBuilder = ChoiceBuilder.fromChoice(choice);
-    _chosenExamTypes = {};
-    if (_choiceBuilder.oral1 != null && _choiceBuilder.oral2 != null) {
-      for (Subject subject in choice.abiSubjects) {
-        var choices = ExamTypeChoice.getChoicesForSubject(subject, _choiceBuilder);
+    super.initState();
+
+    if (widget.choice.hasSelectedExamTypes) {
+      for (Subject subject in widget.choice.abiSubjects) {
+        var choices = ExamTypeChoice.getChoicesForSubject(subject, widget.choice);
         if (choices.length == 1) {
           _chosenExamTypes[subject] = choices.first;
         }
-        _chosenExamTypes[subject] = choice.isSubjectOral(subject) ? ExamTypeChoice.oral : ExamTypeChoice.written;
+        _chosenExamTypes[subject] = widget.choice.isSubjectOral(subject) ? ExamTypeChoice.oral : ExamTypeChoice.written;
       }
     }
-
-    super.initState();
   }
 
   @override
@@ -49,34 +46,32 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
     int oralCount = _chosenExamTypes.values.where((choice) => choice == ExamTypeChoice.oral).length;
     int writtenMin2Count = 0;
     for (Subject subject in _chosenExamTypes.keys) {
-      if (subject == _choiceBuilder.lk || subject == Subject.mathe || subject == Subject.deutsch) {
+      if (subject == widget.choice.lk || subject == Subject.mathe || subject == Subject.deutsch) {
         if (_chosenExamTypes[subject] == ExamTypeChoice.written) writtenMin2Count++;
       }
     }
     bool invalid = writtenCount != 3 || oralCount != 2 || writtenMin2Count < 2;
 
-    if (!invalid) {
-      int index = 0;
-      for (Subject subject in _chosenExamTypes.keys) {
-        if (_chosenExamTypes[subject] == ExamTypeChoice.oral) {
-          if (index == 0) {
-            _choiceBuilder.oral1 = subject;
-          } else {
-            _choiceBuilder.oral2 = subject;
-          }
-          index++;
-        }
-      }
-    }
-
-    var choice = _choiceBuilder.build();
-
     return SubpageSkeleton(
-        title: Text("Prüfungsarten festlegen", style: theme.textTheme.headlineMedium),
+        title: const PageTitle(title: "Prüfungsarten festlegen"),
         actions: [
           SaveButtonContainer(btn1: SaveButton(
             onTap: () {
               if (invalid) return;
+              int index = 0;
+              ChoiceBuilder builder = ChoiceBuilder.fromChoice(widget.choice);
+              for (Subject subject in _chosenExamTypes.keys) {
+                if (_chosenExamTypes[subject] == ExamTypeChoice.oral) {
+                  if (index == 0) {
+                    builder.oral1 = subject;
+                  } else {
+                    builder.oral2 = subject;
+                  }
+                  index++;
+                }
+              }
+              var choice = builder.build();
+
               Provider.of<SettingsDataProvider>(context, listen: false).choice = choice;
               Provider.of<AccountDataProvider>(context, listen: false).updateChoice(choice);
               SubpageController.of(context).closeSubpage();
@@ -91,14 +86,14 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
 
           Text("Gewählte Abiturprüfungsfächer", style: theme.textTheme.bodySmall),
           const SizedBox(height: 6),
-          for (Subject subject in choice.abiSubjects) ...[
+          for (Subject subject in widget.choice.abiSubjects) ...[
             Wrap(
               alignment: WrapAlignment.spaceBetween,
               runAlignment: WrapAlignment.spaceBetween,
               spacing: 16,
               runSpacing: 4,
               children: [
-                Flexible(child: MediumSubjectWidget(subject: subject)),
+                MediumSubjectWidget(subject: subject),
                 _buildOptionLine(theme, subject),
               ],
             ),
@@ -148,7 +143,7 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
                     child: Center(child: Text("$writtenCount", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.primaryColor, fontWeight: FontWeight.w600), textAlign: TextAlign.center,))
                   ),
                   const SizedBox(width: 6),
-                  Text("von 3 schriftlich", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: invalid ? theme.disabledColor : theme.primaryColor),),
+                  Text("von 3 schriftlich", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: invalid ? theme.disabledColor : theme.shadowColor),),
                 ],
               ),
               const SizedBox(height: 8),
@@ -164,7 +159,7 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
                     child: Center(child: Text("$oralCount", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.primaryColor, fontWeight: FontWeight.w600), textAlign: TextAlign.center,))
                   ),
                   const SizedBox(width: 6),
-                  Text("von 2 mündlich", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: invalid ? theme.disabledColor : theme.primaryColor),),
+                  Text("von 2 mündlich", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: invalid ? theme.disabledColor : theme.shadowColor),),
                 ],
               ),
             ],
@@ -205,7 +200,7 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
                     child: Center(child: Text("$writtenMin2Count", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.primaryColor, fontWeight: FontWeight.w600), textAlign: TextAlign.center,))
                 ),
                 const SizedBox(width: 6),
-                Flexible(child: Text("von mindestens 2 schriftlichen Prüfungen in Deutsch, Mathe, Leistungsfach", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: invalid ? theme.disabledColor : theme.primaryColor), softWrap: true,)),
+                Flexible(child: Text("von mindestens 2 schriftlichen Prüfungen in Deutsch, Mathe, Leistungsfach", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: invalid ? theme.disabledColor : theme.shadowColor), softWrap: true,)),
               ],
             ),
           ),
@@ -215,7 +210,7 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
   }
 
   Widget _buildOptionLine(ThemeData theme, Subject subject) {
-    List<ExamTypeChoice> choices = ExamTypeChoice.getChoicesForSubject(subject, _choiceBuilder);
+    List<ExamTypeChoice> choices = ExamTypeChoice.getChoicesForSubject(subject, widget.choice);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

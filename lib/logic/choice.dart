@@ -365,7 +365,7 @@ enum ExamTypeChoice {
 
   const ExamTypeChoice(this.name);
 
-  static List<ExamTypeChoice> getChoicesForSubject(Subject subject, ChoiceBuilder choiceBuilder) {
+  static List<ExamTypeChoice> getChoicesForSubject(Subject subject, Choice choiceBuilder) {
     // (1) 8. 1.  [Kunst/Musik]: eA=schriftlich, gA=mündlich
     //          ( [Sport]: eA=schriftlich/mündlich, gA=/ )
     if (subject == Subject.kunst || subject == Subject.musik) {

@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -11,6 +10,7 @@ import '../logic/grades.dart';
 import '../provider/account.dart';
 import '../provider/grades.dart';
 import '../provider/settings.dart';
+import '../util/dates.dart';
 import '../widgets/connector.dart';
 import '../widgets/general.dart';
 import '../widgets/subpage.dart';
@@ -229,7 +229,7 @@ class _AccountPageState extends State<AccountPage> {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 Text(session.deviceName.truncateTo(28), style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.primaryColor), softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1),
-                                                Text("${session.lastRefreshed == null ? "" : "${GradeHelper.formatDateDifference(session.lastRefreshed!)}, "}gültig bis ${GradeHelper.formatDate(session.expiry)}", style: theme.textTheme.bodySmall?.copyWith(height: 1.5), softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1),
+                                                Text("${session.lastRefreshed == null ? "" : "${DateHelper.formatDateDifference(session.lastRefreshed!)}, "}gültig bis ${DateHelper.formatDate(session.expiry)}", style: theme.textTheme.bodySmall?.copyWith(height: 1.5), softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1),
                                               ],
                                             ),
                                           ),
@@ -259,7 +259,7 @@ class _AccountPageState extends State<AccountPage> {
                 ),
 
                 const SizedBox(height: 20,),
-                Text("Erstellt: ${GradeHelper.formatDate(account.privateProfile!.createdAt, useFullYear: true)}", style: theme.textTheme.displayMedium),
+                Text("Erstellt: ${DateHelper.formatDate(account.privateProfile!.createdAt, useFullYear: true)}", style: theme.textTheme.displayMedium),
                 const SizedBox(height: 2,),
                 Text("Provider: ${account.provider}", style: theme.textTheme.displayMedium),
                 const SizedBox(height: 2,),

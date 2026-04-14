@@ -10,6 +10,7 @@ import '../provider/settings.dart';
 import '../provider/grades.dart';
 import '../logic/grades.dart';
 import '../logic/types.dart';
+import '../util/dates.dart';
 import '../widgets/general.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/subpage.dart';
@@ -328,7 +329,7 @@ class TestItem extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(entry.type.name, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16, height: 1), maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 2),
-                  Text(GradeHelper.formatDate(entry.date), style: theme.textTheme.bodySmall),
+                  Text(DateHelper.formatDate(entry.date), style: theme.textTheme.bodySmall),
                 ],
               ),
             ),

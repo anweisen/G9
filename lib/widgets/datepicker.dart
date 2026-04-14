@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../logic/grades.dart';
+import '../util/dates.dart';
 
 class DatePicker extends StatefulWidget {
   const DatePicker({super.key, this.date, required this.onDateChanged});
@@ -63,7 +64,7 @@ class _DatePickerState extends State<DatePicker> {
                         child: Container(margin: const EdgeInsets.symmetric(horizontal: 20), child: Icon(Icons.chevron_left_rounded, color: theme.primaryColor, size: 22)),
                         onTap: () => _selectMonth(DateTime(_monthBeginDate.year, _monthBeginDate.month - 1, 1))
                     ),
-                    Text("${GradeHelper.nameOfMonth(_monthBeginDate.month)} ${_monthBeginDate.year}", style: theme.textTheme.bodyMedium),
+                    Text("${DateHelper.nameOfMonth(_monthBeginDate.month)} ${_monthBeginDate.year}", style: theme.textTheme.bodyMedium),
                     GestureDetector(
                         child: Container(margin: const EdgeInsets.symmetric(horizontal: 20), child: Icon(Icons.chevron_right_rounded, color: theme.primaryColor, size: 22)),
                         onTap: () => _selectMonth(DateTime(_monthBeginDate.year, _monthBeginDate.month + 1, 1))

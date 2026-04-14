@@ -3,11 +3,11 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart';
 
 import '../logic/choice.dart';
-import '../logic/grades.dart';
 import '../logic/hurdles.dart';
 import '../logic/types.dart';
 import '../logic/results.dart';
 import '../provider/grades.dart';
+import '../util/dates.dart';
 
 class PdfGenerator {
 
@@ -221,7 +221,7 @@ class PdfGenerator {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text("Angaben ohne Gewähr", style: const TextStyle(fontSize: 7, color: secondaryColor),),
-                    Text("Stand: ${GradeHelper.formatDate(DateTime.now(), useRelative: false)}", style: const TextStyle(fontSize: 7, color: secondaryColor),)
+                    Text("Stand: ${DateHelper.formatDate(DateTime.now(), useRelative: false)}", style: const TextStyle(fontSize: 7, color: secondaryColor),)
                   ]
                 )
               ]

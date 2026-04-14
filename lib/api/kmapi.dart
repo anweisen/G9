@@ -43,18 +43,6 @@ class KmApi {
     return normalizedSubjectName.contains(subject.name.toLowerCase());
   }
 
-  static bool isDatePassed(DateTime date) => date.add(const Duration(days: 1)).isBefore(DateTime.now());
-
-  static bool isDateToday(DateTime date) {
-    DateTime now = DateTime.now();
-    return date.year == now.year && date.month == now.month && date.day == now.day;
-  }
-
-  static bool isWeekToday(DateTime startDate, DateTime endDate) {
-    DateTime now = DateTime.now();
-    return (startDate.isBefore(now) && endDate.isAfter(now)) || isDateToday(startDate) || isDateToday(endDate);
-  }
-
   static List<(Subject, WrittenAbiExamDate)> sortWittenAbiExamDates(Map<Subject, WrittenAbiExamDate> subjectToDateMap) {
     List<(Subject, WrittenAbiExamDate)> sortedList = subjectToDateMap.entries
         .map((entry) => (entry.key, entry.value))

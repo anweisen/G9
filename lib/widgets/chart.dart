@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../logic/grades.dart';
 import '../provider/grades.dart';
+import '../util/dates.dart';
 
 class SubjectGradesChart extends StatelessWidget {
   const SubjectGradesChart({super.key, required this.grades, required this.gradesSemesters});
@@ -117,7 +118,7 @@ class GradesChartPainter extends CustomPainter {
       canvas.drawCircle(points[i], dotSize, fillPaint);
       final textPainter = TextPainter(
         text: TextSpan(
-          text: GradeHelper.formatDate(grades[i].date, includeYear: false, shortMonth: true),
+          text: DateHelper.formatDate(grades[i].date, includeYear: false, shortMonth: true),
           style: theme.textTheme.bodySmall,
         ),
         textDirection: TextDirection.ltr,

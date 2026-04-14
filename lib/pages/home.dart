@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../api/api.dart';
 import '../api/kmapi.dart';
 import '../logic/choice.dart';
+import '../logic/grades.dart';
 import '../logic/hurdles.dart';
 import '../logic/types.dart';
 import '../logic/results.dart';
@@ -13,11 +14,11 @@ import '../provider/account.dart';
 import '../provider/grades.dart';
 import '../provider/kmapi.dart';
 import '../provider/settings.dart';
+import '../util/dates.dart';
 import '../widgets/general.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/subpage.dart';
 import '../widgets/piechart.dart';
-import '../logic/grades.dart';
 import 'account.dart';
 import 'change.dart';
 import 'grade.dart';
@@ -985,19 +986,22 @@ class AbiDatesWidget extends StatelessWidget {
       sortedWrittenDates = KmApi.sortWittenAbiExamDates(mappedWrittenDates);
 
       for (var writtenDate in sortedWrittenDates) {
-        if (KmApi.isDateToday(writtenDate.$2.date)) currentIndex = completedIndex;
-        if (!KmApi.isDatePassed(writtenDate.$2.date)) break;
+        if (DateHelper.isDateToday(writtenDate.$2.date)) currentIndex = completedIndex;
+        if (!DateHelper.isDatePassed(writtenDate.$2.date)) break;
         completedIndex++;
       }
       for (var oralDate in kmapi.abiDates!.oralExamWeeks) {
-        if (KmApi.isWeekToday(oralDate.startDate, oralDate.endDate)) currentIndex = completedIndex;
-        if (!KmApi.isDatePassed(oralDate.endDate)) break;
+        if (DateHelper.isTimeSpanToday(oralDate.startDate, oralDate.endDate)) currentIndex = completedIndex;
+        if (!DateHelper.isDatePassed(oralDate.endDate)) break;
         completedIndex++;
       }
     }
 
+    final double width = MediaQuery.of(context).size.width;
+    final bool useDateAbbreviations = width < 450 && width > 380 || width < 340;
+
     return SubpageTrigger(
-      createSubpage: () => const OralExamTypeSelectorPage(),
+      createSubpage: () => OralExamTypeSelectorPage(choice: choice,),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         decoration: BoxDecoration(
@@ -1074,16 +1078,17 @@ class AbiDatesWidget extends StatelessWidget {
                         spacing: 8,
                         runSpacing: 2,
                         children: [
-                          SmallSubjectWidget(subject: writtenDate.$1, old: KmApi.isDatePassed(writtenDate.$2.date), choice: settings.choice!,),
+                          SmallSubjectWidget(subject: writtenDate.$1, old: DateHelper.isDatePassed(writtenDate.$2.date), choice: settings.choice!,),
                           Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               decoration: BoxDecoration(color: theme.shadowColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(5)),
-                              child: Text(GradeHelper.formatDateDifference(writtenDate.$2.date), style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600))
+                              child: Text(DateHelper.formatDateDifference(writtenDate.$2.date, useAbbreviations: useDateAbbreviations),
+                                  style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600))
                           ),
                         ],
                       ),
                     ),
-                    Text(GradeHelper.formatDate(writtenDate.$2.date)),
+                    Text(DateHelper.formatDate(writtenDate.$2.date)),
                   ],
                 ),
             ] else DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
@@ -1103,16 +1108,17 @@ class AbiDatesWidget extends StatelessWidget {
                         spacing: 8,
                         runSpacing: 2,
                         children: [
-                          Text("${oralDate.weekNumber}. Woche", style: SmallSubjectWidget.getTextStyle(theme, KmApi.isDatePassed(oralDate.endDate))),
+                          Text("${oralDate.weekNumber}. Woche", style: SmallSubjectWidget.getTextStyle(theme, DateHelper.isDatePassed(oralDate.endDate))),
                           Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               decoration: BoxDecoration(color: theme.shadowColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(5)),
-                              child: Text(GradeHelper.formatWeekDifference(oralDate.startDate, oralDate.endDate), style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600))
+                              child: Text(DateHelper.formatWeekDifference(oralDate.startDate, oralDate.endDate, useAbbreviations: useDateAbbreviations),
+                                  style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600))
                           ),
                         ],
                       ),
                     ),
-                    Text(GradeHelper.formatWeek(oralDate.startDate, oralDate.endDate)),
+                    Text(DateHelper.formatWeek(oralDate.startDate, oralDate.endDate)),
                   ],
                 ),
             ] else DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),

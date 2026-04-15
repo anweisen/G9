@@ -8,9 +8,10 @@ import '../widgets/subpage.dart';
 import 'grade.dart';
 
 class CustomizeSubjectPage extends StatefulWidget {
-  const CustomizeSubjectPage({super.key, required this.subject});
+  const CustomizeSubjectPage({super.key, required this.subject, required this.initialSettings});
 
   final Subject subject;
+  final SubjectSettings? initialSettings;
 
   @override
   State<CustomizeSubjectPage> createState() => _CustomizeSubjectPageState();
@@ -33,7 +34,7 @@ class _CustomizeSubjectPageState extends State<CustomizeSubjectPage> {
   bool get isDefaultColor => _color == null || _color == defaultColor;
 
   SubjectSettings createSettings() {
-    return SubjectSettings(colorValue: _color?.value);
+    return widget.initialSettings?.copyWithColorValue(_color?.toARGB32()) ?? SubjectSettings(colorValue: _color?.toARGB32());
   }
 
   @override

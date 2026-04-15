@@ -7,16 +7,18 @@ import '../provider/grades.dart';
 import '../provider/settings.dart';
 import '../logic/grades.dart';
 import '../logic/types.dart';
+import '../util/dates.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/subpage.dart';
 import '../widgets/datepicker.dart';
 
 // (!) USE A GLOBAL KEY
 class GradePage extends StatefulWidget {
-  const GradePage({super.key, this.subject, this.entry, required this.semester});
+  const GradePage({super.key, this.subject, this.entry, required this.semester, this.type = null});
 
   final Semester semester;
   final Subject? subject;
+  final GradeType? type;
   final GradeEntry? entry;
 
   @override
@@ -43,7 +45,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
     _subject = widget.subject;
     _semester = widget.semester;
     _grade = widget.entry?.grade;
-    _type = widget.entry?.type;
+    _type = widget.entry?.type ?? widget.type;
     _date = widget.entry?.date ?? DateTime.now();
     _usesSlider = gradesProvider.usesSlider ?? kIsWeb;
 
@@ -234,7 +236,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
                   child: (_date == null)
                       ? const GradeOptionPlaceholder(text: "Wähle ein Datum")
                       : GradeOptionPlaceholder(
-                        text: GradeHelper.formatDate(_date!),
+                        text: DateHelper.formatDate(_date!),
                         icon: Icon(Icons.calendar_month_rounded, color: theme.primaryColor, size: 24))),
             ]),
           ],

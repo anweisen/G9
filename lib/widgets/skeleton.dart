@@ -175,7 +175,7 @@ class PageTitle extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: crossAxisAlignment,
       children: [
-        Text(title, style: theme.textTheme.headlineMedium, softWrap: true, maxLines: 1, overflow: TextOverflow.ellipsis,),
+        Expanded(child: Text(title, style: theme.textTheme.headlineMedium, softWrap: true, maxLines: 1, overflow: TextOverflow.ellipsis,)),
         if (info != null) const SizedBox(width: 8,),
         if (info != null) info!,
       ],

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import '../adapter/json_converters.dart';
 import '../logic/choice.dart';
 import '../logic/types.dart';
 
@@ -63,7 +64,6 @@ class SettingsDataProvider extends ChangeNotifier {
     try {
       _data = await box.get(hiveSettingsKey, defaultValue: defaultData);
     } catch (e) {
-      box.clear();
       _data = defaultData;
     }
 
@@ -101,7 +101,9 @@ class SettingsDataProvider extends ChangeNotifier {
 
   void applySubjectSetting(Subject subject, SubjectSettings? settings) {
     if (settings == null || settings.colorValue == null) {
-      subject.color = Subject.originalColors[subject.id]!;
+      if (Subject.originalColors.containsKey(subject.id) && Subject.originalColors[subject.id] != null) {
+        subject.color = Subject.originalColors[subject.id]!;
+      }
     } else {
       subject.color = Color(settings.colorValue!);
     }
@@ -145,9 +147,26 @@ class SubjectSettings {
   @HiveField(0) @JsonKey(name: "color")
   final int? colorValue;
 
-  SubjectSettings({this.colorValue});
+  @HiveField(10) @JsonKey(name: "oral_exam") @DateOnlyConverter()
+  final DateTime? oralExamDate;
 
-  bool get isEmpty => colorValue == null;
+  SubjectSettings({this.colorValue, this.oralExamDate});
+
+  bool get isEmpty => colorValue == null && oralExamDate == null;
+
+  SubjectSettings copyWithColorValue(int? colorValue) {
+    return SubjectSettings(
+      colorValue: colorValue,
+      oralExamDate: oralExamDate,
+    );
+  }
+
+  SubjectSettings copyWithOralExamDate(DateTime? oralExamDate) {
+    return SubjectSettings(
+      colorValue: colorValue,
+      oralExamDate: oralExamDate,
+    );
+  }
 
   factory SubjectSettings.fromJson(Map<String, dynamic> json) => _$SubjectSettingsFromJson(json);
   Map<String, dynamic> toJson() => _$SubjectSettingsToJson(this);

@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../api/kmapi.dart';
 import '../logic/choice.dart';
 import '../logic/types.dart';
 import '../provider/account.dart';
+import '../provider/kmapi.dart';
 import '../provider/settings.dart';
+import '../util/dates.dart';
+import '../widgets/datepicker.dart';
+import '../widgets/general.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/subjects.dart';
 import '../widgets/subpage.dart';
+import 'change.dart';
 import 'grade.dart';
 
 class OralExamTypeSelectorPage extends StatefulWidget {
-  const OralExamTypeSelectorPage({super.key, required this.choice});
+  const OralExamTypeSelectorPage({super.key, required this.choice, required this.initialSubjectSettings});
 
   final Choice choice;
+  final Map<SubjectId, SubjectSettings>? initialSubjectSettings;
 
   @override
   State<OralExamTypeSelectorPage> createState() => _OralExamTypeSelectorPageState();
@@ -22,6 +29,7 @@ class OralExamTypeSelectorPage extends StatefulWidget {
 class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
 
   final Map<Subject, ExamTypeChoice> _chosenExamTypes = {};
+  final Map<Subject, DateTime> oralExamDates = {};
 
   @override
   void initState() {
@@ -35,7 +43,23 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
         }
         _chosenExamTypes[subject] = widget.choice.isSubjectOral(subject) ? ExamTypeChoice.oral : ExamTypeChoice.written;
       }
+      if (widget.initialSubjectSettings != null) {
+        for (Subject subject in widget.choice.abiSubjects) {
+          if (!_chosenExamTypes.containsKey(subject) || _chosenExamTypes[subject] != ExamTypeChoice.oral) continue;
+          SubjectSettings? settings = widget.initialSubjectSettings?[subject.id];
+          if (settings != null && settings.oralExamDate != null) {
+            oralExamDates[subject] = settings.oralExamDate!;
+          }
+        }
+      }
     }
+  }
+
+  void _setOralExamDate(Subject subject, DateTime date) {
+    print("setting oral exam date for $subject: $date");
+    setState(() {
+      oralExamDates[subject] = date;
+    });
   }
 
   @override
@@ -60,8 +84,13 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
               if (invalid) return;
               int index = 0;
               ChoiceBuilder builder = ChoiceBuilder.fromChoice(widget.choice);
+              Map<SubjectId, SubjectSettings> updatedSettings = {};
               for (Subject subject in _chosenExamTypes.keys) {
                 if (_chosenExamTypes[subject] == ExamTypeChoice.oral) {
+                  if (oralExamDates[subject] != null) {
+                    updatedSettings[subject.id] = widget.initialSubjectSettings?[subject.id]?.copyWithOralExamDate(oralExamDates[subject]) ?? SubjectSettings(oralExamDate: oralExamDates[subject]);
+                  }
+
                   if (index == 0) {
                     builder.oral1 = subject;
                   } else {
@@ -72,8 +101,17 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
               }
               var choice = builder.build();
 
-              Provider.of<SettingsDataProvider>(context, listen: false).choice = choice;
-              Provider.of<AccountDataProvider>(context, listen: false).updateChoice(choice);
+              var settings = Provider.of<SettingsDataProvider>(context, listen: false);
+              var account = Provider.of<AccountDataProvider>(context, listen: false);
+
+              settings.choice = choice;
+              account.updateChoice(choice);
+
+              for (SubjectId subjectId in updatedSettings.keys) {
+                settings.setSubjectSettings(subjectId, updatedSettings[subjectId]!);
+                account.updateSubjectSettings(subjectId, updatedSettings[subjectId]!);
+              }
+
               SubpageController.of(context).closeSubpage();
             },
             shown: !invalid,
@@ -85,19 +123,51 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
         children: [
 
           Text("Gewählte Abiturprüfungsfächer", style: theme.textTheme.bodySmall),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           for (Subject subject in widget.choice.abiSubjects) ...[
             Wrap(
               alignment: WrapAlignment.spaceBetween,
               runAlignment: WrapAlignment.spaceBetween,
               spacing: 16,
-              runSpacing: 4,
+              runSpacing: 6,
               children: [
                 MediumSubjectWidget(subject: subject),
                 _buildOptionLine(theme, subject),
               ],
             ),
-            const SizedBox(height: 10),
+            AnimatedDrawerTransition(
+              expanded: !invalid && _chosenExamTypes[subject] == ExamTypeChoice.oral,
+              duration: const Duration(milliseconds: 500),
+              margin: const EdgeInsets.only(bottom: 8),
+              child: SubpageTrigger(
+                createSubpage: () => SelectOralDatePage(subject: subject, initialDate: oralExamDates[subject],),
+                callback: (result) {
+                  if (result is DateTime) _setOralExamDate(subject, result);
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(top: 6, bottom: 0),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: theme.dividerColor, width: 2),
+                    // color: theme.dividerColor,
+                  ),
+                  child: oralExamDates[subject] == null ? Row(
+                    children: [
+                      Icon(Icons.add_circle_outline_rounded, size: 20, color: theme.shadowColor),
+                      const SizedBox(width: 8),
+                      Flexible(child: Text("Kolloquiumstermin eintragen", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.shadowColor), softWrap: true,)),
+                    ]
+                  ) : Row(
+                    children: [
+                      Icon(Icons.calendar_month_rounded, size: 20, color: theme.primaryColor),
+                      const SizedBox(width: 8),
+                      Flexible(child: Text(DateHelper.formatDate(oralExamDates[subject]!, useFullYear: true), style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.primaryColor), softWrap: true,)),
+                    ]),
+                ),
+              ),
+            ),
+            const SizedBox(height: 11),
           ],
 
           const SizedBox(height: 20),
@@ -125,7 +195,7 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
           SizedBox(
             width: 24,
             height: 24,
-            child: Icon(invalid ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded, size: invalid ? 20 : 18, color: invalid ? theme.disabledColor : theme.primaryColor)
+            child: Icon(invalid ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded, size: invalid ? 22 : 20, color: invalid ? theme.disabledColor : theme.primaryColor)
           ),
           const SizedBox(width: 10),
           Column(
@@ -158,7 +228,7 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
                     ),
                     child: Center(child: Text("$oralCount", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.primaryColor, fontWeight: FontWeight.w600), textAlign: TextAlign.center,))
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 8),
                   Text("von 2 mündlich", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: invalid ? theme.disabledColor : theme.shadowColor),),
                 ],
               ),
@@ -183,7 +253,7 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
           SizedBox(
               width: 24,
               height: 24,
-              child: Icon(invalid ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded, size: invalid ? 20 : 18, color: invalid ? theme.disabledColor : theme.primaryColor)
+              child: Icon(invalid ? Icons.warning_amber_rounded : Icons.check_circle_outline_rounded, size: invalid ? 22 : 20, color: invalid ? theme.disabledColor : theme.primaryColor)
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -199,7 +269,7 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
                     ),
                     child: Center(child: Text("$writtenMin2Count", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.primaryColor, fontWeight: FontWeight.w600), textAlign: TextAlign.center,))
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 Flexible(child: Text("von mindestens 2 schriftlichen Prüfungen in Deutsch, Mathe, Leistungsfach", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: invalid ? theme.disabledColor : theme.shadowColor), softWrap: true,)),
               ],
             ),
@@ -213,6 +283,7 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
     List<ExamTypeChoice> choices = ExamTypeChoice.getChoicesForSubject(subject, widget.choice);
     return Row(
       mainAxisSize: MainAxisSize.min,
+      spacing: 10,
       children: [
         for (ExamTypeChoice choice in choices) ...[
           GestureDetector(
@@ -236,7 +307,6 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
               ),
             ),
           ),
-          const SizedBox(width: 10),
         ]
       ],
     );
@@ -252,3 +322,126 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
     }
   }
 }
+
+class SelectOralDatePage extends StatefulWidget {
+  const SelectOralDatePage({super.key, this.initialDate, required this.subject});
+
+  final DateTime? initialDate;
+  final Subject subject;
+
+  @override
+  State<SelectOralDatePage> createState() => _SelectOralDatePageState();
+}
+
+class _SelectOralDatePageState extends State<SelectOralDatePage> {
+
+  DateTime? _selectedDate;
+
+  @override
+  void initState() {
+    _selectedDate = widget.initialDate;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final kmapi = Provider.of<KmApiProvider>(context);
+
+    return SubpageSkeleton(
+        title: const PageTitle(title: "Kolloquiumstermin auswählen"),
+        actions: [
+          SaveButtonContainer(btn1: SaveButton(
+            onTap: () {
+              SubpageController.of(context).closeSubpage(_selectedDate);
+            },
+            shown: _selectedDate != null,
+            index: 0,
+            icon: Icons.check_rounded,
+            text: "Speichern",
+          ), btn2: null, shown: true)
+        ],
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: theme.dividerColor, width: 2),
+                ),
+                child: SmallSubjectWidget(subject: widget.subject, old: false, choice: null,)
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          if (!kmapi.hasError && kmapi.abiDates != null) for (OralAbiExamWeek oralDate in kmapi.abiDates!.oralExamWeeks) ...[
+            Text("${oralDate.formattedWeekName} (${DateHelper.formatWeek(oralDate.startDate, oralDate.endDate)})", style: theme.textTheme.displayMedium),
+            const SizedBox(height: 6),
+            WeekDatePicker(
+              selected: _selectedDate,
+              start: oralDate.startDate,
+              end: oralDate.endDate,
+              onDateSelected: (DateTime date) => setState(() => _selectedDate = date),
+            ),
+            const SizedBox(height: 20),
+          ] else DatePicker(
+            date: _selectedDate,
+            onDateChanged: (DateTime date) => setState(() => _selectedDate = date),
+          ),
+        ]
+    );
+  }
+}
+
+
+class WeekDatePicker extends StatelessWidget {
+  const WeekDatePicker({super.key, this.selected, required this.start, required this.end, required this.onDateSelected});
+
+  final DateTime? selected;
+  final DateTime start, end;
+  final Function(DateTime date) onDateSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Wrap(
+      spacing: 26,
+      runSpacing: 12,
+      crossAxisAlignment: WrapCrossAlignment.start,
+      children: [
+        for (DateTime date in _getDaysBetween())
+          GestureDetector(
+            onTap: () => onDateSelected(date),
+            child: Container(
+              width: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: date == selected ? theme.primaryColor : theme.dividerColor,
+              ),
+              child: Column(
+                children: [
+                  Text(DateHelper.shortNameOfWeekday(date.weekday), style: theme.textTheme.bodySmall),
+                  Text("${date.day}", style: theme.textTheme.bodyMedium?.copyWith(color: selected != null && date.isAtSameMomentAs(selected!) ? theme.scaffoldBackgroundColor : null),),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  List<DateTime> _getDaysBetween() {
+    List<DateTime> days = [];
+    DateTime current = start;
+    while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
+      days.add(current);
+      current = current.add(const Duration(days: 1));
+    }
+    return days;
+  }
+}
+

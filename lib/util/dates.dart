@@ -11,9 +11,10 @@ class DateHelper {
   }
 
   // Whether the given today is between the given start and end date (inclusive), hour/minutes are ignored
-  static bool isTimeSpanToday(DateTime startDate, DateTime endDate) {
-    DateTime now = DateTime.now();
-    return (startDate.isBefore(now) && endDate.isAfter(now)) || isDateToday(startDate) || isDateToday(endDate);
+  static bool isDateSpanToday(DateTime startDate, DateTime endDate) => isWithinDateSpan(startDate, endDate, DateTime.now());
+
+  static bool isWithinDateSpan(DateTime startDate, DateTime endDate, DateTime toCheck) {
+    return (startDate.isBefore(toCheck) && endDate.isAfter(toCheck)) || isDateToday(startDate) || isDateToday(endDate);
   }
 
   static String formatDate(DateTime date, {includeYear = true, shortMonth = false, useRelative = true, useFullYear = false}) {
@@ -105,6 +106,19 @@ class DateHelper {
       11 => "Nov",
       12 => "Dez",
       _ => "$month.",
+    };
+  }
+
+  static String shortNameOfWeekday(int weekday) {
+    return switch (weekday) {
+      1 => "Mo",
+      2 => "Di",
+      3 => "Mi",
+      4 => "Do",
+      5 => "Fr",
+      6 => "Sa",
+      7 => "So",
+      _ => "$weekday.",
     };
   }
 

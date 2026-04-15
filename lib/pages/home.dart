@@ -972,12 +972,37 @@ class CompletedWidget extends StatelessWidget {
 class AbiDatesWidget extends StatelessWidget {
   const AbiDatesWidget({super.key});
 
+  bool _shouldShowOralWeek(Choice choice, List<Subject> sortedOralExamSubjects, OralAbiExamWeek week, Map<SubjectId, SubjectSettings>? subjectSettings) {
+    if (sortedOralExamSubjects.length >= 2) return false;
+    if (subjectSettings == null) return true;
+    if (!choice.hasSelectedExamTypes) return true;
+    for (Subject oralSubject in choice.oralAbiSubjects) {
+      var settings = subjectSettings[oralSubject.id];
+      if (settings?.oralExamDate == null || settings == null) continue;
+      if (DateHelper.isWithinDateSpan(week.startDate, week.endDate, settings.oralExamDate!)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
     var kmapi = Provider.of<KmApiProvider>(context);
     var settings = Provider.of<SettingsDataProvider>(context);
     var choice = settings.choice!;
+
+    List<Subject> sortedOralSubjects = choice.oralAbiSubjects
+        .where((e) => settings.subjectSettings?[e.id]?.oralExamDate != null).toList()..sort((a, b) {
+      var aDate = settings.subjectSettings?[a.id]?.oralExamDate;
+      var bDate = settings.subjectSettings?[b.id]?.oralExamDate;
+      if (aDate == null && bDate == null) return 0;
+      if (aDate == null) return 1;
+      if (bDate == null) return -1;
+      return aDate.compareTo(bDate);
+    });
 
     List<(Subject, WrittenAbiExamDate)>? sortedWrittenDates;
     int completedIndex = 0, currentIndex = -1;
@@ -991,8 +1016,17 @@ class AbiDatesWidget extends StatelessWidget {
         completedIndex++;
       }
       for (var oralDate in kmapi.abiDates!.oralExamWeeks) {
-        if (DateHelper.isTimeSpanToday(oralDate.startDate, oralDate.endDate)) currentIndex = completedIndex;
+        if (!_shouldShowOralWeek(choice, sortedOralSubjects, oralDate, settings.subjectSettings)) {
+          continue;
+        }
+        if (DateHelper.isDateSpanToday(oralDate.startDate, oralDate.endDate)) currentIndex = completedIndex;
         if (!DateHelper.isDatePassed(oralDate.endDate)) break;
+        completedIndex++;
+      }
+      for (var oralSubject in sortedOralSubjects) {
+        var oralDate = settings.subjectSettings![oralSubject.id]!.oralExamDate!;
+        if (DateHelper.isDateToday(oralDate)) currentIndex = completedIndex;
+        if (!DateHelper.isDatePassed(oralDate)) break;
         completedIndex++;
       }
     }
@@ -1001,7 +1035,7 @@ class AbiDatesWidget extends StatelessWidget {
     final bool useDateAbbreviations = width < 450 && width > 380 || width < 340;
 
     return SubpageTrigger(
-      createSubpage: () => OralExamTypeSelectorPage(choice: choice,),
+      createSubpage: () => OralExamTypeSelectorPage(choice: choice, initialSubjectSettings: settings.subjectSettings, key: GlobalKey()),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         decoration: BoxDecoration(
@@ -1068,28 +1102,10 @@ class AbiDatesWidget extends StatelessWidget {
             Text("Schriftliche Prüfungen", style: theme.textTheme.bodySmall),
             const SizedBox(height: 2,),
             if (sortedWrittenDates != null) ...[
-              for (var writtenDate in sortedWrittenDates)
-                Row(
-                  spacing: 16,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 2,
-                        children: [
-                          SmallSubjectWidget(subject: writtenDate.$1, old: DateHelper.isDatePassed(writtenDate.$2.date), choice: settings.choice!,),
-                          Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              decoration: BoxDecoration(color: theme.shadowColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(5)),
-                              child: Text(DateHelper.formatDateDifference(writtenDate.$2.date, useAbbreviations: useDateAbbreviations),
-                                  style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600))
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(DateHelper.formatDate(writtenDate.$2.date)),
-                  ],
+              for (var (index, writtenDate) in sortedWrittenDates.indexed)
+                _buildSubjectExamDateLine(
+                    subject: writtenDate.$1, date: writtenDate.$2.date, choice: settings.choice!, index: index,
+                    completedIndex: completedIndex, currentIndex: currentIndex, theme: theme, useDateAbbreviations: useDateAbbreviations
                 ),
             ] else DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
 
@@ -1098,8 +1114,13 @@ class AbiDatesWidget extends StatelessWidget {
             Text("Mündliche Prüfungen", style: theme.textTheme.bodySmall),
             const SizedBox(height: 2,),
             if (kmapi.abiDates != null) ...[
+              for (var (index, oralSubject) in sortedOralSubjects.indexed)
+                _buildSubjectExamDateLine(
+                    subject: oralSubject, date: settings.subjectSettings![oralSubject.id]!.oralExamDate!, choice: choice, index: index + 3,
+                    completedIndex: completedIndex, currentIndex: currentIndex, theme: theme, useDateAbbreviations: useDateAbbreviations
+                ),
               for (var oralDate in kmapi.abiDates!.oralExamWeeks)
-                Row(
+                if (_shouldShowOralWeek(choice, sortedOralSubjects, oralDate, settings.subjectSettings)) Row(
                   spacing: 16,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1109,11 +1130,16 @@ class AbiDatesWidget extends StatelessWidget {
                         runSpacing: 2,
                         children: [
                           Text("${oralDate.weekNumber}. Woche", style: SmallSubjectWidget.getTextStyle(theme, DateHelper.isDatePassed(oralDate.endDate))),
-                          Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              decoration: BoxDecoration(color: theme.shadowColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(5)),
-                              child: Text(DateHelper.formatWeekDifference(oralDate.startDate, oralDate.endDate, useAbbreviations: useDateAbbreviations),
-                                  style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600))
+                          ShimmerContainer.create(
+                            enabled: DateHelper.isDateSpanToday(oralDate.startDate, oralDate.endDate) || max(oralDate.startDate.difference(DateTime.now()).inDays, 0) <= 1,
+                            shimmerColor: theme.primaryColor,
+                            duration: const Duration(milliseconds: 1500),
+                            child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                decoration: BoxDecoration(color: theme.shadowColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(5)),
+                                child: Text(DateHelper.formatWeekDifference(oralDate.startDate, oralDate.endDate, useAbbreviations: useDateAbbreviations),
+                                    style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600))
+                            ),
                           ),
                         ],
                       ),
@@ -1125,6 +1151,40 @@ class AbiDatesWidget extends StatelessWidget {
           ]
         ),
       ),
+    );
+  }
+
+  Widget _buildSubjectExamDateLine({
+    required Subject subject, required DateTime date, required Choice choice, required int index,
+    required int completedIndex, required int currentIndex, required ThemeData theme, required bool useDateAbbreviations
+  }) {
+    return Row(
+      spacing: 16,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 2,
+            children: [
+              SmallSubjectWidget(subject: subject, old: DateHelper.isDatePassed(date), choice: choice,),
+              ShimmerContainer.create(
+                enabled: !DateHelper.isDatePassed(date) && index == completedIndex,
+                // enabled: DateHelper.isDateToday(date) || max(date.difference(DateTime.now()).inDays, 0) <= 1,
+                shimmerColor: theme.primaryColor,
+                duration: const Duration(milliseconds: 1500),
+                child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(color: theme.shadowColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(5)),
+                    child: Text(DateHelper.formatDateDifference(date, useAbbreviations: useDateAbbreviations),
+                        style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600))
+                ),
+              ),
+            ],
+          ),
+        ),
+        Text(DateHelper.formatDate(date)),
+      ],
     );
   }
 }

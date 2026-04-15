@@ -420,7 +420,7 @@ class _ChangeAbiChoiceResultWidgetState extends State<ChangeAbiChoiceResultWidge
 class SmallSubjectWidget extends StatelessWidget {
   const SmallSubjectWidget({super.key, required this.subject, required this.old, required this.choice});
 
-  final Choice choice;
+  final Choice? choice;
   final Subject subject;
   final bool old;
 
@@ -450,19 +450,30 @@ class SmallSubjectWidget extends StatelessWidget {
           child: Text(subject.name, style: getTextStyle(theme, old), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,
           ),
         ),
-        if (choice.lk == subject) ...[
-          const SizedBox(width: 4),
-          Text("(LF)", style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: theme.shadowColor, fontWeight: FontWeight.w600)),
-        ] else if (choice.substituteMathe && subject == (choice.lk.category == SubjectCategory.info ? choice.ntg1 : choice.mintSg2)) ...[
-          const SizedBox(width: 4),
-          Text("(M)", style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: theme.shadowColor, fontWeight: FontWeight.w600)),
-        ] else if (choice.substituteDeutsch && subject == choice.mintSg2) ...[
-          const SizedBox(width: 4),
-          Text("(D)", style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: theme.shadowColor, fontWeight: FontWeight.w600)),
-        ]
+        if (choice != null) ...buildSubjectTags(theme, choice!, subject),
       ],
     );
   }
+
+  static List<Widget> buildSubjectTags(ThemeData theme, Choice choice, Subject subject) {
+    if (choice.lk == subject) {
+      return [
+        const SizedBox(width: 4),
+        Text("(LF)", style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: theme.shadowColor, fontWeight: FontWeight.w600)),
+      ];
+    }
+    if (choice.substituteMathe && subject == (choice.lk.category == SubjectCategory.info ? choice.ntg1 : choice.mintSg2)) {
+      return [
+        const SizedBox(width: 4),
+        Text("(M)", style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: theme.shadowColor, fontWeight: FontWeight.w600)),
+      ];
+    }
+    if (choice.substituteDeutsch && subject == choice.mintSg2) {
+      return [
+        const SizedBox(width: 4),
+        Text("(D)", style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: theme.shadowColor, fontWeight: FontWeight.w600)),
+      ];
+    }
+    return [];
+  }
 }
-
-

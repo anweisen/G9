@@ -29,8 +29,9 @@ class SubjectPageTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final settings = Provider.of<SettingsDataProvider>(context);
     return Expanded(flex: 100, child: SubpageTrigger(
-      createSubpage: () => CustomizeSubjectPage(subject: subject),
+      createSubpage: () => CustomizeSubjectPage(subject: subject, initialSettings: settings.subjectSettings?[subject.id],),
       callback: (result) {
         if (result != null && result is SubjectSettings) {
           Provider.of<SettingsDataProvider>(context, listen: false).setSubjectSettings(subject.id, result);
@@ -312,6 +313,72 @@ class _ColorFadeContainerState extends State<ColorFadeContainer> with SingleTick
         );
       },
     );
+  }
+}
+
+class ShimmerContainer extends StatefulWidget {
+  const ShimmerContainer({super.key, required this.child, required this.shimmerColor, required this.duration});
+
+  static Widget create({required bool enabled, required Widget child, required Color shimmerColor, required Duration duration}) {
+    return enabled
+        ? ShimmerContainer(shimmerColor: shimmerColor, duration: duration, child: child)
+        : child;
+  }
+
+  final Widget child;
+  final Color shimmerColor;
+  final Duration duration;
+
+  @override
+  State<ShimmerContainer> createState() => _ShimmerContainerState();
+}
+
+class _ShimmerContainerState extends State<ShimmerContainer> with SingleTickerProviderStateMixin {
+
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    _animation = Tween<double>(begin: -1.0, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOutQuad));
+    _controller.repeat();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return ShaderMask(
+          blendMode: BlendMode.srcATop,
+          shaderCallback: (bounds) {
+            return LinearGradient(
+              colors: [
+                Colors.transparent,
+                widget.shimmerColor,
+                widget.shimmerColor,
+                Colors.transparent,
+              ],
+              stops: const [0.2, 0.45, 0.55, 0.8],
+              transform: _SlidingGradientTransform(slidePercent: _animation.value)
+            ).createShader(bounds);
+          },
+          child: widget.child,
+        );
+      },
+    );
+  }
+}
+
+class _SlidingGradientTransform extends GradientTransform {
+  const _SlidingGradientTransform({required this.slidePercent});
+  final double slidePercent;
+
+  @override
+  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
+    return Matrix4.translationValues(bounds.width * slidePercent, 0.0, 0.0);
   }
 }
 

@@ -47,6 +47,8 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
   }
 
   void openSubpage(Widget content, {Function(dynamic result)? callback}) {
+    if (_controller.isAnimating) return; // prevent opening (same) subpage concurrently (e.g. button is spammed)
+
     setState(() {
       _stack.add(_SubpageEntry(content, callback));
       _isOpened = true;
@@ -83,8 +85,8 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
     }
   }
 
-  void _handleKeyEvent(RawKeyEvent event) {
-    if (event is RawKeyDownEvent) {
+  void _handleKeyEvent(KeyEvent event) {
+    if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.escape && _isOpened) {
         closeSubpage();
       }
@@ -93,9 +95,9 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
 
   @override
   Widget build(BuildContext context) {
-    return RawKeyboardListener(
+    return KeyboardListener(
       focusNode: _focusNode,
-      onKey: _handleKeyEvent,
+      onKeyEvent: _handleKeyEvent,
       autofocus: true,
       child: Scaffold(
         appBar: const WindowTitleBar(), // to reserve space for title bar (scroll thumb)
@@ -225,8 +227,9 @@ class _SubpageEntry {
 }
 
 class SubpageTrigger extends StatelessWidget {
-  const SubpageTrigger({super.key, required this.child, required this.createSubpage, this.callback});
+  const SubpageTrigger({super.key, required this.child, required this.createSubpage, this.callback, this.enabled = true});
 
+  final bool enabled;
   final Widget child;
   final Widget Function() createSubpage;
   final Function(dynamic result)? callback;
@@ -234,7 +237,7 @@ class SubpageTrigger extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => SubpageController.of(context).openSubpage(createSubpage(), callback: callback),
+      onTap: enabled ? () => SubpageController.of(context).openSubpage(createSubpage(), callback: callback) : null,
       child: child,
     );
   }

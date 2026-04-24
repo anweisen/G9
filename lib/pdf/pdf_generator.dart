@@ -17,8 +17,12 @@ class PdfGenerator {
       secondaryColor = PdfColors.grey600;
   static final TextStyle
       bodyTextStyle = TextStyle(fontSize: 10, color: primaryColor, fontWeight: FontWeight.normal),
-      headerTextStyle = TextStyle(fontSize: 9, color: primaryColor, fontWeight: FontWeight.bold);
+      headerTextStyle = TextStyle(fontSize: 9, color: primaryColor, fontWeight: FontWeight.bold),
+      footnoteTextStyle = TextStyle(fontSize: 5, color: secondaryColor, fontWeight: FontWeight.bold);
 
+  static const int hintPrediction = 1, hintUnused = 2, hintFlagged = 3, hintEffective= 4;
+
+  @pragma('dart2js:noInline')
   static Future<Uint8List> generatePdf(
       PdfPageFormat format,
       Choice choice, Map<Subject, Map<Semester, SemesterResult>> results, ResultsFlags flags, Statistics statistics,
@@ -103,7 +107,7 @@ class PdfGenerator {
                               Text("≈ ${(results[subject]![Semester.seminar13]?.effectiveGrade.toString() ?? "-")}",
                                   style: TextStyle(fontSize: 9, color: (results[subject]![Semester.seminar13]?.prediction ?? false) ? secondaryColor : primaryColor, fontWeight: FontWeight.normal), textAlign: TextAlign.center
                               ),
-                              Text(" 3)", style: TextStyle(fontSize: 5, color: secondaryColor, fontWeight: FontWeight.bold),),
+                              Text(" $hintEffective)", style: footnoteTextStyle,),
                             ]
                         ), width: 40),
                         SizedBox(child: Row(
@@ -140,7 +144,7 @@ class PdfGenerator {
                           Text("≈ ${(results[subject]![Semester.abi]?.effectiveGrade.toString() ?? "-")}",
                               style: TextStyle(fontSize: 9, color: (results[subject]![Semester.abi]?.prediction ?? false) ? secondaryColor : primaryColor, fontWeight: FontWeight.normal), textAlign: TextAlign.center
                           ),
-                          Text(" 3)", style: TextStyle(fontSize: 5, color: secondaryColor, fontWeight: FontWeight.bold),),
+                          Text(" $hintEffective)", style: footnoteTextStyle,),
                         ]
                       ), width: 40),
                       SizedBox(child: Row(
@@ -176,9 +180,10 @@ class PdfGenerator {
 
             Spacer(),
 
-            buildFootNoteText("1", "Diese Note ist eine Prognose, basierend auf bisherigen Leistungen, da noch keine Noten in diesem Semester eingetragen wurden. Sie kann von der tatsächlichen Note abweichen."),
-            buildFootNoteText("2", "Diese Halbjahresleistung wird nicht in die Gesamtqualifikation einbezogen, da sie nicht zu den 40 eingebrachten Halbjahresleistungen zählt."),
-            buildFootNoteText("3", "Note in einfacher Wertung (0 - 15 Punkte). Diese wird nicht zur Berechnung der Gesamtqualifikation herangezogen, sondern dient lediglich als Orientierungshilfe."),
+            buildFootNoteText("$hintPrediction", "Diese Note ist eine Prognose, basierend auf bisherigen Leistungen, da noch keine Noten in diesem Semester eingetragen wurden. Sie kann von der tatsächlichen Note abweichen."),
+            buildFootNoteText("$hintUnused", "Diese Halbjahresleistung wird nicht in die Gesamtqualifikation einbezogen, da sie nicht zu den 40 eingebrachten Halbjahresleistungen zählt."),
+            buildFootNoteText("$hintFlagged", "In diesem Fach konnte keine Halbjahresleistung gebildet werden."),
+            buildFootNoteText("$hintEffective", "Note in einfacher Wertung (0 - 15 Punkte). Diese wird nicht zur Berechnung der Gesamtqualifikation herangezogen, sondern dient lediglich als Orientierungshilfe."),
 
             SizedBox(height: 8),
 
@@ -235,16 +240,19 @@ class PdfGenerator {
 
   static List<Widget> buildSemesterResultText(SemesterResult? result) {
     final bool isPrediction = result?.prediction ?? false;
-    final bool isUnused = !(result?.used ?? true);
+    final bool displayUnused = result != null && !result.used && !result.flagged;
+    final bool isFlagged = result?.flagged ?? false;
     return [
       if (isPrediction) SizedBox(width: 5),
-      if (isUnused) SizedBox(width: 5),
-      Text("${isUnused ? "(" : ""}${result?.grade.toString() ?? "-"}${isUnused ? ")" : ""}", style: TextStyle(
+      if (displayUnused) SizedBox(width: 5),
+      if (isFlagged) SizedBox(width: 5),
+      Text("${displayUnused ? "(" : ""}${isFlagged ? "-" : result?.grade.toString() ?? "-"}${displayUnused ? ")" : ""}", style: TextStyle(
           fontSize: 10,
           color: isPrediction ? secondaryColor : primaryColor,
           fontWeight: FontWeight.normal), textAlign: TextAlign.center),
-      if (isPrediction) Text(" 1)", style: TextStyle(fontSize: 5, color: secondaryColor, fontWeight: FontWeight.bold),),
-      if (isUnused) Text(" 2)", style: TextStyle(fontSize: 5, color: secondaryColor, fontWeight: FontWeight.bold),),
+      if (isPrediction) Text(" $hintPrediction)", style: footnoteTextStyle,),
+      if (displayUnused) Text(" $hintUnused)", style: footnoteTextStyle,),
+      if (isFlagged) Text(" $hintFlagged)", style: footnoteTextStyle,),
     ];
   }
 

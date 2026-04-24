@@ -68,6 +68,7 @@ class GradesDataProvider extends ChangeNotifier {
     return data?.values
       .expand((subjectGradesMap) => subjectGradesMap.values)
       .expand((gradesList) => gradesList)
+      .where((gradeEntry) => gradeEntry.type.area != GradeTypeArea.flag)
       .toList() ?? [];
   }
 
@@ -118,6 +119,16 @@ class GradesDataProvider extends ChangeNotifier {
     grades ??= data![semester]![subjectId] = [];
 
     grades.removeAt(index);
+
+    notifyListeners();
+    save();
+  }
+
+  void setGrades(SubjectId subjectId, List<GradeEntry> grades, Semester semester) {
+    print("Setting grades for $subjectId in $semester to $grades");
+    assert (data != null);
+
+    data![semester]![subjectId] = grades;
 
     notifyListeners();
     save();

@@ -215,7 +215,7 @@ class HomePage extends StatelessWidget {
                   _buildTextLine(_buildSubject(theme.textTheme, stats.bestSubjects[i].$1), [
                     if (MediaQuery.of(context).size.width > 500) Row(children: [
                       for (Semester semester in Semester.values)
-                        if (!(results[stats.bestSubjects[i].$1]?[semester]?.prediction ?? true)) Container(
+                        if (results[stats.bestSubjects[i].$1]?[semester]?.valid ?? false) Container(
                           margin: const EdgeInsets.fromLTRB(0, 0, 4, 0),
                           width: 21,
                           height: 19,
@@ -228,7 +228,7 @@ class HomePage extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
                     const SizedBox(width: 4),
-                    Text("${GradeHelper.formatNumber(stats.bestSubjects[i].$2, decimals: 1)}", style: theme.textTheme.bodyMedium),
+                    Text(GradeHelper.formatNumber(stats.bestSubjects[i].$2, decimals: 1), style: theme.textTheme.bodyMedium),
                   ]),
               ]),
             ),
@@ -570,6 +570,7 @@ class HomePage extends StatelessWidget {
     for (var subject in settings.choice!.subjects) {
       var grades = currentSemesterGrades[subject.id] ?? [];
       for (var grade in grades) {
+        if (grade.type.area == GradeTypeArea.flag) continue;
         gradesDistribution[grade.grade] = (gradesDistribution[grade.grade] ?? 0) + 1;
       }
     }
@@ -1005,29 +1006,29 @@ class AbiDatesWidget extends StatelessWidget {
     });
 
     List<(Subject, WrittenAbiExamDate)>? sortedWrittenDates;
-    int completedIndex = 0, currentIndex = -1;
+    int completedCount = 0, todayIndex = -1;
     if (kmapi.abiDates != null) {
       var mappedWrittenDates = KmApi.mapSubjectsToWrittenExamDates(kmapi.abiDates!.writtenExamDates, choice.hasSelectedExamTypes ? choice.writtenAbiSubjects : choice.abiSubjects, choice);
       sortedWrittenDates = KmApi.sortWittenAbiExamDates(mappedWrittenDates);
 
       for (var writtenDate in sortedWrittenDates) {
-        if (DateHelper.isDateToday(writtenDate.$2.date)) currentIndex = completedIndex;
+        if (DateHelper.isDateToday(writtenDate.$2.date)) todayIndex = completedCount;
         if (!DateHelper.isDatePassed(writtenDate.$2.date)) break;
-        completedIndex++;
+        completedCount++;
       }
       for (var oralDate in kmapi.abiDates!.oralExamWeeks) {
         if (!_shouldShowOralWeek(choice, sortedOralSubjects, oralDate, settings.subjectSettings)) {
           continue;
         }
-        if (DateHelper.isDateSpanToday(oralDate.startDate, oralDate.endDate)) currentIndex = completedIndex;
+        if (DateHelper.isDateSpanToday(oralDate.startDate, oralDate.endDate)) todayIndex = completedCount;
         if (!DateHelper.isDatePassed(oralDate.endDate)) break;
-        completedIndex++;
+        completedCount++;
       }
       for (var oralSubject in sortedOralSubjects) {
         var oralDate = settings.subjectSettings![oralSubject.id]!.oralExamDate!;
-        if (DateHelper.isDateToday(oralDate)) currentIndex = completedIndex;
+        if (DateHelper.isDateToday(oralDate)) todayIndex = completedCount;
         if (!DateHelper.isDatePassed(oralDate)) break;
-        completedIndex++;
+        completedCount++;
       }
     }
 
@@ -1077,20 +1078,20 @@ class AbiDatesWidget extends StatelessWidget {
                           children: [
                             for (int i = 0; i < 5; i++)
                               ColorFadeContainer.create(
-                                enabled: i == currentIndex,
+                                enabled: i == todayIndex,
                                 width: width,
                                 height: 9,
                                 colorFrom: theme.primaryColor,
                                 colorTo: theme.indicatorColor,
                                 duration: const Duration(milliseconds: 750),
                                 decoration: BoxDecoration(
-                                  color: i < completedIndex ? theme.indicatorColor : theme.hintColor,
+                                  color: i < completedCount ? theme.indicatorColor : theme.hintColor,
                                   borderRadius: BorderRadius.circular(3),
                                 ),
                             ),
                           ],
                         ),
-                        Text("$completedIndex / 5", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.primaryColor),),
+                        Text("$completedCount / 5", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.primaryColor),),
                       ],
                     ),
                   );
@@ -1105,7 +1106,7 @@ class AbiDatesWidget extends StatelessWidget {
               for (var (index, writtenDate) in sortedWrittenDates.indexed)
                 _buildSubjectExamDateLine(
                     subject: writtenDate.$1, date: writtenDate.$2.date, choice: settings.choice!, index: index,
-                    completedIndex: completedIndex, currentIndex: currentIndex, theme: theme, useDateAbbreviations: useDateAbbreviations
+                    completedIndex: completedCount, currentIndex: todayIndex, theme: theme, useDateAbbreviations: useDateAbbreviations
                 ),
             ] else DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
 
@@ -1117,7 +1118,7 @@ class AbiDatesWidget extends StatelessWidget {
               for (var (index, oralSubject) in sortedOralSubjects.indexed)
                 _buildSubjectExamDateLine(
                     subject: oralSubject, date: settings.subjectSettings![oralSubject.id]!.oralExamDate!, choice: choice, index: index + 3,
-                    completedIndex: completedIndex, currentIndex: currentIndex, theme: theme, useDateAbbreviations: useDateAbbreviations
+                    completedIndex: completedCount, currentIndex: todayIndex, theme: theme, useDateAbbreviations: useDateAbbreviations
                 ),
               for (var oralDate in kmapi.abiDates!.oralExamWeeks)
                 if (_shouldShowOralWeek(choice, sortedOralSubjects, oralDate, settings.subjectSettings)) Row(
@@ -1148,6 +1149,14 @@ class AbiDatesWidget extends StatelessWidget {
                   ],
                 ),
             ] else DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
+
+            if (completedCount >= 5) ...[
+              const SizedBox(height: 10,),
+              Text("Zeugnisvergabe", style: theme.textTheme.bodySmall),
+              if (kmapi.abiDates != null) ...[
+                Text("ab ${kmapi.abiDates!.graduationDate.formattedDate}", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 16, color: theme.primaryColor), softWrap: true,),
+              ] else  DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
+            ]
           ]
         ),
       ),
@@ -1183,7 +1192,7 @@ class AbiDatesWidget extends StatelessWidget {
             ],
           ),
         ),
-        Text(DateHelper.formatDate(date)),
+        Text(DateHelper.formatDate(date, useRelative: false)),
       ],
     );
   }

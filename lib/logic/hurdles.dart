@@ -70,7 +70,7 @@ enum AdmissionHurdle implements HurdleType {
         }
 
         // no0: Alle Pflichthalbjahre müssen mindestens 1 Punkt haben (sonst nicht belegt), Pflichtbelegung (Mindeststundenzahl) nicht erfüllt
-        if (sr.grade < 1 && subject != choice.profil12 && subject != choice.profil13) { // Belegung Profilfach nicht Pflicht
+        if (sr.grade < 1 && !sr.flagged && subject != choice.profil12 && subject != choice.profil13) { // Belegung Profilfach nicht Pflicht
           checkResults.add(HurdleCheckResult(AdmissionHurdle.no0, "${subject.name} in ${semester.display}"));
         }
         if (sr.used) {

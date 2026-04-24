@@ -82,6 +82,9 @@ class GradeWeighting {
     if (grades.isEmpty) {
       return -1;
     }
+    if (GradeHelper.hasAnyFlags(grades)) {
+      return -1;
+    }
     if (grades.length == 1 && grades.first.type == GradeType.result) {
       return grades.first.grade.toDouble();
     }
@@ -359,6 +362,14 @@ class GradeHelper {
     return avg < 1 ? 0 : avg.round();
   }
 
+  static bool containsAnyOfType(GradesList grades, GradeType type) {
+    return grades.any((it) => it.type == type);
+  }
+
+  static bool hasAnyFlags(GradesList grades) {
+    return grades.any((it) => it.type.area == GradeTypeArea.flag);
+  }
+
   static double averageOfSemester(SubjectGradesMap grades, Semester semester, Choice choice) {
     double sum = 0;
     int count = 0;
@@ -366,6 +377,7 @@ class GradeHelper {
     grades.forEach((subjectId, grades) {
       var subject = Subject.byId[subjectId]!;
       if (grades.isEmpty) return;
+      if (GradeHelper.hasAnyFlags(grades)) return;
       int result = GradeHelper.result(subject, semester, choice, grades);
       sum += result / semester.semesterCountEquivalent;
       count++;
@@ -381,7 +393,7 @@ class GradeHelper {
 
     results.forEach((subject, semesters) {
       var result = semesters[semester];
-      if (result == null || result.prediction) return; // only use real results
+      if (result == null || result.prediction || result.flagged) return; // only use real results
       if (!result.used) return; // only use used results
       sum += result.grade / semester.semesterCountEquivalent;
       count++;
@@ -460,6 +472,9 @@ enum GradeType {
   @HiveField(100) @JsonValue(100)
   result("Ergebnis", GradeTypeArea.result),
 
+  @HiveField(200) @JsonValue(200)
+  exempt("Befreit", GradeTypeArea.flag),
+
   ;
 
   const GradeType(this.name, this.area);
@@ -474,6 +489,20 @@ enum GradeType {
 
   static List<GradeType> only(GradeTypeArea area) {
     return values.where((it) => it.area == area).toList();
+  }
+
+  static List<GradeType> allBut(List<GradeTypeArea> excludeAreas) {
+    return values.where((it) => !excludeAreas.contains(it.area)).toList();
+  }
+
+  static List<GradeType> get all => allBut([GradeTypeArea.result, GradeTypeArea.flag]);
+
+  static List<GradeType> getValidFlagsForSubject(Choice choice, Subject subject, Semester semester) {
+    if (semester == Semester.abi) return [];
+    if (subject == Subject.sport && subject != choice.lk) {
+      return [GradeType.exempt]; // Sportbefreiung im GK
+    }
+    return [];
   }
 
   static List<GradeType> types(Choice choice, Subject subject, Semester semester) {
@@ -569,7 +598,9 @@ enum GradeTypeArea {
   /// Abiturprüfungen: schriftliche / mündliche Prüfungen, Fachprüfungen, Zusatzprüfungen, etc.
   abi("Abiturprüfungen"),
   /// Ergebnis direkt eintragen (z.B. Gesamtleistung Seminar, Abiturprüfungsergebnis, etc.)
-  result("Ergebnis");
+  result("Ergebnis"),
+  /// Keine Notenbildung z.B. von Sportunterricht befreit
+  flag("");
 
   const GradeTypeArea(this.name);
 

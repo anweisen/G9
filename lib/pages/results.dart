@@ -75,16 +75,6 @@ class ResultsPage extends StatelessWidget {
       ],
     );
   }
-
-  Widget _buildLegendText(ThemeData theme, String text, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: theme.textTheme.bodySmall?.color),
-        const SizedBox(width: 8),
-        Text(text, style: theme.textTheme.labelSmall),
-      ],
-    );
-  }
 }
 
 class SubjectCard extends StatelessWidget {
@@ -148,7 +138,7 @@ class SubjectCard extends StatelessWidget {
         Text(semester.display, style: theme.textTheme.bodySmall),
         Row(
           children: [
-            Text(result?.grade.toString() ?? "-", style: textStyle?.copyWith(decoration: (result?.replacedByJoker ?? false) ? TextDecoration.lineThrough : null)),
+            Text((result != null && !result.flagged) ? result.grade.toString() : "-", style: textStyle),
             const SizedBox(width: 3),
             if (result?.replacedByJoker ?? false) Icon(Icons.join_inner_rounded, size: 13, color: textStyle?.color)
             else if (result?.useForced ?? false) Icon(Icons.check_circle, size: 12, color: textStyle?.color)

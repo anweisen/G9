@@ -304,7 +304,7 @@ class GradeTypSelectionPage extends StatelessWidget {
         break;
       }
     }
-    final List<GradeType> types = (subject != null && semester != null) ? GradeType.types(choice, subject!, semester!) : GradeType.values;
+    final List<GradeType> types = (subject != null && semester != null) ? GradeType.types(choice, subject!, semester!) : GradeType.all;
     final Set<GradeTypeArea> areas = types.map((e) => e.area).toSet();
 
     return SubpageSkeleton(

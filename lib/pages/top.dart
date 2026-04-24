@@ -24,7 +24,7 @@ class TopSubjectsSubpage extends StatelessWidget {
             _buildTextLine(_buildSubject(theme.textTheme, stats.bestSubjects[i].$1, i + 1), [
               if (width > 480) Row(children: [
                 for (Semester semester in Semester.values)
-                  if (!(results[stats.bestSubjects[i].$1]?[semester]?.prediction ?? true)) Container(
+                  if (results[stats.bestSubjects[i].$1]?[semester]?.valid ?? false) Container(
                       margin: const EdgeInsets.fromLTRB(0, 0, 4, 0),
                       width: 21,
                       height: 19,
@@ -40,7 +40,7 @@ class TopSubjectsSubpage extends StatelessWidget {
               const SizedBox(width: 8),
               Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
               const SizedBox(width: 4),
-              Text("${GradeHelper.formatNumber(stats.bestSubjects[i].$2, decimals: 2)}", style: theme.textTheme.bodyMedium),
+              Text(GradeHelper.formatNumber(stats.bestSubjects[i].$2, decimals: 2), style: theme.textTheme.bodyMedium),
             ]),
           ]
         ]

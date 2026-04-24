@@ -115,7 +115,7 @@ type Choice struct {
 }
 
 type GradeEntry struct {
-  Grade uint8  `json:"g" bson:"g"`
+  Grade int8   `json:"g" bson:"g"`
   Type  uint8  `json:"t" bson:"t"`
   Date  string `json:"d" bson:"d"` // only date (year-month-day), no time, in ISO format
 }

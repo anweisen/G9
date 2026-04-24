@@ -382,4 +382,40 @@ class _SlidingGradientTransform extends GradientTransform {
   }
 }
 
+class CallbackCheckBox extends StatelessWidget {
+  const CallbackCheckBox({super.key, required this.checked, required this.size, required this.primaryColor, required this.secondaryColor, this.onEnable, this.onDisable, this.onToggle});
+
+  final Function()? onToggle;
+  final Function()? onEnable;
+  final Function()? onDisable;
+  final bool checked;
+  final double size;
+  final Color primaryColor;
+  final Color secondaryColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        onToggle?.call();
+        if (checked) {
+          onDisable?.call();
+        } else {
+          onEnable?.call();
+        }
+      },
+      child: Container(
+        width: size, height: size,
+        decoration: BoxDecoration(
+          color: checked ? primaryColor : null,
+          border: Border.all(color: primaryColor, width: 2),
+          borderRadius: BorderRadius.circular(size / 4),
+        ),
+        child: checked ? Icon(Icons.close_rounded, size: size * 0.8, color: secondaryColor,) : null,
+      ),
+    );
+  }
+}
+
+
 

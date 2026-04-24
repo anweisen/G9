@@ -106,7 +106,7 @@ class SubjectResultPage extends StatelessWidget {
                     width: 36,
                     height: 27,
                     decoration: (result?.used ?? false) ? BoxDecoration(color: (result?.grade ?? 15) >= 5 ? theme.primaryColor : theme.splashColor, borderRadius: BorderRadius.circular(6)) : null,
-                    child: Center(child: Text(result?.grade.toString() ?? "-",
+                    child: Center(child: Text(result?.gradeString ?? "-",
                           style: (result?.used ?? false) ? theme.textTheme.labelMedium?.copyWith(color: (result?.grade ?? 15) < 5 ? theme.disabledColor : null) : theme.textTheme.bodyMedium,)
                     )
                 ),
@@ -147,6 +147,7 @@ class SubjectResultPage extends StatelessWidget {
     int freeSemestersUsed = 0;
     Semester? jokerUsed; // this semester is replaced
     Semester? usedVkExtra;
+    List<Semester> flaggedSemester = [];
     (Subject, SemesterResult)? jokerReplacesSemester; // this semester is used as a replacement for
     for (Semester semester in Semester.qPhaseEquivalents(subject.category)) {
       SemesterResult? result = results[semester];
@@ -155,6 +156,7 @@ class SubjectResultPage extends StatelessWidget {
       if (result.useExtra) freeSemestersUsed += 1;
       if (result.useJoker) jokerReplacesSemester = result.jokerResult;
       if (result.useVk) usedVkExtra = semester;
+      if (result.flagged) flaggedSemester.add(semester);
     }
 
     bool abi = choice.abiSubjects.contains(subject);
@@ -201,6 +203,9 @@ class SubjectResultPage extends StatelessWidget {
 
       if (jokerReplacesSemester != null)
         _buildInfoWidget(theme, "Einbringung per Optionsregel ersetzt ${jokerReplacesSemester.$1.name} ${jokerReplacesSemester.$2.semester.display}", Icons.join_full_rounded),
+
+      if (flaggedSemester.isNotEmpty)
+        _buildInfoWidget(theme, "Keine Note in ${flaggedSemester.map((s) => s.display).join(", ")}", Icons.comments_disabled_rounded),
     ];
   }
 

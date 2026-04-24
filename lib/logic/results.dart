@@ -123,7 +123,9 @@ class SemesterResult {
 
       List<SemesterResult> sorted = result[subject]!.entries
           .where((entry) => Semester.qPhaseEquivalents(subject.category).contains(entry.key))
-          .map((e) => e.value).toList()
+          .map((e) => e.value)
+          .where((e) => !e.flagged)
+          .toList()
         ..sort((a, b) => b.grade.compareTo(a.grade));
 
       int minSemesters = getMinSemestersForSubject(choice, subject);
@@ -242,10 +244,13 @@ class SemesterResult {
         results.putIfAbsent(subject, () => {});
 
         if (grades.isNotEmpty) {
-          results[subject]![semester] = SemesterResult(
-            GradeHelper.result(subject, semester, choice, grades),
-            grades.length, semester
-          );
+          if (GradeHelper.hasAnyFlags(grades)) {
+            results[subject]![semester] = SemesterResult(-1, grades.length, semester);
+            return; // not continue: .forEach
+          }
+
+          int resultGrade = GradeHelper.result(subject, semester, choice, grades);
+          results[subject]![semester] = SemesterResult(resultGrade, grades.length, semester);
         }
       });
     });
@@ -373,7 +378,7 @@ class SemesterResult {
 
       for (var semester in Semester.values) {
         if (result[subject]![semester] == null) continue;
-        if (result[subject]![semester]!.prediction) continue;
+        if (!result[subject]![semester]!.valid) continue;
 
         numberGrades += result[subject]![semester]!.basedOnGradeCount;
         points += result[subject]![semester]!.effectiveGrade;
@@ -471,11 +476,15 @@ class SemesterResult {
   bool replacedByJoker = false;
   (Subject, SemesterResult)? jokerResult; // cross reference (original<->replacement)
 
+  bool get flagged => grade == -1; // exempt
   bool get prediction => basedOnGradeCount == 0;
   bool get used => (useForced || useExtra || useJoker || useVk) && !replacedByJoker;
   int get effectiveGrade => (grade / semester.semesterCountEquivalent).round();
+  bool get valid => !flagged && !prediction;
 
   SemesterResult(this.grade, this.basedOnGradeCount, this.semester);
+
+  String get gradeString => flagged ? "-" : grade.toString();
 
   @override
   String toString() => "$grade[${semester.semesterCountEquivalent}x ${used ? "used" : "free"}${prediction ? ", predicted" : ""}]";

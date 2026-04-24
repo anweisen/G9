@@ -74,6 +74,8 @@ class _SubjectPageState extends State<SubjectPage> {
     final AccountDataProvider accountProvider = Provider.of<AccountDataProvider>(context);
     final GradesList grades = dataProvider.getGrades(widget.subject.id, semester: _currentSemester);
     final double average = GradeHelper.average(widget.subject, _currentSemester!, choice, grades);
+    final List<GradeType> validFlags = GradeType.getValidFlagsForSubject(choice, widget.subject, _currentSemester!);
+    final bool isFlagged = GradeHelper.hasAnyFlags(grades);
 
     return SubpageSkeleton(
         title: Row(
@@ -137,6 +139,7 @@ class _SubjectPageState extends State<SubjectPage> {
                   ),
                   const Spacer(),
                   SubpageTrigger(
+                    enabled: !isFlagged,
                       createSubpage: () => GradePage(subject: widget.subject, key: GlobalKey(), semester: _currentSemester!,),
                       callback: (result) {
                         if (result is GradeEditResult) {
@@ -144,7 +147,7 @@ class _SubjectPageState extends State<SubjectPage> {
                           accountProvider.updateSubjectGradesFromResult(result, dataProvider);
                         }
                       },
-                      child: Icon(Icons.add, color: theme.primaryColor, size: 30),
+                      child: Icon(Icons.add, color: isFlagged ? theme.shadowColor : theme.primaryColor, size: 30),
                   ),
                 ],
               ),
@@ -152,7 +155,10 @@ class _SubjectPageState extends State<SubjectPage> {
           ),
           const SizedBox(height: 10),
 
-          if ((grades.isEmpty || grades.length == 1 && grades.first.type == GradeType.result) && (_currentSemester == Semester.seminar13 || _currentSemester == Semester.abi))
+          if (validFlags.isNotEmpty && (grades.isEmpty || isFlagged)) ...[
+            for (GradeType flagType in validFlags)
+              _buildFlagSelection(theme, flagType, GradeHelper.containsAnyOfType(grades, flagType), dataProvider, accountProvider),
+          ] else if ((grades.isEmpty || grades.length == 1 && grades.first.type == GradeType.result) && (_currentSemester == Semester.seminar13 || _currentSemester == Semester.abi))
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -182,6 +188,44 @@ class _SubjectPageState extends State<SubjectPage> {
 
   void _addGrade(GradesDataProvider dataProvider, GradeEditResult result) {
     dataProvider.addGrade(result.subject.id, result.entry, semester: result.semester);
+  }
+
+  Widget _buildFlagSelection(ThemeData theme, GradeType flag, bool flagged, GradesDataProvider dataProvider, AccountDataProvider accountProvider) {
+    String description = switch (flag) {
+      GradeType.exempt => "Es konnte aufgrund einer ärztlichen Befreiung vom Sportunterricht keine Note gebildet werden",
+      _ => flag.name,
+    };
+
+    return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: flagged ? theme.dividerColor : null,
+          border: Border.all(color: theme.dividerColor, width: 2),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          spacing: 12,
+          children: [
+            CallbackCheckBox(
+              checked: flagged,
+              primaryColor: flagged ? theme.primaryColor : theme.shadowColor,
+              secondaryColor: theme.scaffoldBackgroundColor,
+              size: 20,
+              onEnable: () {
+                dataProvider.addGrade(widget.subject.id, GradeEntry(-1, flag, DateTime.now()), semester: _currentSemester);
+                accountProvider.updateSubjectGrades(widget.subject.id, _currentSemester!, dataProvider);
+              },
+              onDisable: () {
+                // clear all grades, because flags can only be present if no grades are set
+                dataProvider.setGrades(widget.subject.id, [], _currentSemester!);
+                accountProvider.updateSubjectGrades(widget.subject.id, _currentSemester!, dataProvider);
+              },
+            ),
+            Flexible(child: Text(description, style: theme.textTheme.displayMedium?.copyWith(color: flagged ? theme.primaryColor : theme.shadowColor, height: 1.2), softWrap: true,)),
+          ]
+        )
+    );
   }
 
   List<Widget> _buildDirectSelection(ThemeData theme, GradeEntry? grade, AccountDataProvider accountProvider, GradesDataProvider gradesProvider) {
@@ -288,7 +332,7 @@ class _SubjectPageState extends State<SubjectPage> {
           ),
           child: Column(children: [
             Text(semester.display, style: theme.textTheme.bodySmall),
-            Text(grades.isEmpty ? "-" : result.toString(), style: theme.textTheme.labelMedium?.copyWith(color: selected ? theme.primaryColor : null)),
+            Text((grades.isEmpty || GradeHelper.hasAnyFlags(grades)) ? "-" : result.toString(), style: theme.textTheme.labelMedium?.copyWith(color: selected ? theme.primaryColor : null)),
           ]),
         ),
       ),

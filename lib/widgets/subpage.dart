@@ -34,7 +34,7 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
     );
     _animation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
       parent: _controller,
-      curve: Curves.ease,
+      curve: Curves.linear,
     ));
 
     _focusNode = FocusNode(); // required for keyboard listener
@@ -53,13 +53,13 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
       _stack.add(_SubpageEntry(content, callback));
       _isOpened = true;
     });
-    _controller.forward(from: 0);
+    _controller.animateTo(1, curve: Curves.ease);
   }
 
   void closeSubpage([dynamic result]) {
     final toRemove = _stack.lastOrNull;
     toRemove?.callback?.call(result);
-    _controller.reverse().then((_) {
+    _controller.animateTo(0, curve: Curves.ease).then((_) {
       if (!mounted) return;
       setState(() {
         _isOpened = _stack.length > 1;
@@ -78,8 +78,8 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
   }
 
   void handleDragEnd(DragEndDetails details) {
-    if (_controller.value > 0.85 && details.velocity.pixelsPerSecond.dy < 400) {
-      _controller.forward(); // keep open
+    if (_controller.value > 0.9 && details.velocity.pixelsPerSecond.dy < 400) {
+      _controller.animateTo(1, curve: Curves.easeOutCubic, duration: const Duration(milliseconds: 500)); // keep open
     } else {
       closeSubpage();
     }

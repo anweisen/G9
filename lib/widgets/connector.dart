@@ -89,6 +89,7 @@ class _SyncApiConnectorLoadingWidgetState extends State<SyncApiConnectorLoadingW
   void setStage(int index) {
     if (index == _stageIndex) return;
 
+    if (!_visible) _controller.forward();
     _stageController.forward(from: 0);
 
     if (!ConnectorLoadingStage.stages[index].isLoading) {

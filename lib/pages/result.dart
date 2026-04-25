@@ -205,7 +205,7 @@ class SubjectResultPage extends StatelessWidget {
         _buildInfoWidget(theme, "Einbringung per Optionsregel ersetzt ${jokerReplacesSemester.$1.name} ${jokerReplacesSemester.$2.semester.display}", Icons.join_full_rounded),
 
       if (flaggedSemester.isNotEmpty)
-        _buildInfoWidget(theme, "Keine Note in ${flaggedSemester.map((s) => s.display).join(", ")}", Icons.comments_disabled_rounded),
+        _buildInfoWidget(theme, "keine Notenbildung in ${flaggedSemester.map((s) => s.display).join(", ")}", Icons.comments_disabled_rounded),
     ];
   }
 

@@ -5,23 +5,28 @@ import '../api/kmapi.dart';
 class KmApiProvider extends ChangeNotifier {
 
   AbiDates? _abiDates;
-  bool loadingFailed = false;
+  bool _loadingFailed = false;
+  bool _loading = false;
 
   AbiDates? get abiDates => _abiDates;
-  bool get isLoading => _abiDates == null && !loadingFailed;
-  bool get hasError => loadingFailed;
+  bool get isLoading => _abiDates == null && !_loadingFailed;
+  bool get hasError => _loadingFailed;
 
-  KmApiProvider() {
-    fetchData();
-  }
+  void fetchDataIfNotPresent(int predictedYear) async {
+    if (_loading) return;
+    if (_loadingFailed) return;
+    if (_abiDates != null) return;
+    _loading = true;
 
-  void fetchData() async {
-    AbiDates? dates = await KmApi.fetchAbiDates();
+    AbiDates? dates = await KmApi.fetchAbiDates(predictedYear);
+
     if (dates != null) {
       _abiDates = dates;
     } else {
-      loadingFailed = true;
+      _loadingFailed = true;
     }
+
+    _loading = false;
     notifyListeners();
   }
 

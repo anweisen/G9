@@ -12,15 +12,26 @@ part 'kmapi.g.dart';
 class KmApi {
   static const String kmapiBaseUrl = "https://kmapi.anweisen.net";
   static const String routeBavariaGymAbiNext = "/by/gym/abi/next";
+  static String routeBavariaGymAbiYear(int year) => "/by/gym/abi/$year";
 
-  static Future<AbiDates?> fetchAbiDates() async {
+
+  static Future<AbiDates?> fetchAbiDates(int predictedYear) async {
     DateTime now = DateTime.now();
-    int year = now.year;
-    if (now.month > 7) year++;
+    int currentYear = now.year;
 
+    // dates might not be available yet, fallback to previous year until to display
+    for (int year = predictedYear; year >= currentYear; year--) {
+      var selectedYearDates = await _fetchAbiDates(routeBavariaGymAbiYear(year));
+      if (selectedYearDates != null) return selectedYearDates;
+    }
+
+    return await _fetchAbiDates(routeBavariaGymAbiNext);
+  }
+
+  static Future<AbiDates?> _fetchAbiDates(String route) async {
     try {
       final response = await http.get(
-        Uri.parse("$kmapiBaseUrl$routeBavariaGymAbiNext"),
+        Uri.parse("$kmapiBaseUrl$route"),
         headers: {"Accept": "application/json"},
       );
 

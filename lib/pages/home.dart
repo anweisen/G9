@@ -10,6 +10,7 @@ import '../logic/grades.dart';
 import '../logic/hurdles.dart';
 import '../logic/types.dart';
 import '../logic/results.dart';
+import '../logic/year.dart';
 import '../provider/account.dart';
 import '../provider/grades.dart';
 import '../provider/kmapi.dart';
@@ -993,7 +994,11 @@ class AbiDatesWidget extends StatelessWidget {
     var theme = Theme.of(context);
     var kmapi = Provider.of<KmApiProvider>(context);
     var settings = Provider.of<SettingsDataProvider>(context);
+    var data = Provider.of<GradesDataProvider>(context);
     var choice = settings.choice!;
+
+    int predictedGraduationYear = YearHelper.extractGraduationYear(data);
+    kmapi.fetchDataIfNotPresent(predictedGraduationYear);
 
     List<Subject> sortedOralSubjects = choice.oralAbiSubjects
         .where((e) => settings.subjectSettings?[e.id]?.oralExamDate != null).toList()..sort((a, b) {

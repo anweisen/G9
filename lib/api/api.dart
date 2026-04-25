@@ -142,11 +142,11 @@ class Api {
 
     } catch (e) {
       if (tries < 3) {
-        print("Error during token refresh: $e. Retrying in 5 seconds...");
-        await Future.delayed(const Duration(seconds: 5));
+        print("Error during token refresh: $e. Retrying in 3 seconds...");
+        await Future.delayed(const Duration(seconds: 3));
         return await refreshAccessTokenWithBackend(dataProvider, tries + 1);
       } else {
-        dataProvider.logout();
+        // don't logout immediately, probably just offline
         print("Error during token refresh after multiple attempts: $e");
       }
     }

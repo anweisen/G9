@@ -165,7 +165,7 @@ class AccountDataProvider extends ChangeNotifier {
   }
 
   void refreshTokens() async {
-    if (!isLoggedIn) {
+    if (!isLoggedIn || isAuthenticating) {
       return;
     }
 
@@ -197,9 +197,9 @@ class AccountDataProvider extends ChangeNotifier {
     }
   }
 
-  void syncStoredData(SettingsDataProvider settingsProvider, GradesDataProvider gradesProvider) async {
+  void syncStoredData(SettingsDataProvider settingsProvider, GradesDataProvider gradesProvider, {notifyInstantly = false}) async {
     _syncing = true;
-    // notifyListeners();
+    if (notifyInstantly) notifyListeners();
 
     await Future.delayed(const Duration(milliseconds: 1500));
 

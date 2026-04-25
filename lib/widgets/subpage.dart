@@ -69,7 +69,7 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
     });
   }
 
-  void _handleDragUpdate(DragUpdateDetails details) {
+  void handleDragUpdate(DragUpdateDetails details) {
     final dy = details.primaryDelta ?? 0;
     final screenHeight = MediaQuery.sizeOf(context).height;
 
@@ -77,7 +77,7 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
     _controller.value = target.clamp(0.0, 1.0); // Keep it within bounds
   }
 
-  void _handleDragEnd(DragEndDetails details) {
+  void handleDragEnd(DragEndDetails details) {
     if (_controller.value > 0.85 && details.velocity.pixelsPerSecond.dy < 400) {
       _controller.forward(); // keep open
     } else {
@@ -200,8 +200,8 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
             Padding(
               padding: EdgeInsets.only(top: 50 + WindowTitleBar.height),
               child: GestureDetector(
-                onVerticalDragUpdate: _handleDragUpdate,
-                onVerticalDragEnd: _handleDragEnd,
+                onVerticalDragUpdate: handleDragUpdate,
+                onVerticalDragEnd: handleDragEnd,
                 child: Container(
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,

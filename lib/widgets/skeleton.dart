@@ -193,6 +193,7 @@ class SubpageSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final SubpageControllerState subpageController = SubpageController.of(context);
 
     return Scaffold(
       backgroundColor: theme.cardColor,
@@ -216,28 +217,32 @@ class SubpageSkeleton extends StatelessWidget {
                   floating: true,
                   flexibleSpace: LayoutBuilder(
                       builder: (context, constraints) {
-                        return Container(
-                          constraints: constraints,
-                          padding: const EdgeInsets.symmetric(horizontal: PageSkeleton.leftOffset / 2), // 2x half padding for better blur blending at the edges
-                          child: ClipRRect(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      theme.cardColor,
-                                      theme.cardColor,
-                                      theme.cardColor.withOpacity(0.6),
-                                      theme.cardColor.withOpacity(0.2),
-                                    ],
-                                    stops: const [0.0, 0.1, 0.4, 1.0],
+                        return GestureDetector(
+                          onVerticalDragUpdate: subpageController.handleDragUpdate,
+                          onVerticalDragEnd: subpageController.handleDragEnd,
+                          child: Container(
+                            constraints: constraints,
+                            padding: const EdgeInsets.symmetric(horizontal: PageSkeleton.leftOffset / 2), // 2x half padding for better blur blending at the edges
+                            child: ClipRRect(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        theme.cardColor,
+                                        theme.cardColor,
+                                        theme.cardColor.withValues(alpha: 0.6), // ~60%
+                                        theme.cardColor.withValues(alpha: 0.2), // ~20%
+                                      ],
+                                      stops: const [0.0, 0.1, 0.4, 1.0],
+                                    ),
                                   ),
-                                ),
-                                child: SafeBackdropFilter(
-                                    filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                                    child: Padding(padding: const EdgeInsets.fromLTRB(PageSkeleton.leftOffset / 2, 16, PageSkeleton.leftOffset / 2, 10), child: title!)),
-                              )
+                                  child: SafeBackdropFilter(
+                                      filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                                      child: Padding(padding: const EdgeInsets.fromLTRB(PageSkeleton.leftOffset / 2, 16, PageSkeleton.leftOffset / 2, 10), child: title!)),
+                                )
+                            ),
                           ),
                         );
                       }

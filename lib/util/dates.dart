@@ -20,11 +20,14 @@ class DateHelper {
   static String formatDate(DateTime date, {includeYear = true, shortMonth = false, useRelative = true, useFullYear = false}) {
     var now = DateTime.now();
 
-    if (useRelative && date.day == now.day && date.month == now.month && date.year == now.year) {
-      return "Heute";
-    }
-    if (useRelative && date.day == now.day - 1 && date.month == now.month && date.year == now.year) {
-      return "Gestern";
+    if (useRelative) {
+      if (date.day == now.day && date.month == now.month && date.year == now.year) {
+        return "Heute";
+      }
+      var difference = now.difference(date);
+      if (difference.inDays == 1) {
+        return "Gestern";
+      }
     }
 
     return "${date.day}. ${shortMonth ? shortNameOfMonth(date.month) : nameOfMonth(date.month)} ${includeYear ? date.year.toString().substring(useFullYear ? 0 : 2) : ""}".trimRight();
@@ -37,10 +40,12 @@ class DateHelper {
   static String formatDateDifference(DateTime date, {useAbbreviations = false}) {
     var now = DateTime.now();
     var difference = now.difference(date);
-
+    // difference.isNegative: in the future otherwise in the past
     String prefix = difference.isNegative ? "in" : "vor";
-    // fix: replace Duration.inDays, which is rounded down (number of entire days), we count fractional days as whole days
-    int days = (difference.inMicroseconds / Duration.microsecondsPerDay).abs().ceil();
+
+    double daysFraction = (difference.inMicroseconds / Duration.microsecondsPerDay).abs(); // > 0
+    // fix: replace Duration.inDays, which is rounded down (number of entire days), we count fractional days as whole days if date is in the future
+    int days = difference.isNegative ? daysFraction.ceil() : daysFraction.floor();
 
     if (date.day == now.day && date.month == now.month && date.year == now.year) {
       return "Heute";
@@ -48,7 +53,8 @@ class DateHelper {
     if (days == 1 && difference.isNegative) {
       return "Morgen";
     }
-    if (days == 1) {
+    if (days <= 1) {
+      // for past dates: day count is not rounded up, map 0.x days ago to yesterday if it isn't today
       return "Gestern";
     }
     if (days < 31 || (useAbbreviations && days < 365)) {
@@ -59,7 +65,7 @@ class DateHelper {
       return "$prefix $months${useAbbreviations ? "m" : " Monat${months > 1 ? "en" : ""}"}";
     }
     int years = (days / 365).floor();
-    return "$prefix $years${useAbbreviations ? "y" : " Jahr${years > 1 ? "e" : ""}"}";
+    return "$prefix $years${useAbbreviations ? "y" : " Jahr${years > 1 ? "en" : ""}"}";
   }
 
   static String formatWeekDifference(DateTime startDate, DateTime endDate, {useAbbreviations = false}) {

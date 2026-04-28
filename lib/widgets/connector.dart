@@ -29,7 +29,7 @@ class _SyncApiConnectorLoadingWidgetState extends State<SyncApiConnectorLoadingW
   late final Animation<Offset> _stageOffsetAnimation;
 
   bool _visible = false;
-  int _stageIndex = 0;
+  int _stageIndex = -1;
 
   @override
   void initState() {
@@ -135,10 +135,7 @@ class _SyncApiConnectorLoadingWidgetState extends State<SyncApiConnectorLoadingW
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(width: 1, color: theme.primaryColor.withOpacity(.1)),
-                  color: theme.dividerColor.withOpacity(.86),
-                  // border: Border.all(width: 1, color: theme.primaryColor.withOpacity(.66)),
-                  // color: theme.primaryColor.withOpacity(.2),
+                  color: theme.dividerColor.withValues(alpha: 0.8),
                 ),
                 height: 60,
                 child: SafeBackdropFilter(

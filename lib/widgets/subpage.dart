@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 
 import 'skeleton.dart';
@@ -49,23 +52,44 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
   void openSubpage(Widget content, {Function(dynamic result)? callback}) {
     if (_controller.isAnimating) return; // prevent opening (same) subpage concurrently (e.g. button is spammed)
 
+    _controller.value = 0;
+    _controller.animateTo(1, curve: Curves.ease);
+
     setState(() {
       _stack.add(_SubpageEntry(content, callback));
       _isOpened = true;
     });
-    _controller.animateTo(1, curve: Curves.ease);
+  }
+
+  void _closeSubpageWithVelocity(double velocity) {
+    final toRemove = _stack.lastOrNull;
+    toRemove?.callback?.call(null);
+    _controller.animateWith(
+      SpringSimulation(
+        const SpringDescription(mass: 1, stiffness: 500, damping: 50),
+        _controller.value,
+        0,
+        -velocity / MediaQuery.sizeOf(context).height, // convert from pixels/s to controller value/s
+      ),
+    ).then((_) {
+      _handleCloseAnimationCompleted(_stack.lastOrNull);
+    });
   }
 
   void closeSubpage([dynamic result]) {
     final toRemove = _stack.lastOrNull;
     toRemove?.callback?.call(result);
-    _controller.animateTo(0, curve: Curves.ease).then((_) {
-      if (!mounted) return;
-      setState(() {
-        _isOpened = _stack.length > 1;
-        _stack.remove(toRemove);
-        if (_isOpened) _controller.value = 1;
-      });
+    _controller.animateTo(0, curve: Curves.easeInOut).then((_) {
+      _handleCloseAnimationCompleted(toRemove);
+    });
+  }
+
+  void _handleCloseAnimationCompleted(_SubpageEntry? toRemove) {
+    if (!mounted) return;
+    setState(() {
+      _isOpened = _stack.length > 1;
+      _stack.remove(toRemove);
+      if (_isOpened) _controller.value = 1;
     });
   }
 
@@ -81,7 +105,7 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
     if (_controller.value > 0.9 && details.velocity.pixelsPerSecond.dy < 400) {
       _controller.animateTo(1, curve: Curves.easeOutCubic, duration: const Duration(milliseconds: 500)); // keep open
     } else {
-      closeSubpage();
+      _closeSubpageWithVelocity(details.velocity.pixelsPerSecond.dy);
     }
   }
 
@@ -118,7 +142,7 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
                       scale: 1 - (_animation.value * 0.05),
                       child: Stack(children: [
 
-                        // the root page
+                        // the root/home page
                         if (_stack.length > 1)
                           Transform.scale(
                               scale: 1 + (_animation.value * 0.05) - 0.05,
@@ -136,7 +160,7 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
                           ),
 
                         ..._stack
-                            .sublist(0, (_stack.length - 1).clamp(0, 100))
+                            .sublist(max(0, _stack.length - 2), max(0, _stack.length - 1)) // no need to display full stack
                             .map((element) => _buildSubpage(context, element.content))
                       ]),
                     );
@@ -188,12 +212,16 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
                 left: 0,
                 right: 0,
                 child: Center(
-                  child: Container(
-                    height: 4,
-                    width: MediaQuery.sizeOf(context).width * 0.1,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).hintColor,
-                      borderRadius: BorderRadius.circular(4),
+                  child: GestureDetector(
+                    onVerticalDragUpdate: handleDragUpdate,
+                    onVerticalDragEnd: handleDragEnd,
+                    child: Container(
+                      height: 4,
+                      width: MediaQuery.sizeOf(context).width * 0.1,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).hintColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
                   ),
                 )),
@@ -238,7 +266,7 @@ class SubpageTrigger extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: enabled ? () => SubpageController.of(context).openSubpage(createSubpage(), callback: callback) : null,
-      child: child,
+      child: Container(color: Colors.transparent, child: child), // make tappable
     );
   }
 }

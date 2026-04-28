@@ -264,6 +264,7 @@ class SemesterResult {
       int sum = 0;
       for (var semester in Semester.qPhase) {
         if (results[subject]![semester] != null) {
+          if (!results[subject]![semester]!.valid) continue;
           sum += results[subject]![semester]!.grade;
           count++;
         }
@@ -292,7 +293,7 @@ class SemesterResult {
 
     }
 
-    // calculate total prediction
+    // apply total prediction and abi predictions
     int totalPrediction = totalCount == 0 ? 0 : (totalSum / totalCount).floor();
     for (var subject in choice.subjects) {
       for (var semester in Semester.normal) {
@@ -323,6 +324,7 @@ class SemesterResult {
     if (subject != null) {
       for (var semester in Semester.qPhase) {
         if (results[subject]![semester] != null) {
+          if (!results[subject]![semester]!.valid) continue;
           sum += results[subject]![semester]!.grade;
           count++;
         }
@@ -366,6 +368,26 @@ class SemesterResult {
       }
     }
     return true;
+  }
+
+  static Map<Subject, List<Semester>> getIncompleteSubjects(Choice choice, GradesDataProvider dataProvider) {
+    Map<Subject, List<Semester>> incomplete = {};
+    for (var subject in choice.subjects) {
+      for (var semester in Semester.qPhaseEquivalents(subject.category)) {
+        if (!choice.hasSubjectInSemester(subject, semester)) continue;
+        if (dataProvider.getGrades(subject.id, semester: semester).isEmpty) {
+          incomplete.putIfAbsent(subject, () => []);
+          incomplete[subject]!.add(semester);
+        }
+      }
+      if (choice.abiSubjects.contains(subject)) {
+        if (dataProvider.getGrades(subject.id, semester: Semester.abi).isEmpty) {
+          incomplete.putIfAbsent(subject, () => []);
+          incomplete[subject]!.add(Semester.abi);
+        }
+      }
+    }
+    return incomplete;
   }
 
   static Statistics calculateStatistics(Choice choice, Map<Subject, Map<Semester, SemesterResult>> result) {

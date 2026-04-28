@@ -103,7 +103,7 @@ class SubjectWidget extends StatelessWidget {
             const SizedBox(width: 10),
             Text(subject.name, style: theme.textTheme.labelMedium?.copyWith(color: contrastColor), maxLines: 1, overflow: TextOverflow.clip),
             const Spacer(),
-            const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 24),
+            Icon(Icons.chevron_right_rounded, color: contrastColor, size: 24),
           ],
         ),
       ),

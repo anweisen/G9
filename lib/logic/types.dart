@@ -40,6 +40,7 @@ class Subject {
   @override
   String toString() => "$name($id, ${category.name})";
 
+  // https://www.gesetze-bayern.de/Content/Document/BayGSO-ANL_3
   static Subject
     mathe = Subject(id: 1, name: 'Mathe', color: const Color.fromRGBO(11, 107, 234, 1), category: SubjectCategory.abi, field: SubjectTaskField.mint),
     deutsch = Subject(id: 2, name: 'Deutsch', color: const Color.fromRGBO(248, 248, 31, 1.0), category: SubjectCategory.abi, field: SubjectTaskField.slk),
@@ -51,6 +52,10 @@ class Subject {
     franz = Subject(id: 22, name: 'Französisch', color: const Color.fromRGBO(224, 146, 46, 1.0), category: SubjectCategory.sg),
     spanisch = Subject(id: 23, name: 'Spanisch', color: const Color.fromRGBO(224, 146, 46, 1.0), category: SubjectCategory.sg),
     latein = Subject(id: 24, name: 'Latein', color: const Color.fromRGBO(224, 146, 46, 1.0), category: SubjectCategory.sg),
+    griechisch = Subject(id: 25, name: 'Griechisch', color: const Color.fromRGBO(224, 146, 46, 1.0), category: SubjectCategory.sg),
+    italienisch = Subject(id: 26, name: 'Italienisch', color: const Color.fromRGBO(224, 146, 46, 1.0), category: SubjectCategory.sg),
+    russisch = Subject(id: 27, name: 'Russisch', color: const Color.fromRGBO(224, 146, 46, 1.0), category: SubjectCategory.sg),
+    chinesisch = Subject(id: 28, name: 'Chinesisch', color: const Color.fromRGBO(224, 146, 46, 1.0), category: SubjectCategory.sg),
 
     spanischSb = Subject(id: 31, name: 'Spanisch spätb.', color: const Color.fromRGBO(224, 146, 46, 1.0), category: SubjectCategory.sbs),
 
@@ -79,9 +84,9 @@ class Subject {
 
   static final Map<SubjectId, Subject> byId = {};
   static final List<Subject> all = [ // ensure initialization
-    mathe, deutsch, matheVk, deutschVk, english, franz, spanisch, latein, spanischSb, physik, chemie, bio, info, reli, geschi, geo, wr, pug, kunst, musik, sport, seminar, wahl
+    mathe, deutsch, matheVk, deutschVk, english, franz, spanisch, latein, griechisch, italienisch, russisch, chinesisch, spanischSb, physik, chemie, bio, info, reli, geschi, geo, wr, pug, kunst, musik, sport, seminar, wahl
   ];
-  static List<Subject> lks = [english, bio, physik, chemie, info, reli, geschi, geo, wr, pug, kunst, musik, sport, franz, spanisch, latein]; // custom order
+  static List<Subject> lks = [english, bio, physik, chemie, info, reli, geschi, geo, wr, pug, kunst, musik, sport, franz, spanisch, latein, griechisch, italienisch, russisch, chinesisch]; // custom order
 
   static final Map<SubjectId, Color> originalColors = {};
 
@@ -168,7 +173,7 @@ enum SubjectTaskField {
   final String longName;
 
   get fullName => "${longName[0].toUpperCase()}${longName.substring(1)}es Aufgabenfeld";
-  get fullDisplay => "$fullName ${this != none ? "($shortName)" : ""}";
+  get fullDisplay => "$fullName${this != none ? " ($shortName)" : ""}";
   get display => "$shortName ($longName)";
 
   const SubjectTaskField(this.shortName, this.longName);

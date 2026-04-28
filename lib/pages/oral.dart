@@ -349,7 +349,7 @@ class _SelectOralDatePageState extends State<SelectOralDatePage> {
     final kmapi = Provider.of<KmApiProvider>(context);
 
     return SubpageSkeleton(
-        title: const PageTitle(title: "Kolloquiumstermin auswählen"),
+        title: const PageTitle(title: "Kolloquiumstermin eintragen"),
         actions: [
           SaveButtonContainer(btn1: SaveButton(
             onTap: () {

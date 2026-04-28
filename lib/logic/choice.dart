@@ -238,7 +238,6 @@ class Choice extends HiveObject {
   List<Subject> get writtenAbiSubjects => abiSubjects.where((subject) => subject != oral1 && subject != oral2).toList();
   List<Subject> get oralAbiSubjects => [if (oral1 != null) oral1!, if (oral2 != null) oral2!];
 
-  // might not be set correctly yet, yet hasSelectedExamTypes first!
   bool isSubjectEa(Subject subject) {
     // eA: LK, Deutsch, Mathe
     return subject == lk || subject == Subject.deutsch || subject == Subject.mathe;

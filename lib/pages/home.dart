@@ -22,6 +22,7 @@ import '../widgets/skeleton.dart';
 import '../widgets/subpage.dart';
 import '../widgets/piechart.dart';
 import 'account.dart';
+import 'bayefg.dart';
 import 'change.dart';
 import 'grade.dart';
 import 'hurdles.dart';
@@ -127,13 +128,14 @@ class HomePage extends StatelessWidget {
       else if (!flags.isEmpty && graduationHurdleCheckResults.isNotEmpty)
         ..._buildHurdleInfo(theme, "Anerkennungshürde", graduationHurdleCheckResults.first, [...admissionHurdleCheckResults, ...graduationHurdleCheckResults]),
 
-      if (grades.currentSemester == Semester.abi)...(completed ? [
-        CompletedWidget(flags: flags, noHurdles: admissionHurdleCheckResults.isEmpty && graduationHurdleCheckResults.isEmpty,),
-        const SizedBox(height: 20),
-      ] : [
+      if (grades.currentSemester == Semester.abi) ...[
+        if (completed) ...[
+          CompletedWidget(flags: flags, noHurdles: admissionHurdleCheckResults.isEmpty && graduationHurdleCheckResults.isEmpty,),
+          const SizedBox(height: 20),
+        ],
         const AbiDatesWidget(),
         const SizedBox(height: 20),
-      ]),
+      ],
 
       // Abitur Vorhersage
       Container(
@@ -241,7 +243,7 @@ class HomePage extends StatelessWidget {
       ..._buildImproveAbiChoice(theme, betterChoice, settings.choice!, flags),
 
       if (graduationHurdleCheckResults.isEmpty && admissionHurdleCheckResults.isEmpty)
-        ..._buildHurdlePassingInfo(theme),
+        ..._buildHurdlePassingInfoAndBayEfg(theme, completed, settings.choice!, results, flags, grades),
 
       if (!flags.isEmpty) ...[
         const SizedBox(height: 20),
@@ -351,34 +353,70 @@ class HomePage extends StatelessWidget {
     ];
   }
 
-  List<Widget> _buildHurdlePassingInfo(ThemeData theme) {
+  List<Widget> _buildHurdlePassingInfoAndBayEfg(ThemeData theme, bool completed, Choice choice, Map<Subject, Map<Semester, SemesterResult>> result, ResultsFlags flags, GradesDataProvider provider) {
+    List<HurdleCheckResult> bayEfgHurdles = BayEfgHurdle.check(choice, result, flags, provider);
+    bool passedQ = bayEfgHurdles.isEmpty || !bayEfgHurdles.any((hurdle) => !(hurdle.hurdle as BayEfgHurdle).finalCheckAfterAbi);
+
     return [
       const SizedBox(height: 20),
-      SubpageTrigger(
-        createSubpage: () => const HurdlesPage(checkResults: []),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: theme.dividerColor,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(
-                  children: [
-                    Icon(Icons.gavel_rounded, size: 16, color: theme.textTheme.bodySmall?.color,),
-                    const SizedBox(width: 5,),
-                    Text("Zulassungs- & Anerkennungshürden", style: theme.textTheme.bodySmall),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text("Alle nötigen Hürden erfüllt", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1)),
-              ]),
-              Icon(Icons.check_circle_rounded, size: 20, color: theme.primaryColor,),
-            ],
-          ),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: theme.dividerColor,
+        ),
+        child: Column(
+          children: [
+            SubpageTrigger(
+              createSubpage: () => const HurdlesPage(checkResults: []),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Row(
+                      children: [
+                        Icon(Icons.gavel_rounded, size: 16, color: theme.textTheme.bodySmall?.color,),
+                        const SizedBox(width: 5,),
+                        Text("Zulassungs- & Anerkennungshürden", style: theme.textTheme.bodySmall),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text("Alle nötigen Hürden erfüllt", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1)),
+                  ]),
+                  Icon(Icons.check_circle_rounded, size: 20, color: theme.primaryColor,),
+                ],
+              ),
+            ),
+            const SizedBox(height: 15),
+            SubpageTrigger(
+              createSubpage: () => BayEfgHurdlePage(checkResults: bayEfgHurdles),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Row(
+                      children: [
+                        Icon(Icons.arrow_circle_up_rounded, size: 16, color: theme.textTheme.bodySmall?.color,),
+                        const SizedBox(width: 5,),
+                        Text("Auswahlhürden Förderung BayEFG", style: theme.textTheme.bodySmall?.copyWith(height: 1.2)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    if (completed) ...[
+                      if (bayEfgHurdles.isEmpty) Text("Alle Hürden erfüllt", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1))
+                      else Text("Hürden nicht erfüllt", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1)),
+                    ] else ...[
+                      if (passedQ) Text("Vorauswahlhürden erfüllt", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1))
+                      else Text("Hürden vermutlich nicht erfüllt", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1)),
+                    ],
+                  ]),
+                  if (completed && bayEfgHurdles.isEmpty) Icon(Icons.check_circle_rounded, size: 20, color: theme.primaryColor,)
+                  else if (!completed && passedQ) Icon(Icons.check_circle_outline_rounded, size: 20, color: theme.primaryColor,)
+                  else Icon(Icons.info_outline_rounded, size: 20, color: theme.primaryColor,)
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     ];
@@ -629,6 +667,7 @@ class _GradeBarChartState extends State<GradeBarChart> {
     String currentGradeText = SemesterResult.pointsToAbiGrade(points);
     String worseGradeText = pointsForCurrentGrade <= 300 ? "-" : SemesterResult.pointsToAbiGrade(pointsForCurrentGrade - 1);
 
+    // (points more than needed for current) / (points width between current and better)
     double offset = (points - pointsForCurrentGrade) / (pointsForBetterGrade - pointsForCurrentGrade);
 
     return LayoutBuilder(
@@ -998,6 +1037,8 @@ class AbiDatesWidget extends StatelessWidget {
     var data = Provider.of<GradesDataProvider>(context);
     var choice = settings.choice!;
 
+    Map<Subject, List<Semester>> missingGrades = SemesterResult.getIncompleteSubjects(choice, data);
+
     int predictedGraduationYear = YearHelper.extractGraduationYear(data);
     kmapi.fetchDataIfNotPresent(predictedGraduationYear);
 
@@ -1162,6 +1203,43 @@ class AbiDatesWidget extends StatelessWidget {
               if (kmapi.abiDates != null) ...[
                 Text("ab ${kmapi.abiDates!.graduationDate.formattedDate}", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 16, color: theme.primaryColor), softWrap: true,),
               ] else  DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
+
+              const SizedBox(height: 10,),
+              Text("Trage noch folgende Noten ein", style: theme.textTheme.bodySmall),
+              const SizedBox(height: 4,),
+              Row(
+                spacing: 10,
+                children: [
+                  Icon(Icons.warning_amber_rounded, size: 20, color: theme.disabledColor,),
+                  Flexible(
+                    child: Wrap(
+                      spacing: 14,
+                      runSpacing: 2,
+                      children: [
+                        for (var missingEntry in missingGrades.entries)
+                          Row(
+                            spacing: 6,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(missingEntry.key.name,
+                                  style: theme.textTheme.displayMedium?.copyWith(fontSize: 16, color: theme.primaryColor, fontWeight: FontWeight.w600, height: 1.4),
+                                  overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,
+                                ),
+                              ),
+                              for (var semester in missingEntry.value)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                                  decoration: BoxDecoration(color: theme.splashColor, borderRadius: BorderRadius.circular(5)),
+                                  child: Text(semester.name.toUpperCase(), style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600, color: theme.disabledColor))
+                                ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                ]
+              )
             ]
           ]
         ),

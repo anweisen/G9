@@ -279,3 +279,141 @@ enum GraduationHurdle implements HurdleType {
     return checkResults;
   }
 }
+
+enum BayEfgHurdle implements HurdleType {
+  // https://www.gesetze-bayern.de/Content/Document/BayDVEFG-5 (2005)
+  // (3) 1 Folgende Voraussetzungen müssen für die Zulassung zur Prüfung erfüllt sein:
+  // 1. die Hochschulreife oder Fachhochschulreife wurde mit einer Note von mindestens 1,3 in Bayern erworben und
+  // 2. es wurden folgende Leistungen erbracht:
+  //    a) beim Besuch der gymnasialen Oberstufe wurde in der Gesamtqualifikation aus
+  //      aa) Block I, der Qualifikationsphase, eine Summe von mindestens 524 Punkten eingebracht, davon
+  //        aaa) aus den Fächern [? augenscheinlicher Widerspruch ?]
+  //              – Deutsch,
+  //              – Mathematik,
+  //              – fortgeführter Fremdsprache sowie
+  //              – entweder aus dem Fach Geschichte oder einer in vier Ausbildungsabschnitten belegten Naturwissenschaft
+  //             insgesamt 209 Punkte, sowie
+  //        bbb) in jeder der eingebrachten Halbjahresleistungen mindestens 12 Punkte und
+  //      bb) Block II, der Abiturprüfung, eine Summe von mindestens 250 Punkten,
+  // https://www.elitenetzwerk.bayern.de/start/foerderangebote/max-weber-programm/von-der-schule-zum-stipendium (2026)
+  // Abiturschnitt:	mindestens 1,30
+  // Qualifikationsphase:
+  // -  mindestens 524 Punkte,
+  // -  davon aus den Fächern Deutsch, Mathematik sowie dem Leistungsfach eine Summe von insgesamt mindestens 156 Punkten,
+  // -  sowie in jeder der eingebrachten Halbjahresleistungen mindestens 12 Punkte
+  // Abiturprüfung: mindestens 250 Punkte
+
+  min1_3("Nr. 1", "Hochschulreife mit einer Note von mindestens 1,3 in Bayern", true), // !
+  q524("Nr. 2 Buchst. a aa", "In der Gesamtqualifikation aus Block I mindestens 524 Punkte eingebracht"),
+  min209q_dmsgntg("Nr. 2 Buchst. a aa aaa", "In Deutsch, Mathe, fortgeführter Fremdsprache und Geschichte/Naturwissenschaft insgesamt mindestens 209 Punkte eingebracht"),
+  min156dml(null, "In Deutsch, Mathe und dem Leistungsfach insgesamt mindestens 156 Punkte"),
+  je12("Nr. 2 Buchst. a aa bbb", "In jeder der eingebrachten Halbjahresleistungen mindestens 12 Punkte"),
+  abi250("Nr. 2 Buchst. a bb", "In Block II, der Abiturprüfung, eine Summe von mindestens 250 Punkten", true) // !
+  // ! können erst nach Prüfungen final überprüft werden
+  ;
+
+  final bool finalCheckAfterAbi;
+
+  @override
+  final String desc;
+
+  @override
+  final String paragraph;
+
+  const BayEfgHurdle(String? section, this.desc, [this.finalCheckAfterAbi = false]) : paragraph = section == null ? "§ -" : "§ 5 Abs. 3 $section BayDVEFG";
+
+  static List<HurdleCheckResult> check(Choice choice, Map<Subject, Map<Semester, SemesterResult>> result, ResultsFlags flags, GradesDataProvider provider) {
+    List<HurdleCheckResult> checkResults = [];
+
+    if (flags.pointsTotal < 751) { // see results.dart minPointsForAbiGradeMap
+      checkResults.add(HurdleCheckResult(
+          BayEfgHurdle.min1_3,
+          "Note von ${SemesterResult.pointsToAbiGrade(flags.pointsTotal)}"
+      ));
+    }
+    if (flags.pointsQ < 524) {
+      checkResults.add(HurdleCheckResult(
+          BayEfgHurdle.q524,
+          "${flags.pointsQ} von 524"
+      ));
+    }
+
+    int pointsD = getUsedPointsIf4Q(Subject.deutsch, choice, result);
+    int pointsM = getUsedPointsIf4Q(Subject.mathe, choice, result);
+    int pointsLk = getUsedPointsIf4Q(choice.lk, choice, result);
+
+    int pointsSg = getBetterUsedPointsIf4Q(choice.sg1, (choice.mintSg2.category == SubjectCategory.sg) ? choice.mintSg2 : null, choice, result);
+    int pointsG = getUsedPointsIf4Q(Subject.geschi, choice, result);
+    int pointsNtg = getBetterUsedPointsIf4Q(choice.ntg1, (choice.mintSg2.category == SubjectCategory.ntg) ? choice.mintSg2 : null, choice, result);
+    int pointsNtgG = pointsG > pointsNtg ? pointsG : pointsNtg;
+
+    int pointsDMSGNTG = pointsD + pointsM + pointsSg + pointsNtgG;
+    if (pointsDMSGNTG < 209) {
+      checkResults.add(HurdleCheckResult(
+        BayEfgHurdle.min209q_dmsgntg,
+        "$pointsDMSGNTG von 209"
+      ));
+    }
+
+    int pointsDML = pointsD + pointsM + pointsLk;
+    if (pointsDML < 156) {
+      checkResults.add(HurdleCheckResult(
+        BayEfgHurdle.min156dml,
+        "$pointsDML von 156"
+      ));
+    }
+
+    int under12Count = 0; // for statistic
+    for (Subject subject in choice.subjects) {
+      for (Semester semester in Semester.qPhaseSeminar) {
+        if (result[subject]?[semester] == null) {
+          continue; // Fach in diesem Semester nicht gewählt
+        }
+
+        SemesterResult sr = result[subject]![semester]!;
+        if (sr.used && sr.grade < 12) {
+          under12Count++;
+        }
+      }
+    }
+    if (under12Count > 0) {
+      checkResults.add(HurdleCheckResult(
+          BayEfgHurdle.je12,
+          "$under12Count eingebrachte Halbjahresleistungen unter 12 Punkten"
+      ));
+    }
+
+    if (flags.pointsAbi < 250) {
+      checkResults.add(HurdleCheckResult(
+          BayEfgHurdle.abi250,
+          "${flags.pointsAbi} von 250"
+      ));
+    }
+
+    return checkResults;
+  }
+
+  static int getBetterUsedPointsIf4Q(Subject? subject1, Subject? subject2, Choice choice, Map<Subject, Map<Semester, SemesterResult>> result) {
+    int points1 = getUsedPointsIf4Q(subject1, choice, result);
+    int points2 = getUsedPointsIf4Q(subject2, choice, result);
+    return points1 >= points2 ? points1 : points2;
+  }
+
+  static int getUsedPointsIf4Q(Subject? subject, Choice choice, Map<Subject, Map<Semester, SemesterResult>> result) {
+    int points = -1;
+
+    if (subject != null && choice.numberOfSemestersFor(subject) == 4) {
+      for (Semester semester in Semester.qPhase) {
+        if (result[subject]?[semester] == null) continue; // darf dann nicht mehr passieren !
+
+        SemesterResult sr = result[subject]![semester]!;
+        if (sr.used) {
+          points += sr.grade;
+        }
+      }
+    }
+
+    return points;
+  }
+
+}

@@ -143,7 +143,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.black,
         shadowColor: const Color.fromRGBO(117, 116, 131, 1.0),
         splashColor: const Color.fromRGBO(252, 130, 130, 0.4),
-        disabledColor: const Color.fromRGBO(252, 130, 130, 1.0),
+        disabledColor: const Color.fromRGBO(252, 89, 89, 1.0),
         indicatorColor: const Color.fromRGBO(107, 211, 99, 1.0),
         textTheme: const TextTheme(
           headlineMedium: TextStyle(fontWeight: bold, color: Colors.black, fontSize: 24),

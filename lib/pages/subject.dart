@@ -147,7 +147,7 @@ class _SubjectPageState extends State<SubjectPage> {
                           accountProvider.updateSubjectGradesFromResult(result, dataProvider);
                         }
                       },
-                      child: Icon(Icons.add, color: isFlagged ? theme.shadowColor : theme.primaryColor, size: 30),
+                      child: Icon(Icons.add_rounded, color: isFlagged ? theme.shadowColor : theme.primaryColor, size: 30),
                   ),
                 ],
               ),

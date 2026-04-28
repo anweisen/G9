@@ -14,7 +14,7 @@ import '../widgets/datepicker.dart';
 
 // (!) USE A GLOBAL KEY
 class GradePage extends StatefulWidget {
-  const GradePage({super.key, this.subject, this.entry, required this.semester, this.type = null});
+  const GradePage({super.key, this.subject, this.entry, required this.semester, this.type});
 
   final Semester semester;
   final Subject? subject;
@@ -525,7 +525,7 @@ class SaveButtonContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: 24 + PageSkeleton.leftOffset,
+      bottom: 18 + PageSkeleton.leftOffset,
       left: PageSkeleton.leftOffset,
       right: PageSkeleton.leftOffset,
       child: Row(
@@ -565,20 +565,23 @@ class SaveButton extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
 
     return Expanded(
-      child: Material(
+      child: ClipRRect(
+       borderRadius: BorderRadius.circular(10),
+       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: theme.primaryColor),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 18),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(text, style: theme.textTheme.labelMedium),
-                  Icon(icon, color: theme.textTheme.labelMedium?.color, size: 24),
-                ],
+            child: Container(
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: theme.primaryColor),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 18),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(text, style: theme.textTheme.labelMedium),
+                    Icon(icon, color: theme.textTheme.labelMedium?.color, size: 24),
+                  ],
+                ),
               ),
             ),
           ),

@@ -36,6 +36,8 @@
   <title>G9 Notenapp</title>
   <link rel="manifest" href="manifest.json">
 
+  <link rel="preload" href="main.dart.js" as="script">
+
   <script>
     // The value below is injected by flutter build, do not touch.
     const serviceWorkerVersion = null;
@@ -50,6 +52,21 @@
              child-src 'self' blob:;
              img-src * 'self' data: blob:;
              connect-src * 'self' blob:;">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #fff; /* default to white */
+    }
+    @media (prefers-color-scheme: dark) {
+      body {
+          background-color: #000; /* switch to black in dark mode */
+      }
+    }
+  </style>
 </head>
 <body>
   <script>

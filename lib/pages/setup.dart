@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../widgets/skeleton.dart';
@@ -653,7 +654,7 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
                             icon: Icons.chevron_left_rounded,
                             callback: () {
                               if (widget.pageController.page == 0) {
-                                Navigator.of(context).pop();
+                                context.pop();
                                 return;
                               }
                               // 375 = 500 * (24 / leftOffset)
@@ -854,10 +855,10 @@ class SetupFinishPage extends StatelessWidget {
                   NextButton(
                       text: "Bestätigen",
                       icon: Icons.check_rounded,
-                      callback: () => {
-                        Provider.of<SettingsDataProvider>(context, listen: false).choice = choice,
-                        Provider.of<AccountDataProvider>(context, listen: false).updateChoice(choice),
-                        Navigator.popAndPushNamed(context, "/home")
+                      callback: () {
+                        Provider.of<SettingsDataProvider>(context, listen: false).choice = choice;
+                        Provider.of<AccountDataProvider>(context, listen: false).updateChoice(choice);
+                        context.push("/home");
                       },
                       leftOffset: leftOffset,
                       animationProgress: 1)

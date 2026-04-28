@@ -201,7 +201,7 @@ class AccountDataProvider extends ChangeNotifier {
     _syncing = true;
     if (notifyInstantly) notifyListeners();
 
-    await Future.delayed(const Duration(milliseconds: 1500));
+    await Future.delayed(const Duration(milliseconds: 500));
 
     final dataPayload = SyncDataPayload(
       choice: settingsProvider.choice,

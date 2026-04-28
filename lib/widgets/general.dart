@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../logic/choice.dart';
@@ -424,4 +425,135 @@ class CallbackCheckBox extends StatelessWidget {
 }
 
 
+class G9TitleBar extends StatelessWidget {
+  const G9TitleBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+        builder: (context, constraints) => buildTitleBar(Theme.of(context), context, constraints)
+    );
+  }
+
+  static Widget buildTitleBar(ThemeData theme, BuildContext context, BoxConstraints constraints) {
+    bool isWide = constraints.maxWidth > 300;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SvgPicture.asset("assets/icons/logo.svg",
+          clipBehavior: Clip.hardEdge,
+          colorFilter: ColorFilter.mode(theme.primaryColor, BlendMode.srcIn),
+          width: isWide ? 74 : 50,
+          theme: SvgTheme(
+            currentColor: theme.primaryColor,
+          ),
+        ),
+        const SizedBox(width: 5),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("G9 Notenapp",
+                style: (isWide ? theme.textTheme.headlineMedium : theme.textTheme.bodyMedium),
+                textHeightBehavior: const TextHeightBehavior(
+                    applyHeightToFirstAscent: false,
+                    applyHeightToLastDescent: false)),
+            Text("fürs Abitur in Bayern",
+              // style: isWide ? theme.textTheme.labelSmall : theme.textTheme.displayMedium,
+              style: theme.textTheme.displayMedium,
+              textHeightBehavior: const TextHeightBehavior(
+                  applyHeightToFirstAscent: false,
+                  applyHeightToLastDescent: false),
+            ),
+          ],
+        )
+      ],
+    );
+  }
+}
+
+class AnimatedG9TitleBar extends StatefulWidget {
+  const AnimatedG9TitleBar({super.key, this.duration = const Duration(milliseconds: 800)});
+
+  final Duration duration;
+
+  @override
+  State<AnimatedG9TitleBar> createState() => _AnimatedG9TitleBarState();
+}
+
+class _AnimatedG9TitleBarState extends State<AnimatedG9TitleBar> with SingleTickerProviderStateMixin {
+
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  late Animation<Offset> _offsetAnimation;
+
+  @override
+  void initState() {
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic);
+    _offsetAnimation = Tween<Offset>(
+      begin: const Offset(0.1, 0.0),
+      end: Offset.zero,
+    ).animate(_animation);
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return LayoutBuilder(
+        builder: (context, constraints) {
+          bool isWide = constraints.maxWidth > 300;
+          return AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) => Opacity(
+              opacity: _animation.value,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SvgPicture.asset("assets/icons/logo.svg",
+                    clipBehavior: Clip.hardEdge,
+                    colorFilter: ColorFilter.mode(theme.primaryColor, BlendMode.srcIn),
+                    width: isWide ? 74 : 50,
+                    theme: SvgTheme(
+                      currentColor: theme.primaryColor,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  SlideTransition(
+                    position: _offsetAnimation,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("G9 Notenapp",
+                            style: (isWide ? theme.textTheme.headlineMedium : theme.textTheme.bodyMedium),
+                            textHeightBehavior: const TextHeightBehavior(
+                                applyHeightToFirstAscent: false,
+                                applyHeightToLastDescent: false)),
+                        Text("fürs Abitur in Bayern",
+                          // style: isWide ? theme.textTheme.labelSmall : theme.textTheme.displayMedium,
+                          style: theme.textTheme.displayMedium,
+                          textHeightBehavior: const TextHeightBehavior(
+                              applyHeightToFirstAscent: false,
+                              applyHeightToLastDescent: false),
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+          );
+        }
+    );
+  }
+}
 

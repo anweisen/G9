@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:go_router/go_router.dart';
 
 import 'dart:ui';
 
@@ -123,8 +124,8 @@ class PageSkeleton extends StatelessWidget {
                                           end: Alignment.bottomCenter,
                                           colors: [
                                             theme.scaffoldBackgroundColor,
-                                            theme.scaffoldBackgroundColor.withOpacity(0.6),
-                                            theme.scaffoldBackgroundColor.withOpacity(0.4),
+                                            theme.scaffoldBackgroundColor.withValues(alpha: 0.6),
+                                            theme.scaffoldBackgroundColor.withValues(alpha: 0.4),
                                           ],
                                           stops: const [0.0, 0.4, 1.0],
                                         ),
@@ -271,3 +272,98 @@ class SubpageSkeleton extends StatelessWidget {
   }
 }
 
+class UnauthorizedPageSkeleton extends StatelessWidget {
+  const UnauthorizedPageSkeleton({super.key, required this.children, this.crossAxisAlignment = CrossAxisAlignment.start});
+
+  final List<Widget> children;
+  final CrossAxisAlignment crossAxisAlignment;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isAtWelcome = GoRouterState.of(context).matchedLocation == "/welcome";
+
+    return Scaffold(
+        appBar: const WindowTitleBar(),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 860, maxHeight: 1200),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 25, horizontal: PageSkeleton.leftOffset),
+                      child: IntrinsicHeight(
+                        child: Column(
+                            crossAxisAlignment: crossAxisAlignment,
+                            children: [
+                              _buildTitleBar(context, isAtWelcome, theme, constraints),
+                              const SizedBox(height: 25,),
+
+                              ...children,
+
+                              const Spacer(),
+                              const SizedBox(height: 36,),
+                              _buildFooter(theme, context),
+                            ]
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+            ),
+          ),
+        )
+    );
+  }
+
+  GestureDetector _buildTitleBar(BuildContext context, bool isAtWelcome, ThemeData theme, BoxConstraints constraints) {
+    return GestureDetector(
+      onTap: context.canPop() && !isAtWelcome ? () => context.pop() : null,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        spacing: 14,
+        children: [
+          G9TitleBar.buildTitleBar(theme, context, constraints),
+          if (context.canPop() && !isAtWelcome) Container(
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: theme.dividerColor),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SizedBox(height: 28, child: Icon(Icons.chevron_left_rounded, color: theme.primaryColor)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Center _buildFooter(ThemeData theme, BuildContext context) {
+    return Center(
+        child: Column(
+      children: [
+        Text("© ${DateTime.now().year} anweisen", style: theme.textTheme.displayMedium),
+        const SizedBox(height: 6,),
+        Wrap(
+          spacing: 10,
+          children: [
+            GestureDetector(
+                onTap: () => context.push("/legal"),
+                child: Text("Datenschutz & Impressum", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600))),
+          ],
+        ),
+        const SizedBox(height: 4,),
+      ],
+    ));
+  }
+}

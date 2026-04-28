@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class Nav extends StatelessWidget {
   const Nav({super.key});
@@ -18,6 +19,11 @@ class Nav extends StatelessWidget {
       default:
         return 0;
     }
+  }
+
+  void _navigateToRoute(int currentIndex, int targetIndex, String targetRoute, BuildContext context) {
+    if (currentIndex == targetIndex) return;
+    context.go(targetRoute);
   }
 
   @override
@@ -53,13 +59,13 @@ class Nav extends StatelessWidget {
                     var currentIndex = _getCurrentIndex(context);
                     if (index == currentIndex) return;
                     if (index == 0) {
-                      Navigator.pushNamed(context, '/home');
+                      _navigateToRoute(currentIndex, 0, "/home", context);
                     } else if (index == 1) {
-                      Navigator.pushNamed(context, '/subjects');
+                      _navigateToRoute(currentIndex, 1, "/subjects", context);
                     } else if (index == 2) {
-                      Navigator.pushNamed(context, '/results');
+                      _navigateToRoute(currentIndex, 2, "/results", context);
                     } else if (index == 3) {
-                      Navigator.pushNamed(context, '/settings');
+                      _navigateToRoute(currentIndex, 3, "/settings", context);
                     }
                   },
                   items: const [

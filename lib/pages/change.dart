@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../logic/choice.dart';
@@ -39,11 +40,7 @@ class _ChangeAbiSubpageState extends State<ChangeAbiSubpage> {
     final choices = ChangeAbiChoiceResult.getSortedChoiceResultsForAbi(choice, gradesProvider, applyAbiPredictions: _applyAbiPredictions);
 
     return SubpageSkeleton(
-      title: const Row(
-        children: [
-          PageTitle(title: "Abifächer umwählen"),
-        ],
-      ),
+      title: const PageTitle(title: "Abifächer umwählen"),
       children: [
         Text("Aktuelle Abiturprüfungsfächer", style: theme.textTheme.bodySmall),
         const SizedBox(height: 5),
@@ -114,7 +111,7 @@ class _ChangeAbiSubpageState extends State<ChangeAbiSubpage> {
 
         const SizedBox(height: 36,),
 
-        SettingsPage.buildButton(theme, "Abifächer ändern", Icons.published_with_changes_rounded, () => Navigator.pushNamed(context, "/setup/abi")),
+        SettingsPage.buildButton(theme, "Abifächer ändern", Icons.published_with_changes_rounded, () => context.push("/setup/abi")),
 
       ]);
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../api/api.dart';
@@ -109,8 +110,8 @@ class SettingsPage extends StatelessWidget {
                 spacing: spacing,
                 runSpacing: 12,
                 children: [
-                  SizedBox(width: buttonWidth, child: buildButton(theme, "Wahl ändern", Icons.settings_backup_restore_rounded, () => Navigator.pushNamed(context, "/setup"))),
-                  SizedBox(width: buttonWidth, child: buildButton(theme, "Abifächer ändern", Icons.published_with_changes_rounded, () => Navigator.pushNamed(context, "/setup/abi"))),
+                  SizedBox(width: buttonWidth, child: buildButton(theme, "Wahl ändern", Icons.settings_backup_restore_rounded, () => context.push("/setup"))),
+                  SizedBox(width: buttonWidth, child: buildButton(theme, "Abifächer ändern", Icons.published_with_changes_rounded, () => context.push("/setup/abi"))),
                 ],
               );
             }
@@ -121,7 +122,7 @@ class SettingsPage extends StatelessWidget {
               child: buildButton(theme, "Notenübersicht drucken", Icons.print_rounded, null, primary: false)
           ),
           const SizedBox(height: 14),
-          buildButton(theme, "Zur Startseite", Icons.info_rounded, () => Navigator.pushNamed(context, "/welcome"), primary: false),
+          buildButton(theme, "Zur Startseite", Icons.info_rounded, () => context.push("/welcome"), primary: false),
           const SizedBox(height: 20),
         ]);
   }

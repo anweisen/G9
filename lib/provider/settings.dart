@@ -14,12 +14,12 @@ class SettingsDataProvider extends ChangeNotifier {
   static const hiveSettingsKey = "data";
 
   SettingsDataProvider() {
-    // load(); called by the slash screen
+    load();
   }
 
   bool _loaded = false;
 
-  get hasLoaded => _loaded;
+  bool get hasLoaded => _loaded;
 
   SettingsData? _data;
 
@@ -53,6 +53,8 @@ class SettingsDataProvider extends ChangeNotifier {
   }
 
   bool get onboarding => _data?.choice == null;
+
+  String? intendedUserRoute;
 
   Future<void> load() async {
     final defaultUsesSlider = kIsWeb || defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android;

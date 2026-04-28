@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../api/api.dart';
@@ -261,7 +262,7 @@ class HomePage extends StatelessWidget {
               final result = grades.currentSemester.nextSemester();
               grades.changeCurrentSemester(result);
               account.updateSemester(result);
-              Navigator.popAndPushNamed(context, "/home");
+              context.push("/home"); // reload completely ( not replace/go/pushReplacement )
             },
             child: Container(
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: theme.primaryColor),
@@ -290,7 +291,7 @@ class HomePage extends StatelessWidget {
               final result = grades.currentSemester.previousSemester();
               grades.changeCurrentSemester(result);
               account.updateSemester(result);
-              Navigator.popAndPushNamed(context, "/home");
+              context.push("/home"); // reload completely ( not replace/go/pushReplacement )
             },
             child: Container(
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all(color: theme.dividerColor, width: 4)),

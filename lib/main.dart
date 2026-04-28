@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:provider/provider.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
@@ -12,6 +14,7 @@ import 'logic/choice.dart';
 import 'logic/grades.dart';
 import 'logic/types.dart';
 import 'pages/home.dart';
+import 'pages/loading.dart';
 import 'pages/settings.dart';
 import 'pages/results.dart';
 import 'pages/setup.dart';
@@ -20,7 +23,6 @@ import 'provider/account.dart';
 import 'provider/grades.dart';
 import 'provider/kmapi.dart';
 import 'provider/settings.dart';
-import 'widgets/splash.dart';
 import 'widgets/skeleton.dart';
 
 void main() async {
@@ -97,15 +99,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var settings = Provider.of<SettingsDataProvider>(context);
+    // var settings = Provider.of<SettingsDataProvider>(context);
 
     const FontWeight bold = FontWeight.w600;
     const FontWeight normal = FontWeight.w500;
 
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'G9 Notenapp',
       debugShowCheckedModeBanner: false,
-      themeMode: settings.theme,
+      themeMode: ThemeMode.system,
+      // themeMode: settings.theme,
       // themeMode: ThemeMode.light,
       color: Colors.white, // TODO?!
       darkTheme: ThemeData(
@@ -152,16 +155,51 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      home: const SplashScreenPage(),
-      routes: {
-        "/welcome": (context) => const WelcomePage(key: Key("welcome")),
-        "/home": (context) => const HomePage(key: Key("home")),
-        "/subjects": (context) => const SubjectsPage(key: Key("subjects")),
-        "/results": (context) => const ResultsPage(key: Key("results")),
-        "/setup": (context) => const SetupPage(key: Key("setup")),
-        "/setup/abi": (context) => const SetupPage(key: Key("setup/abi"), onlyAbi: true),
-        "/settings": (context) => const SettingsPage(key: Key("settings")),
-      },
+      routerConfig: GoRouter(
+        refreshListenable: Listenable.merge([ // (!) listen: false
+          Provider.of<SettingsDataProvider>(context, listen: false),
+          Provider.of<GradesDataProvider>(context, listen: false),
+        ]),
+        redirect: (context, state) {
+          final settingsProvider = Provider.of<SettingsDataProvider>(context, listen: false);
+          final dataProvider = Provider.of<GradesDataProvider>(context, listen: false);
+          final route = state.matchedLocation;
+          final hasLoaded = settingsProvider.hasLoaded && dataProvider.hasLoaded;
+
+
+          if (!hasLoaded) {
+            if (route == "/") return null; // already here, don't redirect
+            settingsProvider.intendedUserRoute = route; // save for later
+            return "/"; // redirect to loading page until data has loaded
+          }
+
+          if (settingsProvider.onboarding) {
+            String target = route;
+            if (route == "/") target = settingsProvider.intendedUserRoute ?? "/welcome";
+
+            bool isProtected = target == "/home" || target == "/subjects" || target == "/results" || target == "/settings" || target == "/setup/abi";
+            if (isProtected || target == "/") {
+              return "/welcome";
+            }
+            return target;
+          } else if (route == "/") {
+            return settingsProvider.intendedUserRoute ?? "/home";
+          }
+
+          return null;
+        },
+        routes: [
+          GoRoute(path: "/", builder: (context, state) => const LoadingPage(key: Key("splash"))),
+          GoRoute(path: "/welcome", builder: (context, state) => const WelcomePage(key: Key("welcome"))),
+          GoRoute(path: "/home", builder: (context, state) => const HomePage(key: Key("home"))),
+          GoRoute(path: "/subjects", builder: (context, state) => const SubjectsPage(key: Key("subjects"))),
+          GoRoute(path: "/results", builder: (context, state) => const ResultsPage(key: Key("results"))),
+          GoRoute(path: "/setup", builder: (context, state) => const SetupPage(key: Key("setup"))),
+          GoRoute(path: "/setup/abi", builder: (context, state) => const SetupPage(key: Key("setup/abi"), onlyAbi: true)),
+          GoRoute(path: "/settings", builder: (context, state) => const SettingsPage(key: Key("settings"))),
+          GoRoute(path: "/legal", builder: (context, state) => const LegalPage(key: Key("legal"))),
+        ],
+      ),
     );
   }
 }

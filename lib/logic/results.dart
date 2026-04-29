@@ -300,10 +300,13 @@ class SemesterResult {
         if (!choice.hasSubjectInSemester(subject, semester)) {
           continue; // subject not taken that semester
         }
+        if (results[subject]![semester] != null) {
+          continue; // already has prediction (subject average) or result
+        }
 
         if (semester == Semester.abi && provider.getAbiPrediction(subject.id) != null && applyAbiPredictions) {
           results[subject]![semester] = SemesterResult(provider.getAbiPrediction(subject.id)! * 4, 0, semester);
-        } else if (results[subject]![semester] == null) {
+        } else {
           results[subject]![semester] = SemesterResult(totalPrediction * semester.semesterCountEquivalent, 0, semester);
         }
       }

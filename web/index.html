@@ -5,7 +5,9 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Deine Notenapp für das Abitur im neuen G9 in Bayern.">
 
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
@@ -38,10 +40,6 @@
 
   <link rel="preload" href="main.dart.js" as="script">
 
-  <script>
-    // The value below is injected by flutter build, do not touch.
-    const serviceWorkerVersion = null;
-  </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
 
@@ -59,30 +57,85 @@
       padding: 0;
       width: 100vw;
       height: 100vh;
-      background-color: #fff; /* default to white */
+      background-color: #fff; /* default to white mode */
+    }
+    #loading-bar-indicator {
+      background-color: rgb(117, 116, 131);
+    }
+    #loading-bar {
+      background-color: rgb(228, 233, 240);
     }
     @media (prefers-color-scheme: dark) {
       body {
-          background-color: #000; /* switch to black in dark mode */
+        background-color: #000;
       }
+      #loading-bar {
+        background-color: rgba(28, 28, 32);
+      }
+    }
+    #loading-indicator {
+      position: absolute;
+      top: 53%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #loading-bar {
+      position: relative;
+      width: max(min(20vw, 300px), 180px);
+      height: 9px;
+      border-radius: 4px;
+    }
+    #loading-bar-indicator {
+      transition: width linear .2s;
+      position: absolute;
+      height: 100%;
+      border-radius: 4px;
+      width: 0; /* initial value */
+      content: '';
+      animation: loading-bar-indicator-splash .8s linear infinite alternate;
+    }
+    @keyframes loading-bar-indicator-splash {
+      from, to { opacity: 1; }
+      50% { opacity: 0.6; }
     }
   </style>
 </head>
 <body>
+  <div id="loading-indicator"><div id="loading-bar"><div id="loading-bar-indicator"></div></div></div>
   <script>
-    window.addEventListener('load', function(ev) {
-      // Download main.dart.js
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
-          });
+      {{flutter_js}}
+      {{flutter_build_config}}
+
+      let schedulerId;
+      function updateProgress(progress, maxInterval) {
+        const loader = document.querySelector("#loading-bar-indicator");
+        if (loader) {
+          loader.style.width = `${progress}%`;
+          if (progress >= maxInterval) return;
+          if (schedulerId !== undefined) clearTimeout(schedulerId);
+          schedulerId = setTimeout(() => updateProgress(progress + (maxInterval - progress) / 10.0, maxInterval), 200);
         }
+      }
+      function removeProgress() {
+        const loader = document.querySelector("#loading-indicator");
+        if (loader) loader.remove();
+      }
+      updateProgress(0, 5);
+      window.addEventListener('load', function(ev) {
+        updateProgress(5, 60);
+        _flutter.loader.load({
+          onEntrypointLoaded: async function(engineInitializer) {
+            updateProgress(60, 80);
+            const appRunner = await engineInitializer.initializeEngine();
+            updateProgress(80, 90);
+
+            await appRunner.runApp();
+            updateProgress(90, 100);
+
+            setTimeout(removeProgress, 2000);
+          }
+        });
       });
-    });
   </script>
 </body>
 </html>

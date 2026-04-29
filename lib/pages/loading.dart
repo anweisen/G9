@@ -4,9 +4,9 @@ import 'package:provider/provider.dart';
 import '../provider/account.dart';
 import '../provider/grades.dart';
 import '../provider/settings.dart';
-import '../widgets/general.dart';
 import '../widgets/connector.dart';
-import 'welcome.dart';
+import '../widgets/general.dart';
+import '../widgets/skeleton.dart';
 
 class LoadingPage extends StatelessWidget {
   const LoadingPage({super.key});
@@ -14,12 +14,13 @@ class LoadingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
+      appBar: WindowTitleBar(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            AnimatedG9TitleBar(key: ValueKey("splash-title"), duration: Duration(milliseconds: 500),),
+            G9TitleBar(key: ValueKey("splash-title"),),
             SizedBox(height: 24),
             LoadingPageConnectorStage(key: ValueKey("splash-stage"),),
           ],
@@ -46,13 +47,14 @@ class _LoadingPageConnectorStageState extends State<LoadingPageConnectorStage> w
 
   @override
   void initState() {
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic);
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 300), value: 1.0);
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
     _offsetAnimation = Tween<Offset>(
-      begin: const Offset(0.1, 0.0),
+      begin: const Offset(0.05, 0.0),
       end: Offset.zero,
     ).animate(_animation);
     super.initState();
+    print("NEW STATE");
   }
 
   @override
@@ -63,10 +65,8 @@ class _LoadingPageConnectorStageState extends State<LoadingPageConnectorStage> w
 
   void _updateStage(ConnectorLoadingStage newStage) {
     if (_currentStage != newStage) {
-      setState(() {
-        _currentStage = newStage;
-        _controller.forward(from: 0);
-      });
+      if (_currentStage != null) _controller.forward(from: 0);
+      _currentStage = newStage; // no need to mark for rebuild via setState (is called from build)
     }
   }
 
@@ -84,30 +84,31 @@ class _LoadingPageConnectorStageState extends State<LoadingPageConnectorStage> w
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: theme.dividerColor,
         borderRadius: BorderRadius.circular(8),
       ),
+      width: 260, // arbitrary but fits
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: AnimatedBuilder(
-        animation: _animation,
+        animation: _controller,
         builder: (context, animation) {
-          return Opacity(
-            opacity: _animation.value,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(stage.icon, size: 20, color: theme.shadowColor),
-                const SizedBox(width: 10,),
-                Flexible(
-                  child: SlideTransition(
-                      position: _offsetAnimation,
-                      child: Text(stage.text, style: theme.textTheme.displayMedium?.copyWith(color: theme.shadowColor, fontWeight: FontWeight.w600, height: 0), softWrap: true,)
-                  ),
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Opacity(
+                opacity: _animation.value * 0.4 + 0.6,
+                child: Icon(stage.icon, size: 20, color: theme.shadowColor)
+              ),
+              const SizedBox(width: 10,),
+              Flexible(
+                child: SlideTransition(
+                    position: _offsetAnimation,
+                    child: Text(stage.text, style: theme.textTheme.displayMedium?.copyWith(color: theme.shadowColor, fontWeight: FontWeight.w600, height: 0), softWrap: true,)
                 ),
-                const SizedBox(width: 6,),
-                DotLoadingIndicator(style: theme.textTheme.displayMedium!.copyWith(color: theme.shadowColor, fontWeight: FontWeight.w600, height: 0), duration: const Duration(milliseconds: 1000))
-              ],
-            ),
+              ),
+              const SizedBox(width: 6,),
+              DotLoadingIndicator(style: theme.textTheme.displayMedium!.copyWith(color: theme.shadowColor, fontWeight: FontWeight.w600, height: 0), duration: const Duration(milliseconds: 1000))
+            ],
           );
         }
       ),

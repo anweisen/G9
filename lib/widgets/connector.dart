@@ -20,6 +20,7 @@ class SyncApiConnectorLoadingWidget extends StatefulWidget {
 
 class _SyncApiConnectorLoadingWidgetState extends State<SyncApiConnectorLoadingWidget> with TickerProviderStateMixin {
   static bool done = false;
+  static Timer? _hideTimer;
 
   late final AnimationController _controller;
   late final Animation<double> _containerAnimation;
@@ -91,9 +92,10 @@ class _SyncApiConnectorLoadingWidgetState extends State<SyncApiConnectorLoadingW
 
     if (!_visible) _controller.forward();
     _stageController.forward(from: 0);
+    _hideTimer?.cancel();
 
     if (!ConnectorLoadingStage.stages[index].isLoading) {
-      Future.delayed(const Duration(seconds: 3), () {
+      _hideTimer = Timer(const Duration(milliseconds: 2000), () {
         if (mounted && _stageIndex == index) hide();
       });
     }
@@ -211,5 +213,5 @@ class ConnectorLoadingStage {
   final Color Function(ThemeData) color;
   final bool isLoading;
 
-  ConnectorLoadingStage(this.text, this.icon, this.color, [this.isLoading = true]);
+  const ConnectorLoadingStage(this.text, this.icon, this.color, [this.isLoading = true]);
 }

@@ -89,6 +89,7 @@ flutter:
 
   assets:
     - assets/icons/logo.svg
+    - assets/content/privacy.md
 
   fonts:
     - family: Poppins

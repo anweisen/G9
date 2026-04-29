@@ -324,14 +324,14 @@ class UnauthorizedPageSkeleton extends StatelessWidget {
 
   GestureDetector _buildTitleBar(BuildContext context, bool isAtWelcome, ThemeData theme, BoxConstraints constraints) {
     return GestureDetector(
-      onTap: context.canPop() && !isAtWelcome ? () => context.pop() : null,
+      onTap: isAtWelcome ? null : context.canPop() ? () => context.pop() : () => context.go("/welcome"),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         spacing: 14,
         children: [
           G9TitleBar.buildTitleBar(theme, context, constraints),
-          if (context.canPop() && !isAtWelcome) Container(
+          if (!isAtWelcome) Container(
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: theme.dividerColor),
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             child: Row(

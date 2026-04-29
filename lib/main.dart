@@ -15,10 +15,12 @@ import 'logic/grades.dart';
 import 'logic/types.dart';
 import 'pages/home.dart';
 import 'pages/loading.dart';
-import 'pages/settings.dart';
+import 'pages/legal.dart';
 import 'pages/results.dart';
+import 'pages/settings.dart';
 import 'pages/setup.dart';
 import 'pages/subjects.dart';
+import 'pages/unknown.dart';
 import 'provider/account.dart';
 import 'provider/grades.dart';
 import 'provider/kmapi.dart';
@@ -48,6 +50,8 @@ void main() async {
   usePathUrlStrategy();
 
   runApp(MultiProvider(providers: [
+  GoRouter.optionURLReflectsImperativeAPIs = true;
+
     ChangeNotifierProvider<SettingsDataProvider>(create: (context) => SettingsDataProvider()),
     ChangeNotifierProvider<GradesDataProvider>(create: (context) => GradesDataProvider()),
     ChangeNotifierProvider<AccountDataProvider>(create: (context) => AccountDataProvider()),
@@ -166,7 +170,6 @@ class MyApp extends StatelessWidget {
           final route = state.matchedLocation;
           final hasLoaded = settingsProvider.hasLoaded && dataProvider.hasLoaded;
 
-
           if (!hasLoaded) {
             if (route == "/") return null; // already here, don't redirect
             settingsProvider.intendedUserRoute = route; // save for later
@@ -188,6 +191,7 @@ class MyApp extends StatelessWidget {
 
           return null;
         },
+        errorBuilder: (context, state) => const UnknownRoutePage(key: Key("unknown"),),
         routes: [
           GoRoute(path: "/", builder: (context, state) => const LoadingPage(key: Key("splash"))),
           GoRoute(path: "/welcome", builder: (context, state) => const WelcomePage(key: Key("welcome"))),

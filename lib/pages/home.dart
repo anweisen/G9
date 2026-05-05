@@ -407,7 +407,7 @@ class HomePage extends StatelessWidget {
                       else Text("Hürden nicht erfüllt", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1)),
                     ] else ...[
                       if (passedQ) Text("Vorauswahlhürden erfüllt", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1))
-                      else Text("Hürden vermutlich nicht erfüllt", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1)),
+                      else Text("Hürden nicht erfüllt", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1)),
                     ],
                   ]),
                   if (completed && bayEfgHurdles.isEmpty) Icon(Icons.check_circle_rounded, size: 20, color: theme.primaryColor,)

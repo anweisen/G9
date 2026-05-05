@@ -29,11 +29,14 @@ class GradesDevelopmentPage extends StatelessWidget {
     for (Semester semester in semesters) {
       final semesterGrades = rawGrades[semester]?[subject.id] ?? [];
       semesterGrades.sort((a, b) => a.date.compareTo(b.date),);
+      int added = 0;
       for (GradeEntry grade in semesterGrades) {
         if (grade.type == GradeType.result) continue;
+        if (grade.type.area == GradeTypeArea.flag) continue;
         grades.add(grade);
+        added++;
       }
-      gradesSemesters.addAll(List.filled(semesterGrades.length, semester));
+      gradesSemesters.addAll(List.filled(added, semester));
     }
 
     final avg = GradeHelper.unweightedAverageOf(grades);

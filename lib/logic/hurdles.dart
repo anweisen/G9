@@ -320,7 +320,7 @@ enum BayEfgHurdle implements HurdleType {
   @override
   final String paragraph;
 
-  const BayEfgHurdle(String? section, this.desc, [this.finalCheckAfterAbi = false]) : paragraph = section == null ? "§ -" : "§ 5 Abs. 3 $section BayDVEFG";
+  const BayEfgHurdle(String? section, this.desc, [this.finalCheckAfterAbi = false]) : paragraph = section == null ? "§ -" : "§ 5 Abs. 3 $section DVBayEFG";
 
   static List<HurdleCheckResult> check(Choice choice, Map<Subject, Map<Semester, SemesterResult>> result, ResultsFlags flags, GradesDataProvider provider) {
     List<HurdleCheckResult> checkResults = [];

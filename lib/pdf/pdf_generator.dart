@@ -26,7 +26,7 @@ class PdfGenerator {
   static Future<Uint8List> generatePdf(
       PdfPageFormat format,
       Choice choice, Map<Subject, Map<Semester, SemesterResult>> results, ResultsFlags flags, Statistics statistics,
-      List<HurdleCheckResult> admissionHurdles, List<HurdleCheckResult> graduationHurdles
+      List<HurdleCheckResult> admissionHurdles, List<HurdleCheckResult> graduationHurdles, bool complete
       ) async {
 
     final pdf = Document(title: fileName);
@@ -159,7 +159,7 @@ class PdfGenerator {
 
             SizedBox(height: 16),
 
-            Text("Abitur Vorhersage", style: headerTextStyle,),
+            Text("Abitur ${complete ? "Ergebnis" : "Vorhersage"}", style: headerTextStyle,),
             buildInfoTextLine("Note", "Ø ${SemesterResult.pointsToAbiGrade(flags.pointsTotal)}"),
             buildInfoTextLine("Punkte", "${flags.pointsTotal}"),
             SizedBox(height: 2),
@@ -168,9 +168,9 @@ class PdfGenerator {
 
             SizedBox(height: 8),
 
-            Text("Zulassungs- und Anerkennungshürden", style: headerTextStyle),
+            if (!complete || admissionHurdles.isNotEmpty || graduationHurdles.isNotEmpty) Text("Zulassungs- und Anerkennungshürden", style: headerTextStyle),
             if (admissionHurdles.isEmpty && graduationHurdles.isEmpty)
-              Text("Voraussichtlich werden alle nötigen Hürden erfüllt", style: bodyTextStyle,)
+              if (!complete) Text("Voraussichtlich werden alle nötigen Hürden erfüllt", style: bodyTextStyle,)
             else if (flags.isEmpty)
               Text("Es wurden bisher noch keine Noten eingetragen", style: bodyTextStyle,)
             else for (HurdleCheckResult check in [...admissionHurdles, ...graduationHurdles]) ...[
@@ -226,7 +226,7 @@ class PdfGenerator {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text("Angaben ohne Gewähr", style: const TextStyle(fontSize: 7, color: secondaryColor),),
-                    Text("Stand: ${DateHelper.formatDate(DateTime.now(), useRelative: false)}", style: const TextStyle(fontSize: 7, color: secondaryColor),)
+                    Text("Stand: ${DateHelper.formatDate(DateTime.now(), useRelative: false, useFullYear: true)}", style: const TextStyle(fontSize: 7, color: secondaryColor),)
                   ]
                 )
               ]
@@ -243,10 +243,10 @@ class PdfGenerator {
     final bool displayUnused = result != null && !result.used && !result.flagged;
     final bool isFlagged = result?.flagged ?? false;
     return [
-      if (isPrediction) SizedBox(width: 5),
-      if (displayUnused) SizedBox(width: 5),
-      if (isFlagged) SizedBox(width: 5),
-      Text("${displayUnused ? "(" : ""}${isFlagged ? "-" : result?.grade.toString() ?? "-"}${displayUnused ? ")" : ""}", style: TextStyle(
+      if (isPrediction) SizedBox(width: 6),
+      if (displayUnused) SizedBox(width: 6),
+      if (isFlagged) SizedBox(width: 6),
+      Text("${displayUnused ? "(" : ""}${(isFlagged || result == null) ? "-" : result.grade.toString()}${displayUnused ? ")" : ""}", style: TextStyle(
           fontSize: 10,
           color: isPrediction ? secondaryColor : primaryColor,
           fontWeight: FontWeight.normal), textAlign: TextAlign.center),

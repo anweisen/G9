@@ -27,6 +27,7 @@ class PdfPreviewPage extends StatelessWidget {
     final statistics = SemesterResult.calculateStatistics(choice, results);
     final admissionHurdles = AdmissionHurdle.check(choice, results, flags, gradesProvider);
     final graduationHurdles = GraduationHurdle.check(choice, results, flags, gradesProvider);
+    final complete = SemesterResult.isComplete(choice, results);
 
     return Scaffold(
       backgroundColor: theme.cardColor,
@@ -44,7 +45,7 @@ class PdfPreviewPage extends StatelessWidget {
 
             pdfFileName: PdfGenerator.fileName,
             initialPageFormat: PdfPageFormat.a4,
-            build: (format) => PdfGenerator.generatePdf(format, choice, results, flags, statistics, admissionHurdles, graduationHurdles),
+            build: (format) => PdfGenerator.generatePdf(format, choice, results, flags, statistics, admissionHurdles, graduationHurdles, complete),
             useActions: false,
             canChangePageFormat: false,
             canDebug: false,
@@ -58,7 +59,7 @@ class PdfPreviewPage extends StatelessWidget {
             animationProgress: 1,
             icon: Icons.print_rounded,
             callback: () async {
-              final bytes = await PdfGenerator.generatePdf(PdfPageFormat.a4, choice, results, flags, statistics, admissionHurdles, graduationHurdles);
+              final bytes = await PdfGenerator.generatePdf(PdfPageFormat.a4, choice, results, flags, statistics, admissionHurdles, graduationHurdles, complete);
               await Printing.sharePdf(bytes: bytes, filename: PdfGenerator.fileName);
             },
           ),

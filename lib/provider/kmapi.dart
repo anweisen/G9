@@ -9,8 +9,9 @@ class KmApiProvider extends ChangeNotifier {
   bool _loading = false;
 
   AbiDates? get abiDates => _abiDates;
-  bool get isLoading => _abiDates == null && !_loadingFailed;
+  bool get isLoading => _loading;
   bool get hasError => _loadingFailed;
+  bool get hasData => _abiDates != null;
 
   void fetchDataIfNotPresent(int predictedYear) async {
     if (_loading) return;

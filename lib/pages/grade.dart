@@ -72,7 +72,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
     // reset type if not valid anymore
     if (_type != null && _subject != null) {
       final choice = Provider.of<SettingsDataProvider>(context, listen: false).choice!;
-      final possibleTypes = GradeType.types(choice, _subject!, semester);
+      final possibleTypes = GradeType.getValidTypesForSubject(choice, _subject!, semester);
       if (!possibleTypes.contains(_type)) {
         _type = null;
       }
@@ -88,7 +88,7 @@ class _GradePageState extends State<GradePage> with AutomaticKeepAliveClientMixi
     // reset type if not valid anymore
     if (_type != null) {
       final choice = Provider.of<SettingsDataProvider>(context, listen: false).choice!;
-      final possibleTypes = GradeType.types(choice, subject, _semester!);
+      final possibleTypes = GradeType.getValidTypesForSubject(choice, subject, _semester!);
       if (!possibleTypes.contains(_type)) {
         _type = null;
       }
@@ -304,7 +304,7 @@ class GradeTypSelectionPage extends StatelessWidget {
         break;
       }
     }
-    final List<GradeType> types = (subject != null && semester != null) ? GradeType.types(choice, subject!, semester!) : GradeType.all;
+    final List<GradeType> types = (subject != null && semester != null) ? GradeType.getValidTypesForSubject(choice, subject!, semester!) : GradeType.all;
     final Set<GradeTypeArea> areas = types.map((e) => e.area).toSet();
 
     return SubpageSkeleton(

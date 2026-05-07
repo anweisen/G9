@@ -116,6 +116,9 @@ class AbiDates {
   @JsonKey(name: "practical")
   List<PracticalAbiExamDate> practicalExamDates;
 
+  @JsonKey(name: "extra")
+  ExtraExamDate extraExamDate;
+
   @JsonKey(name: "graduation")
   AbiGraduationDate graduationDate;
 
@@ -123,6 +126,7 @@ class AbiDates {
     required this.writtenExamDates,
     required this.oralExamWeeks,
     required this.practicalExamDates,
+    required this.extraExamDate,
     required this.graduationDate
   });
 
@@ -212,6 +216,23 @@ class PracticalAbiExamDate {
   });
 
   factory PracticalAbiExamDate.fromJson(Map<String, dynamic> json) => _$PracticalAbiExamDateFromJson(json);
+}
+
+@JsonSerializable()
+class ExtraExamDate {
+
+  @JsonKey(name: "last_date") @DateOnlyConverter()
+  DateTime lastDate;
+
+  @JsonKey(name: "date_formatted")
+  String formattedDate;
+
+  ExtraExamDate({
+    required this.lastDate,
+    required this.formattedDate,
+  });
+
+  factory ExtraExamDate.fromJson(Map<String, dynamic> json) => _$ExtraExamDateFromJson(json);
 }
 
 @JsonSerializable()

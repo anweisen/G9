@@ -438,15 +438,20 @@ class SemesterResult {
     300: 4.0,
   }));
 
-  static String pointsToAbiGrade(int points) {
+  static double? pointsToAbiGradeDouble(int points) {
     if (points >= 300 && points <= 900) {
       for (var entry in minPointsForAbiGradeMap.entries) {
         if (points >= entry.key) {
-          return GradeHelper.formatNumber(entry.value, decimals: 1);
+          return entry.value;
         }
       }
     }
-    return "ungültig";
+    return null;
+  }
+
+  static String pointsToAbiGrade(int points) {
+    double? abiGrade = pointsToAbiGradeDouble(points);
+    return abiGrade == null ? "ungültig" : GradeHelper.formatNumber(abiGrade, decimals: 1);
   }
 
   static int getMinPointsForBetterAbiGrade(int points) {

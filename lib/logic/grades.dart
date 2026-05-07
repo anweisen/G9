@@ -505,7 +505,7 @@ enum GradeType {
     return [];
   }
 
-  static List<GradeType> types(Choice choice, Subject subject, Semester semester) {
+  static List<GradeType> getValidTypesForSubject(Choice choice, Subject subject, Semester semester) {
     if (semester == Semester.abi) {
       if (subject == choice.lk && (subject == Subject.sport || subject == Subject.musik)) {
         if (choice.hasSelectedExamTypes) {

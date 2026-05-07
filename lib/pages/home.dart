@@ -24,6 +24,7 @@ import '../widgets/piechart.dart';
 import 'account.dart';
 import 'bayefg.dart';
 import 'change.dart';
+import 'extra.dart';
 import 'grade.dart';
 import 'hurdles.dart';
 import 'switcher.dart';
@@ -133,7 +134,7 @@ class HomePage extends StatelessWidget {
           CompletedWidget(flags: flags, noHurdles: admissionHurdleCheckResults.isEmpty && graduationHurdleCheckResults.isEmpty,),
           const SizedBox(height: 20),
         ],
-        const AbiDatesWidget(),
+        AbiDatesWidget(graduationHurdles: graduationHurdleCheckResults,),
         const SizedBox(height: 20),
       ],
 
@@ -341,9 +342,9 @@ class HomePage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            Text(checkResults.first.hurdle.paragraph, style: theme.textTheme.bodySmall),
+            Text(checkResults.first.hurdle.paragraph, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 6),
-            Text(checkResults.first.hurdle.desc, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500, height: 1.1)),
+            Text(checkResults.first.hurdle.desc, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 16, height: 1.1)),
             const SizedBox(height: 6),
             Text(checkResults.first.text, style: theme.textTheme.displayMedium),
           ]),
@@ -986,7 +987,7 @@ class CompletedWidget extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                     color: noHurdles ? theme.primaryColor : theme.splashColor,
                   ),
                   child: noHurdles ? Column(
@@ -1012,7 +1013,9 @@ class CompletedWidget extends StatelessWidget {
 
 
 class AbiDatesWidget extends StatelessWidget {
-  const AbiDatesWidget({super.key});
+  const AbiDatesWidget({super.key, required this.graduationHurdles});
+
+  final List<HurdleCheckResult> graduationHurdles;
 
   bool _shouldShowOralWeek(Choice choice, List<Subject> sortedOralExamSubjects, OralAbiExamWeek week, Map<SubjectId, SubjectSettings>? subjectSettings) {
     if (sortedOralExamSubjects.length >= 2) return false;
@@ -1078,172 +1081,193 @@ class AbiDatesWidget extends StatelessWidget {
         completedCount++;
       }
     }
+    bool extraExamSpan = (completedCount >= 5 || graduationHurdles.isNotEmpty) && choice.hasSelectedExamTypes
+        && kmapi.abiDates != null && !DateHelper.isDatePassed(kmapi.abiDates!.extraExamDate.lastDate);
 
-    final double width = MediaQuery.of(context).size.width;
-    final bool useDateAbbreviations = width < 450 && width > 380 || width < 340;
+    double width = MediaQuery.of(context).size.width;
+    bool useDateAbbreviations = width < 450 && width > 380 || width < 340;
 
-    return SubpageTrigger(
-      createSubpage: () => OralExamTypeSelectorPage(choice: choice, initialSubjectSettings: settings.subjectSettings, key: GlobalKey()),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: theme.dividerColor,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 1,
-          children: [
-            if (!choice.hasSelectedExamTypes) ... [
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.shadowColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                child: Row(
-                  children: [
-                    Icon(Icons.add_circle_outline_rounded, size: 22, color: theme.shadowColor,),
-                    const SizedBox(width: 10,),
-                    Flexible(child: Text("Mündliche/Schriftliche Prüfungen festlegen", style: theme.textTheme.bodyMedium?.copyWith(fontSize: 15, color: theme.shadowColor), maxLines: 5, softWrap: true, overflow: TextOverflow.ellipsis,)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10,),
-            ] else ...[
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  double maxWidth = constraints.maxWidth;
-                  double width = min((maxWidth - 48) / 5 - 8, 60);
-                  return SizedBox(
-                    width: maxWidth,
+    return Column(
+      spacing: 20,
+      children: [
+        SubpageTrigger(
+          createSubpage: () => OralExamTypeSelectorPage(choice: choice, initialSubjectSettings: settings.subjectSettings, key: GlobalKey()),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: theme.dividerColor,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 1,
+              children: [
+                if (!choice.hasSelectedExamTypes) ... [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.shadowColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          spacing: 8,
-                          children: [
-                            for (int i = 0; i < 5; i++)
-                              ColorFadeContainer.create(
-                                enabled: i == todayIndex,
-                                width: width,
-                                height: 9,
-                                colorFrom: theme.primaryColor,
-                                colorTo: theme.indicatorColor,
-                                duration: const Duration(milliseconds: 750),
-                                decoration: BoxDecoration(
-                                  color: i < completedCount ? theme.indicatorColor : theme.hintColor,
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
-                            ),
-                          ],
-                        ),
-                        Text("$completedCount / 5", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.primaryColor),),
-                      ],
-                    ),
-                  );
-                }
-              ),
-              const SizedBox(height: 10,),
-            ],
-
-            Text("Schriftliche Prüfungen", style: theme.textTheme.bodySmall),
-            const SizedBox(height: 2,),
-            if (sortedWrittenDates != null) ...[
-              for (var (index, writtenDate) in sortedWrittenDates.indexed)
-                _buildSubjectExamDateLine(
-                    subject: writtenDate.$1, date: writtenDate.$2.date, choice: settings.choice!, index: index,
-                    completedIndex: completedCount, currentIndex: todayIndex, theme: theme, useDateAbbreviations: useDateAbbreviations
-                ),
-            ] else DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
-
-            const SizedBox(height: 10,),
-
-            Text("Mündliche Prüfungen", style: theme.textTheme.bodySmall),
-            const SizedBox(height: 2,),
-            if (kmapi.abiDates != null) ...[
-              for (var (index, oralSubject) in sortedOralSubjects.indexed)
-                _buildSubjectExamDateLine(
-                    subject: oralSubject, date: settings.subjectSettings![oralSubject.id]!.oralExamDate!, choice: choice, index: index + 3,
-                    completedIndex: completedCount, currentIndex: todayIndex, theme: theme, useDateAbbreviations: useDateAbbreviations
-                ),
-              for (var oralDate in kmapi.abiDates!.oralExamWeeks)
-                if (_shouldShowOralWeek(choice, sortedOralSubjects, oralDate, settings.subjectSettings)) Row(
-                  spacing: 16,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 2,
-                        children: [
-                          Text("${oralDate.weekNumber}. Woche", style: SmallSubjectWidget.getTextStyle(theme, DateHelper.isDatePassed(oralDate.endDate))),
-                          ShimmerContainer.create(
-                            enabled: DateHelper.isDateSpanToday(oralDate.startDate, oralDate.endDate) || max(oralDate.startDate.difference(DateTime.now()).inDays, 0) <= 1,
-                            shimmerColor: theme.primaryColor,
-                            duration: const Duration(milliseconds: 1500),
-                            child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                                decoration: BoxDecoration(color: theme.shadowColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(5)),
-                                child: Text(DateHelper.formatWeekDifference(oralDate.startDate, oralDate.endDate, useAbbreviations: useDateAbbreviations),
-                                    style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600))
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(DateHelper.formatWeek(oralDate.startDate, oralDate.endDate)),
-                  ],
-                ),
-            ] else DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
-
-            if (completedCount >= 5) ...[
-              const SizedBox(height: 10,),
-              Text("Zeugnisvergabe", style: theme.textTheme.bodySmall),
-              if (kmapi.abiDates != null) ...[
-                Text("ab ${kmapi.abiDates!.graduationDate.formattedDate}", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 16, color: theme.primaryColor), softWrap: true,),
-              ] else  DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
-
-              const SizedBox(height: 10,),
-              Text("Trage noch folgende Noten ein", style: theme.textTheme.bodySmall),
-              const SizedBox(height: 4,),
-              Row(
-                spacing: 10,
-                children: [
-                  Icon(Icons.warning_amber_rounded, size: 20, color: theme.disabledColor,),
-                  Flexible(
-                    child: Wrap(
-                      spacing: 14,
-                      runSpacing: 2,
-                      children: [
-                        for (var missingEntry in missingGrades.entries)
-                          Row(
-                            spacing: 6,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Flexible(
-                                child: Text(missingEntry.key.name,
-                                  style: theme.textTheme.displayMedium?.copyWith(fontSize: 16, color: theme.primaryColor, fontWeight: FontWeight.w600, height: 1.4),
-                                  overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,
-                                ),
-                              ),
-                              for (var semester in missingEntry.value)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                                  decoration: BoxDecoration(color: theme.splashColor, borderRadius: BorderRadius.circular(5)),
-                                  child: Text(semester.name.toUpperCase(), style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600, color: theme.disabledColor))
-                                ),
-                            ],
-                          ),
+                        Icon(Icons.add_circle_outline_rounded, size: 22, color: theme.shadowColor,),
+                        const SizedBox(width: 10,),
+                        Flexible(child: Text("Mündliche/Schriftliche Prüfungen festlegen", style: theme.textTheme.bodyMedium?.copyWith(fontSize: 15, color: theme.shadowColor), maxLines: 5, softWrap: true, overflow: TextOverflow.ellipsis,)),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 10,),
+                ] else ...[
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      double maxWidth = constraints.maxWidth;
+                      double width = min((maxWidth - 48) / 5 - 8, 60);
+                      return SizedBox(
+                        width: maxWidth,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              spacing: 8,
+                              children: [
+                                for (int i = 0; i < 5; i++)
+                                  if (kmapi.hasData) ColorFadeContainer.create(
+                                    enabled: i == todayIndex,
+                                    width: width,
+                                    height: 9,
+                                    colorFrom: theme.primaryColor,
+                                    colorTo: theme.indicatorColor,
+                                    duration: const Duration(milliseconds: 750),
+                                    decoration: BoxDecoration(
+                                      color: i < completedCount ? theme.indicatorColor : theme.hintColor,
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                ) else ShimmerContainer(
+                                  shimmerColor: theme.primaryColor.withValues(alpha: 0.5),
+                                  duration: const Duration(milliseconds: 1500),
+                                  child: Container(
+                                    width: width,
+                                    height: 9,
+                                    decoration: BoxDecoration(
+                                      color: theme.shadowColor.withValues(alpha: 0.5),
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (kmapi.hasData) Text("$completedCount / 5", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.primaryColor),)
+                            else Text("", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),), // height placeholder
+                          ],
+                        ),
+                      );
+                    }
+                  ),
+                  const SizedBox(height: 10,),
+                ],
+
+                Text("Schriftliche Prüfungen", style: theme.textTheme.bodySmall),
+                const SizedBox(height: 2,),
+                if (sortedWrittenDates != null) ...[
+                  for (var (index, writtenDate) in sortedWrittenDates.indexed)
+                    _buildSubjectExamDateLine(
+                        subject: writtenDate.$1, date: writtenDate.$2.date, choice: settings.choice!, index: index,
+                        completedIndex: completedCount, currentIndex: todayIndex, theme: theme, useDateAbbreviations: useDateAbbreviations
+                    ),
+                ] else DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
+
+                const SizedBox(height: 10,),
+
+                Text("Mündliche Prüfungen", style: theme.textTheme.bodySmall),
+                const SizedBox(height: 2,),
+                if (kmapi.abiDates != null) ...[
+                  for (var (index, oralSubject) in sortedOralSubjects.indexed)
+                    _buildSubjectExamDateLine(
+                        subject: oralSubject, date: settings.subjectSettings![oralSubject.id]!.oralExamDate!, choice: choice, index: index + 3,
+                        completedIndex: completedCount, currentIndex: todayIndex, theme: theme, useDateAbbreviations: useDateAbbreviations
+                    ),
+                  for (var oralDate in kmapi.abiDates!.oralExamWeeks)
+                    if (_shouldShowOralWeek(choice, sortedOralSubjects, oralDate, settings.subjectSettings)) Row(
+                      spacing: 16,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 2,
+                            children: [
+                              Text("${oralDate.weekNumber}. Woche", style: SmallSubjectWidget.getTextStyle(theme, DateHelper.isDatePassed(oralDate.endDate))),
+                              ShimmerContainer.create(
+                                enabled: DateHelper.isDateSpanToday(oralDate.startDate, oralDate.endDate) || max(oralDate.startDate.difference(DateTime.now()).inDays, 0) <= 1,
+                                shimmerColor: theme.primaryColor,
+                                duration: const Duration(milliseconds: 1500),
+                                child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                    decoration: BoxDecoration(color: theme.shadowColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(5)),
+                                    child: Text(DateHelper.formatWeekDifference(oralDate.startDate, oralDate.endDate, useAbbreviations: useDateAbbreviations),
+                                        style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600))
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(DateHelper.formatWeek(oralDate.startDate, oralDate.endDate)),
+                      ],
+                    ),
+                ] else DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
+
+                if (completedCount >= 5) ...[
+                  const SizedBox(height: 10,),
+                  Text("Zeugnisvergabe", style: theme.textTheme.bodySmall),
+                  if (kmapi.abiDates != null) ...[
+                    Text("ab ${kmapi.abiDates!.graduationDate.formattedDate}", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 16, color: theme.primaryColor), softWrap: true,),
+                  ] else  DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
+
+                  const SizedBox(height: 10,),
+                  Row(
+                    spacing: 10,
+                    children: [
+                      Icon(Icons.unpublished_rounded, size: 20, color: theme.disabledColor,),
+                      Flexible(
+                        child: Wrap(
+                          spacing: 14,
+                          runSpacing: 2,
+                          children: [
+                            for (var missingEntry in missingGrades.entries)
+                              Row(
+                                spacing: 6,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Flexible(
+                                    child: Text(missingEntry.key.name,
+                                      style: theme.textTheme.displayMedium?.copyWith(fontSize: 16, color: theme.primaryColor, fontWeight: FontWeight.w600, height: 1.4),
+                                      overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,
+                                    ),
+                                  ),
+                                  for (var semester in missingEntry.value)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                                      decoration: BoxDecoration(color: theme.splashColor, borderRadius: BorderRadius.circular(5)),
+                                      child: Text(semester.display.toUpperCase(), style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600, color: theme.disabledColor))
+                                    ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ),
+                    ]
+                  )
                 ]
-              )
-            ]
-          ]
+              ]
+            ),
+          ),
         ),
-      ),
+
+        if (extraExamSpan) ...[
+          ExtraExamInfoWidget(choice: choice, examDate: kmapi.abiDates!.extraExamDate),
+        ],
+      ],
     );
   }
 
@@ -1263,7 +1287,6 @@ class AbiDatesWidget extends StatelessWidget {
               SmallSubjectWidget(subject: subject, old: DateHelper.isDatePassed(date), choice: choice,),
               ShimmerContainer.create(
                 enabled: !DateHelper.isDatePassed(date) && index == completedIndex,
-                // enabled: DateHelper.isDateToday(date) || max(date.difference(DateTime.now()).inDays, 0) <= 1,
                 shimmerColor: theme.primaryColor,
                 duration: const Duration(milliseconds: 1500),
                 child: Container(
@@ -1282,6 +1305,66 @@ class AbiDatesWidget extends StatelessWidget {
   }
 }
 
+class ExtraExamInfoWidget extends StatelessWidget {
+  const ExtraExamInfoWidget({super.key, required this.choice, required this.examDate});
 
+  final Choice choice;
+  final ExtraExamDate examDate;
 
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dataProvider = Provider.of<GradesDataProvider>(context);
 
+    List<ExtraExamOptionResult> options = ExtraExamOptionResult.getExtraExamSubjectOptions(choice, dataProvider);
+    bool mandatory = options.any((option) => option.mandatory);
+    bool mandatoryOrImprovement = options.any((option) => option.mandatory || option.improvement);
+
+    return SubpageTrigger(
+      createSubpage: () => const ExtraExamPage(),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: theme.dividerColor,
+        ),
+        child: Row(
+          spacing: 10,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Mündliche Zusatzprüfungen (Nachprüfungen)", style: theme.textTheme.bodySmall),
+                  const SizedBox(height: 4),
+                  Text("Möglich bis ${examDate.formattedDate}", style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+
+                  if (mandatoryOrImprovement) Row(
+                    spacing: 8,
+                    children: [
+                      SmallSubjectWidget(subject: options.first.subject, old: false, choice: null),
+                      if (mandatory) Icon(Icons.error_outline_rounded, size: 18, color: theme.disabledColor,),
+                    ],
+                  )
+                  else Text("Unrealistische Verbesserungschancen", style: theme.textTheme.bodyMedium, softWrap: true, overflow: TextOverflow.ellipsis,),
+                ]
+              ),
+            ),
+
+            if (mandatoryOrImprovement)
+              Column(
+                children: [
+                  Text("Ø ${SemesterResult.pointsToAbiGrade(options.first.newPointsTotal)}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 15)),
+                  Text("+${options.first.deltaPoints} P.", style: theme.textTheme.displayMedium?.copyWith(color: theme.indicatorColor)),
+                ],
+              )
+            else Icon(Icons.info_outline_rounded, size: 20, color: theme.primaryColor),
+          ],
+        )
+      ),
+    );
+  }
+}

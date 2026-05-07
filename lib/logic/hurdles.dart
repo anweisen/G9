@@ -188,7 +188,7 @@ enum GraduationHurdle implements HurdleType {
 
   const GraduationHurdle(String section, this.desc) : paragraph = "§ 54 Abs. 1 $section BayGSO";
 
-  static List<HurdleCheckResult> check(Choice choice, Map<Subject, Map<Semester, SemesterResult>> result, ResultsFlags flags, GradesDataProvider provider) {
+  static List<HurdleCheckResult> check(Choice choice, Map<Subject, Map<Semester, SemesterResult>> result, ResultsFlags flags, GradesDataProvider _) {
     List<HurdleCheckResult> checkResults = [];
 
     List<Subject> min5Subjects = [];

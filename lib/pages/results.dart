@@ -86,7 +86,7 @@ class ResultsPage extends StatelessWidget {
                       ],
                     ),
                     if (admissionHurdleCheckResults.isEmpty && graduationHurdleCheckResults.isEmpty) Text("Alle nötigen Hürden erfüllt", style: theme.textTheme.bodyMedium)
-                    else Text("Nötigen Hürden nicht erfüllt", style: theme.textTheme.bodyMedium?.copyWith(color: theme.disabledColor)),
+                    else Text("Nötige Hürden nicht erfüllt", style: theme.textTheme.bodyMedium?.copyWith(color: theme.disabledColor)),
                   ],
                 ),
                 if (admissionHurdleCheckResults.isEmpty && graduationHurdleCheckResults.isEmpty) Icon(Icons.check_circle, size: 20, color: theme.primaryColor)
@@ -125,7 +125,7 @@ class ResultsPage extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(text, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+        Text(text, style: theme.textTheme.bodyMedium),
         Text(value, style: theme.textTheme.bodyMedium),
       ],
     );

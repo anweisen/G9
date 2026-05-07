@@ -37,10 +37,18 @@ class AccountDataProvider extends ChangeNotifier {
   bool get hasSynced => _synced;
   bool get hasSyncingFailed => _syncingFailed;
 
+  bool _awaitingOAuth = false;
+  bool get isAwaitingOAuth => _awaitingOAuth;
+  set awaitingOAuth(bool value) {
+    _awaitingOAuth = value;
+    if (value) notifyListeners();
+  }
+
   bool _authenticating = false;
   bool get isAuthenticating => _authenticating;
   set authenticating(bool value) {
     _authenticating = value;
+    notifyListeners();
   }
 
   late AuthenticatedApi _api;

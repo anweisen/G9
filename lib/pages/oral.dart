@@ -156,13 +156,13 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
                     children: [
                       Icon(Icons.add_circle_outline_rounded, size: 20, color: theme.shadowColor),
                       const SizedBox(width: 8),
-                      Flexible(child: Text("Kolloquiumstermin eintragen", style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.shadowColor), softWrap: true,)),
+                      Flexible(child: Text("Kolloquiumstermin eintragen", style: theme.textTheme.displayMedium?.copyWith(height: 1.6, color: theme.shadowColor), softWrap: true,)),
                     ]
                   ) : Row(
                     children: [
-                      Icon(Icons.calendar_month_rounded, size: 20, color: theme.primaryColor),
+                      Icon(Icons.calendar_month_rounded, size: 18, color: theme.primaryColor),
                       const SizedBox(width: 8),
-                      Flexible(child: Text(DateHelper.formatDate(oralExamDates[subject]!, useFullYear: true), style: theme.textTheme.displayMedium?.copyWith(height: 0, color: theme.primaryColor), softWrap: true,)),
+                      Flexible(child: Text(DateHelper.formatDate(oralExamDates[subject]!, useFullYear: true), style: theme.textTheme.displayMedium?.copyWith(height: 1.6, color: theme.primaryColor), softWrap: true,)),
                     ]),
                 ),
               ),
@@ -294,7 +294,7 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: theme.dividerColor, width: 2),
+                border: Border.all(color: _chosenExamTypes[subject] == choice ? theme.primaryColor : theme.dividerColor, width: 2),
                 color: _chosenExamTypes[subject] == choice ? theme.primaryColor : null,
               ),
               child: Row(

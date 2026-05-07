@@ -27,7 +27,7 @@ class BayEfgHurdlePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Hürden des gymnasialen Auswahlverfahrens für das Max-Weber-Programm nach dem Bayerischen Elite-Förderungsgesetz (BayEFG). Stand 2026", style: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, height: 0)),
+                Text("Hürden des gymnasialen Auswahlverfahrens für das Max-Weber-Programm nach dem Bayerischen Elite-Förderungsgesetz (BayEFG) Stand 2026", style: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, height: 0)),
                 const SizedBox(height: 10),
                 GestureDetector(
                   onTap: () async {

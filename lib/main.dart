@@ -13,6 +13,7 @@ import 'pages/welcome.dart';
 import 'logic/choice.dart';
 import 'logic/grades.dart';
 import 'logic/types.dart';
+import 'pages/error.dart';
 import 'pages/userdata.dart';
 import 'pages/home.dart';
 import 'pages/loading.dart';
@@ -71,24 +72,7 @@ void main() async {
     ),
   ], child: const MyApp()));
   ErrorWidget.builder = (FlutterErrorDetails details) {
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.red, size: 50),
-              const Text("Es kam zu einem unerwarteten Fehler", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-              const Text("Unterstütze uns gerne bei der Verbesserung der App mit einem Bugreport", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600), textAlign: TextAlign.center),
-              const SizedBox(height: 20,),
-              const Text("Weitere Informationen für Entwickler:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontStyle: FontStyle.italic, color: Colors.blueGrey,), textAlign: TextAlign.center,),
-              const SizedBox(height: 2,),
-              Text(details.exceptionAsString(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.blueGrey,), textAlign: TextAlign.center,),
-            ],
-          ),
-        ),
-      ),
-    );
+    return ErrorPage(details: details);
   };
 
   if (WindowTitleBar.isWindows) {
@@ -104,8 +88,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // var settings = Provider.of<SettingsDataProvider>(context);
-
     const FontWeight bold = FontWeight.w600;
     const FontWeight normal = FontWeight.w500;
 
@@ -113,7 +95,6 @@ class MyApp extends StatelessWidget {
       title: 'G9 Notenapp',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system,
-      // themeMode: settings.theme,
       // themeMode: ThemeMode.light,
       color: Colors.white, // TODO?!
       darkTheme: ThemeData(

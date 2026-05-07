@@ -81,7 +81,7 @@ class SubjectWidget extends StatelessWidget {
       onTap: () => SubpageController.of(context).openSubpage(SubjectPage(subject: subject, key: GlobalKey(),)),
       child: Container(
         decoration: BoxDecoration(
-          color: subject.color.withAlpha(theme.brightness == Brightness.dark ? 150 : 166),
+          color: subject.color.withAlpha(theme.brightness == Brightness.dark ? 150 : 166), // ~58,5%  ~64,8%
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.fromLTRB(16, 7, 8, 7),

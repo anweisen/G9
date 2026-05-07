@@ -245,7 +245,7 @@ class SemesterResult {
 
         if (grades.isNotEmpty) {
           if (GradeHelper.hasAnyFlags(grades)) {
-            results[subject]![semester] = SemesterResult(-1, grades.length, semester);
+            results[subject]![semester] = SemesterResult.flagged(grades.length, semester);
             return; // not continue: .forEach
           }
 
@@ -287,7 +287,7 @@ class SemesterResult {
           continue; // apply abi prediction later
         }
         if (results[subject]![semester] == null) {
-          results[subject]![semester] = SemesterResult(prediction * semester.semesterCountEquivalent, 0, semester);
+          results[subject]![semester] = SemesterResult.prediction(prediction * semester.semesterCountEquivalent, semester);
         }
       }
 
@@ -305,16 +305,16 @@ class SemesterResult {
         }
 
         if (semester == Semester.abi && provider.getAbiPrediction(subject.id) != null && applyAbiPredictions) {
-          results[subject]![semester] = SemesterResult(provider.getAbiPrediction(subject.id)! * 4, 0, semester);
+          results[subject]![semester] = SemesterResult.prediction(provider.getAbiPrediction(subject.id)! * 4, semester);
         } else {
-          results[subject]![semester] = SemesterResult(totalPrediction * semester.semesterCountEquivalent, 0, semester);
+          results[subject]![semester] = SemesterResult.prediction(totalPrediction * semester.semesterCountEquivalent, semester);
         }
       }
     }
 
     int seminarPrediction = totalCount == 0 ? 0 : (2 * totalSum / totalCount).floor();
     if (results[choice.seminar]![Semester.seminar13]?.prediction ?? true) {
-      results[choice.seminar]![Semester.seminar13] = SemesterResult(seminarPrediction, 0, Semester.seminar13);
+      results[choice.seminar]![Semester.seminar13] = SemesterResult.prediction(seminarPrediction, Semester.seminar13);
     }
 
     return results;
@@ -513,6 +513,8 @@ class SemesterResult {
   bool get valid => !flagged && !prediction;
 
   SemesterResult(this.grade, this.basedOnGradeCount, this.semester);
+  SemesterResult.flagged(int basedOnGradeCount, Semester semester) : this(-1, basedOnGradeCount, semester);
+  SemesterResult.prediction(int grade, Semester semester) : this(grade, 0, semester);
 
   String get gradeString => flagged ? "-" : grade.toString();
 

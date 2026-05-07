@@ -46,9 +46,12 @@ class Api {
   }
 
   static Future<void> handleGoogleAuth(AccountDataProvider provider) async {
-    final flow = getAuthFlow();
+    provider.awaitingOAuth = true;
 
+    final flow = getAuthFlow();
     final result = await flow.googleAuthFlow();
+
+    provider.awaitingOAuth = false;
 
     if (result != null) {
       print("Received Auth Code: $result");

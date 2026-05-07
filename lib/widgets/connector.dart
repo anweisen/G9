@@ -183,14 +183,16 @@ class ConnectorLoadingStage {
     ConnectorLoadingStage("Synchronisation erfolgreich", Icons.check_circle_outline_rounded, (theme) => theme.indicatorColor, false),
     ConnectorLoadingStage("Synchronisation fehlgeschlagen", Icons.cloud_off_outlined, (theme) => theme.disabledColor, false),
     ConnectorLoadingStage("Willkommen zurück", Icons.waving_hand_outlined, (theme) => theme.primaryColor, false),
+    ConnectorLoadingStage("Warte auf Authentifizierung", Icons.fingerprint_rounded, (theme) => theme.primaryColor),
   ];
-  static const int loading = 0, authenticating = 1, syncing = 2, signin = 3, success = 4, error = 5, fallback = 6;
+  static const int loading = 0, authenticating = 1, syncing = 2, signin = 3, success = 4, error = 5, fallback = 6, oauth = 7;
 
   static int determineStage(AccountDataProvider accountProvider, GradesDataProvider gradesProvider, SettingsDataProvider settingsProvider) {
     return determine(
-        hasLoaded: accountProvider.hasLoaded && gradesProvider.hasLoaded && settingsProvider.hasLoaded,
-        isAuthenticating: accountProvider.isAuthenticating, isSyncing: accountProvider.isSyncing,
-        hasSynced: accountProvider.hasSynced, hasSyncingFailed: accountProvider.hasSyncingFailed, isLoggedIn: accountProvider.isLoggedIn
+      hasLoaded: accountProvider.hasLoaded && gradesProvider.hasLoaded && settingsProvider.hasLoaded,
+      isAuthenticating: accountProvider.isAuthenticating, isSyncing: accountProvider.isSyncing,
+      hasSynced: accountProvider.hasSynced, hasSyncingFailed: accountProvider.hasSyncingFailed, isLoggedIn: accountProvider.isLoggedIn,
+      isAwaitingOauth: accountProvider.isAwaitingOAuth
     );
   }
 
@@ -198,8 +200,9 @@ class ConnectorLoadingStage {
     return stages[determineStage(accountProvider, gradesProvider, settingsProvider)];
   }
 
-  static int determine({required bool hasLoaded, required bool isAuthenticating, required bool isSyncing, required bool hasSynced, required bool hasSyncingFailed, required bool isLoggedIn}) {
+  static int determine({required bool hasLoaded, required bool isAuthenticating, required bool isSyncing, required bool hasSynced, required bool hasSyncingFailed, required bool isLoggedIn, required bool isAwaitingOauth}) {
     if (!hasLoaded) return loading;
+    if (isAwaitingOauth) return oauth;
     if (isAuthenticating) return authenticating;
     if (isSyncing) return syncing;
     if (hasSynced) return success;

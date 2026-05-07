@@ -38,7 +38,7 @@ class DesktopAuthFlow extends AuthFlow {
       return Uri.parse(result).queryParameters['code'];
     } catch (e) {
       print("User cancelled or error: $e");
-      rethrow;
+      return null;
     }
   }
 }

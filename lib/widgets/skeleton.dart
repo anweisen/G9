@@ -2,7 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:markdown/markdown.dart' as md;
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'dart:ui';
 
@@ -273,8 +276,9 @@ class SubpageSkeleton extends StatelessWidget {
 }
 
 class UnauthorizedPageSkeleton extends StatelessWidget {
-  const UnauthorizedPageSkeleton({super.key, required this.children, this.crossAxisAlignment = CrossAxisAlignment.start});
+  const UnauthorizedPageSkeleton({super.key, required this.children, this.crossAxisAlignment = CrossAxisAlignment.start, this.scrollController});
 
+  final ScrollController? scrollController;
   final List<Widget> children;
   final CrossAxisAlignment crossAxisAlignment;
 
@@ -291,6 +295,7 @@ class UnauthorizedPageSkeleton extends StatelessWidget {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
+                  controller: scrollController,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       minHeight: constraints.maxHeight
@@ -366,4 +371,122 @@ class UnauthorizedPageSkeleton extends StatelessWidget {
       ],
     ));
   }
+}
+
+class MarkdownPage extends StatefulWidget {
+  const MarkdownPage({super.key, required this.assetsPath, required this.errorName});
+
+  final String assetsPath;
+  final String errorName;
+
+  @override
+  State<MarkdownPage> createState() => _MarkdownPageState();
+}
+
+class _MarkdownPageState extends State<MarkdownPage> {
+  final Map<String, GlobalKey> _anchorKeys = {};
+  final ScrollController _scrollController = ScrollController();
+
+  Future<String> _loadPrivacyPolicy() async {
+    return await rootBundle.loadString(widget.assetsPath);
+  }
+
+  void _scrollToAnchor(String anchor) {
+    final key = _anchorKeys[anchor];
+    if (key != null && key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return UnauthorizedPageSkeleton(
+        scrollController: _scrollController,
+        children: [
+          FutureBuilder(future: _loadPrivacyPolicy(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Center(child: CircularProgressIndicator(color: theme.primaryColor,)),
+                  );
+                } else if (snapshot.hasError) {
+                  return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                          color: theme.splashColor,
+                          borderRadius: BorderRadius.circular(8)
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        spacing: 16,
+                        children: [
+                          Icon(Icons.warning_amber_rounded, color: theme.disabledColor, size: 24,),
+                          Flexible(child: Text("Fehler beim Laden der ${widget.errorName}", style: theme.textTheme.displayMedium?.copyWith(color: theme.disabledColor, fontSize: 16, height: 0), softWrap: true,)),
+                        ],
+                      )
+                  );
+                } else {
+                  return MarkdownBody(
+                      onTapLink: (text, href, title) {
+                        if (href == null) return;
+                        if (href.startsWith("/")) {
+                          context.push(href);
+                          return;
+                        }
+                        if (href.startsWith('#')) {
+                          _scrollToAnchor(href.substring(1)); // strip #
+                          return;
+                        }
+
+                        final uri = Uri.parse(href);
+                        canLaunchUrl(uri).then((can) => {
+                          if (can) launchUrl(uri, mode: LaunchMode.externalApplication)
+                        });
+                      },
+                      builders: {
+                        "h2": AnchorHeaderBuilder(_anchorKeys),
+                      },
+                      styleSheet: MarkdownStyleSheet(
+                        // custom style: only used elements...
+                        h1: theme.textTheme.headlineMedium,
+                        h2: theme.textTheme.bodyMedium,
+                        p: theme.textTheme.displayMedium?.copyWith(color: theme.shadowColor, height: 0),
+                        a: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, height: 0),
+                        tableBody: theme.textTheme.displayMedium?.copyWith(color: theme.shadowColor, height: 0),
+                        tableBorder: TableBorder.all(color: theme.dividerColor, width: 2, borderRadius: BorderRadius.circular(8))
+                      ),
+                      data: snapshot.data as String
+                  );
+                }
+              }
+          ),
+        ]
+    );
+  }
+}
+
+class AnchorHeaderBuilder extends MarkdownElementBuilder {
+  AnchorHeaderBuilder(this.keys);
+
+  final Map<String, GlobalKey> keys;
+
+  @override
+  Widget? visitText(md.Text text, TextStyle? preferredStyle) {
+    final id = text.text.toLowerCase().replaceAll(" ", "-").replaceAll("(", "").replaceAll(")", "");
+    final key = keys.putIfAbsent(id, () => GlobalKey());
+
+    return Container(
+      key: key,
+      child: Text(text.text, style: preferredStyle),
+    );
+  }
+
 }

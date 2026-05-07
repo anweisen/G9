@@ -13,6 +13,7 @@ import 'pages/welcome.dart';
 import 'logic/choice.dart';
 import 'logic/grades.dart';
 import 'logic/types.dart';
+import 'pages/userdata.dart';
 import 'pages/home.dart';
 import 'pages/loading.dart';
 import 'pages/legal.dart';
@@ -202,6 +203,7 @@ class MyApp extends StatelessWidget {
           GoRoute(path: "/setup/abi", builder: (context, state) => const SetupPage(key: Key("setup/abi"), onlyAbi: true)),
           GoRoute(path: "/settings", builder: (context, state) => const SettingsPage(key: Key("settings"))),
           GoRoute(path: "/legal", builder: (context, state) => const LegalPage(key: Key("legal"))),
+          GoRoute(path: "/userdata", builder: (context, state) => const UserDataPage(key: Key("userdata"))),
         ],
       ),
     );

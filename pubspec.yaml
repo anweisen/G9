@@ -54,6 +54,7 @@ dependencies:
   flutter_web_auth_2: ^3.0.0
   device_info_plus: ^9.1.2
   jwt_decoder: ^2.0.1
+  flutter_markdown: ^0.6.10
   file_picker: ^8.0.0
   universal_html: ^2.2.4
   go_router: ^17.2.2
@@ -90,6 +91,7 @@ flutter:
   assets:
     - assets/icons/logo.svg
     - assets/content/privacy.md
+    - assets/content/userdata.md
 
   fonts:
     - family: Poppins

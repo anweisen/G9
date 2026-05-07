@@ -1,12 +1,12 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../api/api.dart';
 import '../api/files.dart';
 import '../api/types.dart';
-import '../logic/grades.dart';
 import '../provider/account.dart';
 import '../provider/grades.dart';
 import '../provider/settings.dart';
@@ -146,6 +146,14 @@ class _AccountPageState extends State<AccountPage> {
                         setState(() => exportingActive = false);
                       }
                     ),
+                    AccountActionButton(
+                      text: "Erklärung Accountdaten",
+                      icon: Icons.open_in_new_rounded,
+                      textColor: theme.primaryColor,
+                      backgroundColor: null,
+                      borderColor: theme.dividerColor,
+                      onTap: () => context.push("/userdata"),
+                    ),
                   ],
                 ),
 
@@ -278,7 +286,7 @@ class _AccountPageState extends State<AccountPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: theme.shadowColor, width: 2),
+                      border: Border.all(color: theme.dividerColor, width: 2),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,

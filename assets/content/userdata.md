@@ -7,6 +7,20 @@ gespeichert und es findet keine Übertragung an unsere Server statt.
 In diesem Abschnitt findest du eine ausführliche Erklärung der Datenstruktur, die in diesem Export enthalten ist, damit du genau verstehst, welche
 Informationen gespeichert sind und wie sie organisiert sind.
 
+## Abschnitte
+* [Struktur](#struktur)
+* [Login-Provider (identities)](#login-provider-identities)
+* [Geräteanmeldungen (sessions)](#geräteanmeldungen-sessions)
+* [Accountdaten (user_data)](#accountdaten-user_data)
+* [Fächerwahl (choice)](#fächerwahl-choice)
+* [Fächertypen (subject)](#fächertypen-subject)
+* [Noteneintrag (grade)](#noteneintrag-grade)
+* [Notentypen (grade_type)](#notentypen-grade_type)
+* [Semestertypen (semester)](#semestertypen-semester)
+* [Facheinstellungen (subject_setting)](#facheinstellungen-subject_setting)
+
+## Struktur
+
 Deine Daten sind folgendermaßen strukturiert (weitere Informationen in den eignen Abschnitten):
 
 | Name       | Datentyp                                             | Erklärung                                                             |

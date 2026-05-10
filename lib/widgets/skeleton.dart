@@ -442,7 +442,7 @@ class _MarkdownPageState extends State<MarkdownPage> {
                           return;
                         }
                         if (href.startsWith('#')) {
-                          _scrollToAnchor(href.substring(1)); // strip #
+                          _scrollToAnchor(Uri.decodeFull(href.substring(1))); // strip #, decode special chars
                           return;
                         }
 
@@ -453,13 +453,21 @@ class _MarkdownPageState extends State<MarkdownPage> {
                       },
                       builders: {
                         "h2": AnchorHeaderBuilder(_anchorKeys),
+                        "code": CodeElementBuilder(),
+                        "em": CodeElementBuilder(),
+                        "del": CodeElementBuilder(),
                       },
                       styleSheet: MarkdownStyleSheet(
                         // custom style: only used elements...
                         h1: theme.textTheme.headlineMedium,
                         h2: theme.textTheme.bodyMedium,
+                        h3: theme.textTheme.bodyMedium?.copyWith(fontSize: 16),
                         p: theme.textTheme.displayMedium?.copyWith(color: theme.shadowColor, height: 0),
                         a: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, height: 0),
+                        code: theme.textTheme.displayMedium?.copyWith(
+                            color: Colors.transparent, fontSize: 12, height: 0, letterSpacing: 0.8, shadows: [ Shadow(color: theme.primaryColor, offset: const Offset(0, -2)) ],
+                            decoration: TextDecoration.underline, decorationStyle: TextDecorationStyle.dashed, decorationColor: theme.primaryColor, decorationThickness: 2
+                        ),
                         tableBody: theme.textTheme.displayMedium?.copyWith(color: theme.shadowColor, height: 0),
                         tableBorder: TableBorder.all(color: theme.dividerColor, width: 2, borderRadius: BorderRadius.circular(8))
                       ),
@@ -478,10 +486,13 @@ class AnchorHeaderBuilder extends MarkdownElementBuilder {
 
   final Map<String, GlobalKey> keys;
 
+  static String extractId(String text) {
+    return text.toLowerCase().replaceAll(" ", "-").replaceAll("(", "").replaceAll(")", "");
+  }
+
   @override
   Widget? visitText(md.Text text, TextStyle? preferredStyle) {
-    final id = text.text.toLowerCase().replaceAll(" ", "-").replaceAll("(", "").replaceAll(")", "");
-    final key = keys.putIfAbsent(id, () => GlobalKey());
+    final key = keys.putIfAbsent(extractId(text.text), () => GlobalKey());
 
     return Container(
       key: key,
@@ -489,4 +500,19 @@ class AnchorHeaderBuilder extends MarkdownElementBuilder {
     );
   }
 
+}
+
+class CodeElementBuilder extends MarkdownElementBuilder {
+  @override
+  Widget? visitText(md.Text text, TextStyle? preferredStyle) {
+    print("Code element: ${text.text}");
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.red,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(text.text, style: preferredStyle?.copyWith(fontSize: preferredStyle.fontSize! * 0.5)),
+    );
+  }
 }

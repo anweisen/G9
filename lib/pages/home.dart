@@ -51,7 +51,7 @@ class HomePage extends StatelessWidget {
     var currentSemesterGrades = grades.getGradesForSemester(settings.choice!);
     var currentSemesterAvg = GradeHelper.averageOfSemester(currentSemesterGrades, grades.currentSemester, settings.choice!);
     var currentSemesterAvgUsed = GradeHelper.averageOfSemesterUsed(results, grades.currentSemester);
-    var gradesDistribution = _calculateSingleGradesDistribution(settings, currentSemesterGrades);
+    var gradesDistribution = _calculateSingleGradesDistribution(settings, currentSemesterGrades, grades.currentSemester);
     var usedSemesterResults = _flattenUsedResults(results);
 
     Map<Semester, double> pastSemestersAvg = {};
@@ -254,7 +254,7 @@ class HomePage extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             color: theme.dividerColor,
           ),
-          child: GradesPieChart(grades: grades.getAllGrades(), results: usedSemesterResults),
+          child: GradesPieChart(grades: grades.getAllGradesAsEffective(), results: usedSemesterResults),
         ),
       ],
 
@@ -603,6 +603,7 @@ class HomePage extends StatelessWidget {
   }
 
   List<MapEntry<int, int>> _calculateSingleGradesDistribution(SettingsDataProvider settings, Map<SubjectId, GradesList> currentSemesterGrades) {
+  List<MapEntry<int, int>> _calculateSingleGradesDistribution(SettingsDataProvider settings, Map<SubjectId, GradesList> currentSemesterGrades, Semester semester) {
     Map<int, int> gradesDistribution = {};
     for (int i = 0; i <= 15; i++) {
       gradesDistribution[i] = 0; // initialize all grades from 0 to 15
@@ -612,7 +613,8 @@ class HomePage extends StatelessWidget {
       var grades = currentSemesterGrades[subject.id] ?? [];
       for (var grade in grades) {
         if (grade.type.area == GradeTypeArea.flag) continue;
-        gradesDistribution[grade.grade] = (gradesDistribution[grade.grade] ?? 0) + 1;
+        int effectiveGrade = grade.asEffectiveGradeEntry(semester).grade;
+        gradesDistribution[effectiveGrade] = (gradesDistribution[effectiveGrade] ?? 0) + 1;
       }
     }
 

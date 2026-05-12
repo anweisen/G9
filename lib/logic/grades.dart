@@ -4,7 +4,6 @@ import 'package:hive/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../adapter/json_converters.dart';
-import '../api/kmapi.dart';
 import '../provider/grades.dart';
 import 'choice.dart';
 import 'types.dart';
@@ -30,6 +29,11 @@ class GradeEntry {
   final DateTime date;
 
   GradeEntry(this.grade, this.type, this.date);
+
+  GradeEntry asEffectiveGradeEntry(Semester semester) {
+    if (type == GradeType.result) return GradeEntry((grade / semester.semesterCountEquivalent).floor(), type, date);
+    return this;
+  }
 
   @override
   String toString() {
@@ -329,6 +333,7 @@ class GradeHelper {
   }
 
   // Punktebereich
+  // ! Keine Noten: -1
   // - Q-Semester: 0-15
   // - Seminar13: 0-30
   // - Abi-Semester: 0-60

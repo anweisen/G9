@@ -33,14 +33,17 @@ class SubjectResultPage extends StatelessWidget {
     bool profil = choice.profil12 == subject || choice.profil13 == subject;
 
     return SubpageSkeleton(
-        title: Row(children: [
-          SubjectPageTitle(subject: subject),
-          if (abi || profil || seminar) Container(
+        title: Row(
+          spacing: 8,
+          children: [
+            SubjectPageTitle(subject: subject),
+            if (abi || profil || seminar) Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(6)),
               child: Text(lk ? "Leistungsfach" : abi ? "Abiturfach" : profil ? "Profilfach" : seminar ? "Seminarfach" : "", style: theme.textTheme.displayMedium?.copyWith(height: 1.25, color: theme.scaffoldBackgroundColor),)
-          ),
-        ]),
+            ),
+        ]
+        ),
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,6 +283,7 @@ class SubjectResultAbiPrediction extends StatelessWidget {
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            spacing: 16,
             children: [
               Flexible(
                 child: Column(
@@ -358,9 +362,9 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.fromBorderSide(BorderSide(color: predicted <= 0 ? Colors.transparent : theme.shadowColor, width: 1.5))
+                              border: Border.fromBorderSide(BorderSide(color: predicted <= 0 ? Colors.transparent : theme.shadowColor, width: 2)),
                             ),
-                            child: Icon(Icons.remove_rounded, size: 16, color: predicted <= 0 ? Colors.transparent : theme.shadowColor)
+                            child: Icon(Icons.remove_rounded, size: 16, color: predicted <= 0 ? Colors.transparent : theme.primaryColor)
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -379,9 +383,9 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.fromBorderSide(BorderSide(color: predicted >= 15 ? Colors.transparent : theme.shadowColor, width: 1.5))
+                              border: Border.fromBorderSide(BorderSide(color: predicted <= 0 ? Colors.transparent : theme.shadowColor, width: 2)),
                             ),
-                            child: Icon(Icons.add_rounded, size: 16, color: predicted >= 15 ? Colors.transparent : theme.shadowColor)
+                            child: Icon(Icons.add_rounded, size: 16, color: predicted >= 15 ? Colors.transparent : theme.primaryColor)
                         ),
                       ),
                     ],
@@ -393,7 +397,7 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(borderRadius: BorderRadius.circular(6), border: Border.fromBorderSide(BorderSide(color: theme.textTheme.labelSmall!.color!, width: 2))),
                       child: Text("Prognose zurücksetzen", style: theme.textTheme.displayMedium?.copyWith(color: gradesProvider.getAbiPrediction(subject.id) != null
-                          ? theme.textTheme.bodyMedium?.color : theme.textTheme.labelSmall?.color, height: 1.25), softWrap: true, maxLines: 2,),
+                          ? theme.primaryColor : theme.shadowColor, height: 1.25), softWrap: true, maxLines: 2,),
                     ),
                   ),
                   const SizedBox(height: 8,),

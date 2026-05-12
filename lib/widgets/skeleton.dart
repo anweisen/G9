@@ -408,7 +408,8 @@ class _MarkdownPageState extends State<MarkdownPage> {
     return UnauthorizedPageSkeleton(
         scrollController: _scrollController,
         children: [
-          FutureBuilder(future: _loadPrivacyPolicy(),
+          FutureBuilder(
+              future: _loadPrivacyPolicy(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Padding(
@@ -453,9 +454,6 @@ class _MarkdownPageState extends State<MarkdownPage> {
                       },
                       builders: {
                         "h2": AnchorHeaderBuilder(_anchorKeys),
-                        "code": CodeElementBuilder(),
-                        "em": CodeElementBuilder(),
-                        "del": CodeElementBuilder(),
                       },
                       styleSheet: MarkdownStyleSheet(
                         // custom style: only used elements...
@@ -500,19 +498,4 @@ class AnchorHeaderBuilder extends MarkdownElementBuilder {
     );
   }
 
-}
-
-class CodeElementBuilder extends MarkdownElementBuilder {
-  @override
-  Widget? visitText(md.Text text, TextStyle? preferredStyle) {
-    print("Code element: ${text.text}");
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.red,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(text.text, style: preferredStyle?.copyWith(fontSize: preferredStyle.fontSize! * 0.5)),
-    );
-  }
 }

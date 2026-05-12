@@ -122,7 +122,7 @@ class SettingsPage extends StatelessWidget {
               child: buildButton(theme, "Notenübersicht drucken", Icons.print_rounded, null, primary: false)
           ),
           const SizedBox(height: 14),
-          buildButton(theme, "Zur Startseite", Icons.info_rounded, () => context.push("/welcome"), primary: false),
+          buildButton(theme, "Zur Startseite", Icons.info_outline_rounded, () => context.push("/welcome"), primary: false),
           const SizedBox(height: 20),
         ]);
   }

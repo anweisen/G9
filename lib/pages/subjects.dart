@@ -98,7 +98,7 @@ class SubjectWidget extends StatelessWidget {
                 width: 36,
                 height: 22,
               ),
-              Center(child: Text(GradeHelper.formatNumber(GradeHelper.average(subject, semester, choice, grades) / semester.semesterCountEquivalent), style: TextStyle(color: contrastColor, fontSize: 13, fontWeight: FontWeight.w500))),
+              Center(child: Text(GradeHelper.formatNumber(GradeHelper.average(subject, semester, choice, grades) / semester.semesterCountEquivalent, allowZero: true), style: TextStyle(color: contrastColor, fontSize: 13, fontWeight: FontWeight.w500))),
             ]),
             const SizedBox(width: 10),
             Text(subject.name, style: theme.textTheme.labelMedium?.copyWith(color: contrastColor), maxLines: 1, overflow: TextOverflow.clip),

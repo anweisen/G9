@@ -86,11 +86,11 @@ class _SubjectPageState extends State<SubjectPage> {
             const SizedBox(width: 12),
             Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300, fontSize: 22)),
             const SizedBox(width: 6),
-            Text(GradeHelper.formatNumber(average, decimals: (_currentSemester!.semesterCountEquivalent > 1 ? 1 : 2)), style: theme.textTheme.headlineMedium),
+            Text(GradeHelper.formatNumber(average, decimals: (_currentSemester!.semesterCountEquivalent > 1 ? 1 : 2), allowZero: true), style: theme.textTheme.headlineMedium),
             if (_currentSemester!.semesterCountEquivalent > 1) ...[
               const SizedBox(width: 6),
               Text("(≈ ", style: theme.textTheme.labelSmall),
-              Text(GradeHelper.formatNumber(average / _currentSemester!.semesterCountEquivalent, decimals: 1), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
+              Text(GradeHelper.formatNumber(average / _currentSemester!.semesterCountEquivalent, decimals: 1, allowZero: true), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
               Text(")", style: theme.textTheme.labelSmall),
             ]
           ],

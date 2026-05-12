@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../widgets/skeleton.dart';
 import '../widgets/general.dart';
+import '../widgets/skeleton.dart';
+import '../widgets/subjects.dart';
 import '../provider/settings.dart';
 import '../logic/choice.dart';
 import '../logic/types.dart';
@@ -873,14 +874,14 @@ class SetupFinishPage extends StatelessWidget {
     return [
       Text("Leistungsfach", style: theme.textTheme.bodySmall),
       const SizedBox(height: labelSpacing),
-      SubjectWidget(subject: choice.lk),
+      MediumSubjectWidget(subject: choice.lk),
       const SizedBox(height: sectionSpacing),
 
       // 1. Fremdsprache
       if (choice.lk != choice.sg1) ...[
         Text("1. Fremdsprache", style: theme.textTheme.bodySmall),
         const SizedBox(height: labelSpacing),
-        SubjectWidget(subject: choice.sg1),
+        MediumSubjectWidget(subject: choice.sg1),
         const SizedBox(height: sectionSpacing),
       ],
 
@@ -888,79 +889,80 @@ class SetupFinishPage extends StatelessWidget {
       if (choice.lk != choice.ntg1) ...[
         Text("1. Naturwissenschaft", style: theme.textTheme.bodySmall),
         const SizedBox(height: labelSpacing),
-        SubjectWidget(subject: choice.ntg1),
+        MediumSubjectWidget(subject: choice.ntg1),
         const SizedBox(height: sectionSpacing),
       ],
 
       // 2. Fremdsprache / Naturwissenschaft
       Text("2. Fremdsprache / Naturwissenschaft / Informatik", style: theme.textTheme.bodySmall),
       const SizedBox(height: labelSpacing),
-      SubjectWidget(subject: choice.mintSg2),
+      MediumSubjectWidget(subject: choice.mintSg2),
       const SizedBox(height: sectionSpacing),
 
       // Kunst / Musik
       Text("Kunst oder Musik", style: theme.textTheme.bodySmall),
       const SizedBox(height: labelSpacing),
-      SubjectWidget(subject: choice.musikKunst),
+      MediumSubjectWidget(subject: choice.musikKunst),
       const SizedBox(height: sectionSpacing),
 
       // Geo / WR
       Text("Geographie oder Wirtschaft & Recht in Q12", style: theme.textTheme.bodySmall),
       const SizedBox(height: labelSpacing),
-      SubjectWidget(subject: choice.geoWr),
+      MediumSubjectWidget(subject: choice.geoWr),
       const SizedBox(height: sectionSpacing),
 
       // Weiterführung in Q13 (PuG vs Geo / WR)
       Text("Weiterführung in Q13", style: theme.textTheme.bodySmall),
       const SizedBox(height: labelSpacing),
-      SubjectWidget(subject: choice.pug13 ? Subject.pug : choice.geoWr),
+      MediumSubjectWidget(subject: choice.pug13 ? Subject.pug : choice.geoWr),
       const SizedBox(height: sectionSpacing),
 
       // Pflichtfächer
       Text("Pflichtfächer", style: theme.textTheme.bodySmall),
       const SizedBox(height: labelSpacing),
-      SubjectWidget(subject: Subject.mathe),
+      MediumSubjectWidget(subject: Subject.mathe),
       const SizedBox(height: subjectSpacing),
-      SubjectWidget(subject: Subject.deutsch),
+      MediumSubjectWidget(subject: Subject.deutsch),
       const SizedBox(height: subjectSpacing),
       if (choice.lk != Subject.sport) ...[
-        SubjectWidget(subject: Subject.sport),
+        MediumSubjectWidget(subject: Subject.sport),
         const SizedBox(height: subjectSpacing),
       ],
       if (choice.lk != Subject.reli) ...[
-        SubjectWidget(subject: Subject.reli),
+        MediumSubjectWidget(subject: Subject.reli),
         const SizedBox(height: subjectSpacing),
       ],
       if (choice.lk != Subject.geschi) ...[
-        SubjectWidget(subject: Subject.geschi),
+        MediumSubjectWidget(subject: Subject.geschi),
         const SizedBox(height: subjectSpacing),
       ],
       if (choice.lk != Subject.pug) ...[
-        SubjectWidget(subject: Subject.pug),
+        MediumSubjectWidget(subject: Subject.pug),
         const SizedBox(height: subjectSpacing),
       ],
-      SubjectWidget(subject: choice.seminar),
+      MediumSubjectWidget(subject: choice.seminar),
       const SizedBox(height: sectionSpacing),
 
       // Vertiefungskurs (optional, ersetzt mintSg2 in Q13), nicht mit spät beginnender Fremdsprache/Informatik
       Text("Vertiefungskurs", style: theme.textTheme.bodySmall),
       const SizedBox(height: labelSpacing),
-      SubjectWidget(subject: choice.vk ?? Subject.skipSubject),
+      MediumSubjectWidget(subject: choice.vk ?? Subject.skipSubject),
       const SizedBox(height: sectionSpacing),
 
       // Profilfach (optional)
       Text("Profilfach Q12 / Q13", style: theme.textTheme.bodySmall),
       const SizedBox(height: labelSpacing),
-      SubjectWidget(subject: choice.profil12 ?? Subject.skipSubject),
-      SubjectWidget(subject: choice.profil13 ?? Subject.skipSubject),
+      MediumSubjectWidget(subject: choice.profil12 ?? Subject.skipSubject),
+      MediumSubjectWidget(subject: choice.profil13 ?? Subject.skipSubject),
       const SizedBox(height: sectionSpacing),
 
       // Prüfungsfächer
       Text("Abiturprüfungsfächer", style: theme.textTheme.bodySmall),
       const SizedBox(height: labelSpacing),
       ...choice.abiSubjects.map((e) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SubjectWidget(subject: e),
+          MediumSubjectWidget(subject: e),
           const SizedBox(height: subjectSpacing),
         ],
       )),

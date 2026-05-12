@@ -114,7 +114,6 @@ class _GradesPieChartState extends State<GradesPieChart> {
             Text("Notenverteilung", style: theme.textTheme.bodySmall),
           ],
         ),
-        // Text("Notenverteilung", style: theme.textTheme.bodySmall),
         const SizedBox(height: 8),
         LayoutBuilder(
             builder: (context, constraints) {
@@ -316,8 +315,7 @@ class GradesPieChartPainter extends CustomPainter {
   static Color lerpEntryColor(ThemeData theme, int index, int total) {
     if (index == -1) return Colors.transparent;
     double factor = index / total;
-    return theme.hintColor.withValues(alpha: 1 - factor * 0.5);
-    // return Color.lerp(theme.primaryColor, theme.shadowColor, factor)!;
+    return theme.hintColor.withValues(alpha: 1 - factor * 0.66);
   }
 
   @override
@@ -405,7 +403,7 @@ class GradesPieChartPainter extends CustomPainter {
 
       canvas.drawPath(path, paint);
 
-      if (share > 0.036 && key != -1) {
+      if (share > 0.05 && key != -1) {
         final double labelRadius = radius * 0.7; // position inside slice (distance from center)
         final double x = center.dx + labelRadius * cos(midAngle);
         final double y = center.dy + labelRadius * sin(midAngle);
@@ -417,17 +415,16 @@ class GradesPieChartPainter extends CustomPainter {
   }
 
   void _drawLabel(Canvas canvas, String title, String subtitle, Offset position, double share) {
-    double scalar = clampDouble(share / 0.05, 0.5, 1.0);
     final textPainter = TextPainter(
       text: TextSpan(
         children: [
           TextSpan(
             text: title,
-            style: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, fontWeight: FontWeight.w600, fontSize: 12 * scalar, height: 0),
+            style: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, fontWeight: FontWeight.w600, fontSize: 12, height: 0),
           ),
           if (share > 0.1) TextSpan(
             text: "\n($subtitle)",
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.primaryColor.withValues(alpha: 0.7), fontSize: 8 * scalar),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.primaryColor.withValues(alpha: 0.85), fontSize: 9, fontWeight: FontWeight.w500),
           ),
         ],
       ),

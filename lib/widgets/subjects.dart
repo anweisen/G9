@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../logic/types.dart';
 
 class MediumSubjectWidget extends StatelessWidget {
-  const MediumSubjectWidget({super.key, required this.subject, this.faded = false});
+  MediumSubjectWidget({super.key, required Subject? subject, this.faded = false}) : subject = subject ?? Subject.skipSubject;
 
   final Subject subject;
   final bool faded;
@@ -14,11 +14,15 @@ class MediumSubjectWidget extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
+        subject != Subject.skipSubject ? Container(
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(7), color: subject.color.withValues(alpha: faded ? 0.6 : null)),
           width: 19,
           height: 19,
-        ),
+        ) : SizedBox(
+          width: 19,
+          height: 19,
+          child: Icon(Icons.close_rounded, size: 21, color: faded ? theme.shadowColor : theme.primaryColor, weight: 800,
+        )),
         const SizedBox(width: 8),
         Flexible(child: Text(subject.name, style: theme.textTheme.bodyMedium?.copyWith(color: faded ? theme.shadowColor : null), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,)),
       ],

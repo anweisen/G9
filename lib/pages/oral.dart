@@ -13,7 +13,6 @@ import '../widgets/general.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/subjects.dart';
 import '../widgets/subpage.dart';
-import 'change.dart';
 import 'grade.dart';
 
 class OralExamTypeSelectorPage extends StatefulWidget {
@@ -146,7 +145,7 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
                 },
                 child: Container(
                   margin: const EdgeInsets.only(top: 6, bottom: 0),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: theme.dividerColor, width: 2),
@@ -156,13 +155,13 @@ class _OralExamTypeSelectorPageState extends State<OralExamTypeSelectorPage> {
                     children: [
                       Icon(Icons.add_circle_outline_rounded, size: 20, color: theme.shadowColor),
                       const SizedBox(width: 8),
-                      Flexible(child: Text("Kolloquiumstermin eintragen", style: theme.textTheme.displayMedium?.copyWith(height: 1.6, color: theme.shadowColor), softWrap: true,)),
+                      Flexible(child: Text("Kolloquiumstermin eintragen", style: theme.textTheme.displayMedium?.copyWith(height: 1.8, color: theme.shadowColor), softWrap: true,)),
                     ]
                   ) : Row(
                     children: [
-                      Icon(Icons.calendar_month_rounded, size: 18, color: theme.primaryColor),
+                      Icon(Icons.calendar_month_rounded, size: 19, color: theme.primaryColor),
                       const SizedBox(width: 8),
-                      Flexible(child: Text(DateHelper.formatDate(oralExamDates[subject]!, useFullYear: true), style: theme.textTheme.displayMedium?.copyWith(height: 1.6, color: theme.primaryColor), softWrap: true,)),
+                      Flexible(child: Text(DateHelper.formatDate(oralExamDates[subject]!, useFullYear: true), style: theme.textTheme.displayMedium?.copyWith(height: 1.8, color: theme.primaryColor), softWrap: true,)),
                     ]),
                 ),
               ),
@@ -349,7 +348,7 @@ class _SelectOralDatePageState extends State<SelectOralDatePage> {
     final kmapi = Provider.of<KmApiProvider>(context);
 
     return SubpageSkeleton(
-        title: const PageTitle(title: "Kolloquiumstermin eintragen"),
+        title: SubjectPageTitle(subject: widget.subject),
         actions: [
           SaveButtonContainer(btn1: SaveButton(
             onTap: () {
@@ -362,24 +361,12 @@ class _SelectOralDatePageState extends State<SelectOralDatePage> {
           ), btn2: null, shown: true)
         ],
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: theme.dividerColor, width: 2),
-                ),
-                child: SmallSubjectWidget(subject: widget.subject, old: false, choice: null,)
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+          Text("Kolloquiumstermin eintragen", softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1, style: theme.textTheme.bodyMedium),
+          const SizedBox(height: 20),
 
           if (!kmapi.hasError && kmapi.abiDates != null) for (OralAbiExamWeek oralDate in kmapi.abiDates!.oralExamWeeks) ...[
             Text("${oralDate.formattedWeekName} (${DateHelper.formatWeek(oralDate.startDate, oralDate.endDate)})", style: theme.textTheme.displayMedium),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             WeekDatePicker(
               selected: _selectedDate,
               start: oralDate.startDate,
@@ -408,7 +395,7 @@ class WeekDatePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Wrap(
-      spacing: 26,
+      spacing: 20,
       runSpacing: 12,
       crossAxisAlignment: WrapCrossAlignment.start,
       children: [
@@ -416,15 +403,15 @@ class WeekDatePicker extends StatelessWidget {
           GestureDetector(
             onTap: () => onDateSelected(date),
             child: Container(
-              width: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              width: 52,
+              padding: const EdgeInsets.symmetric(vertical: 6),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 color: date == selected ? theme.primaryColor : theme.dividerColor,
               ),
               child: Column(
                 children: [
-                  Text(DateHelper.shortNameOfWeekday(date.weekday), style: theme.textTheme.bodySmall),
+                  Text(DateHelper.shortNameOfWeekday(date.weekday), style: theme.textTheme.bodySmall?.copyWith(height: 0, fontWeight: selected != null && date.isAtSameMomentAs(selected!) ? FontWeight.w600 : null)),
                   Text("${date.day}", style: theme.textTheme.bodyMedium?.copyWith(color: selected != null && date.isAtSameMomentAs(selected!) ? theme.scaffoldBackgroundColor : null),),
                 ],
               ),

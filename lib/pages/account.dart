@@ -62,8 +62,8 @@ class _AccountPageState extends State<AccountPage> {
                 Row(
                   children: [
                     ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.network(account.userProfile!.picture, width: 48, height: 48, errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_circle_rounded, size: 48))
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.network(account.userProfile!.picture, width: 48, height: 48, errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_circle_rounded, size: 48))
                     ),
                     const SizedBox(width: 16,),
                     Column(
@@ -108,6 +108,36 @@ class _AccountPageState extends State<AccountPage> {
                   runSpacing: 10,
                   children: [
                     AccountActionButton(
+                        text: "Daten exportieren",
+                        icon: Icons.download_rounded,
+                        textColor: theme.primaryColor,
+                        backgroundColor: null,
+                        borderColor: theme.dividerColor,
+                        suffix: exportingActive ? DotLoadingIndicator(style: theme.textTheme.bodyMedium!.copyWith(fontSize: 15), duration: const Duration(milliseconds: 1500)) : null,
+                        onTap: () async {
+                          setState(() => exportingActive = true);
+                          final data = await account.api.getExportData();
+                          await FileExportService.exportJson("user_data", data);
+                          setState(() => exportingActive = false);
+                        }
+                    ),
+                    AccountActionButton(
+                      text: "Erklärung Accountdaten",
+                      icon: Icons.open_in_new_rounded,
+                      textColor: theme.primaryColor,
+                      backgroundColor: null,
+                      borderColor: theme.dividerColor,
+                      onTap: () => context.push("/userdata"),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16,),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    AccountActionButton(
                       text: "Abmelden",
                       icon: Icons.logout_rounded,
                       textColor: theme.disabledColor,
@@ -124,36 +154,6 @@ class _AccountPageState extends State<AccountPage> {
                       onTap: null,
                       createSubpage: () => const ConfirmDeleteAccountDialoge(),
                     )
-                  ],
-                ),
-
-                const SizedBox(height: 16,),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    AccountActionButton(
-                      text: "Daten exportieren",
-                      icon: Icons.download_rounded,
-                      textColor: theme.primaryColor,
-                      backgroundColor: null,
-                      borderColor: theme.dividerColor,
-                      suffix: exportingActive ? DotLoadingIndicator(style: theme.textTheme.bodyMedium!.copyWith(fontSize: 15), duration: const Duration(milliseconds: 1500)) : null,
-                      onTap: () async {
-                        setState(() => exportingActive = true);
-                        final data = await account.api.getExportData();
-                        await FileExportService.exportJson("user_data", data);
-                        setState(() => exportingActive = false);
-                      }
-                    ),
-                    AccountActionButton(
-                      text: "Erklärung Accountdaten",
-                      icon: Icons.open_in_new_rounded,
-                      textColor: theme.primaryColor,
-                      backgroundColor: null,
-                      borderColor: theme.dividerColor,
-                      onTap: () => context.push("/userdata"),
-                    ),
                   ],
                 ),
 

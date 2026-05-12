@@ -44,7 +44,7 @@ func (app AppEmbed) HandlePostAuthExchange(ctx fiber.Ctx) error {
 
   err := ctx.Bind().Body(&body)
   if err != nil {
-    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+    return ctx.Status(fiber.StatusBadRequest).SendString("Invalid request body")
   }
 
   println("code:", body.Code)
@@ -52,7 +52,7 @@ func (app AppEmbed) HandlePostAuthExchange(ctx fiber.Ctx) error {
 
   switch body.Provider {
   default:
-    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "unsupported oauth provider"})
+    return ctx.Status(fiber.StatusBadRequest).SendString("Unsupported oauth provider")
 
   case "google":
     println("exchanging code for token with redirect")
@@ -61,7 +61,7 @@ func (app AppEmbed) HandlePostAuthExchange(ctx fiber.Ctx) error {
     fmt.Println(token)
     if err != nil {
       fmt.Println(err)
-      return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "failed to exchange code for token"})
+      return ctx.Status(fiber.StatusUnauthorized).SendString("Failed to exchange code for token")
     }
 
     println("exchanged code for token")
@@ -70,7 +70,7 @@ func (app AppEmbed) HandlePostAuthExchange(ctx fiber.Ctx) error {
     googleJwt, err := idtoken.Validate(ctx, googleJwtString, googleOAuthConfig.ClientID)
     if err != nil {
       fmt.Println(err)
-      return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to validate id token"})
+      return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to validate id token")
     }
 
     println("validated id token")
@@ -86,7 +86,7 @@ func (app AppEmbed) HandlePostAuthExchange(ctx fiber.Ctx) error {
     identity, err := app.Database.FindIdentityByProvider("google", googleId)
     if err != nil {
       fmt.Println("error while finding identity", err)
-      return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to retrieve user identity"})
+      return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to retrieve user identity")
     }
 
     println("retrieved identity for google id:", googleId, "identity:", identity)
@@ -98,11 +98,11 @@ func (app AppEmbed) HandlePostAuthExchange(ctx fiber.Ctx) error {
       user, err = app.Database.FindUserById(identity.UserId)
       if err != nil {
         fmt.Println(err)
-        return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to retrieve user"})
+        return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to retrieve user")
       }
       if user == nil {
         fmt.Println("user not found for identity:", identity)
-        return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "user not found for identity"})
+        return ctx.Status(fiber.StatusInternalServerError).SendString("User not found for identity")
       }
     } else {
       print("identity not found, creating new")
@@ -110,7 +110,7 @@ func (app AppEmbed) HandlePostAuthExchange(ctx fiber.Ctx) error {
       user, identity, err = provider.CreateUserAndIdentity(app.Database, "google", googleId, name, email, picture)
       if err != nil {
         fmt.Println(err)
-        return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to create user and identity"})
+        return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to create user and identity")
       }
     }
 
@@ -118,20 +118,20 @@ func (app AppEmbed) HandlePostAuthExchange(ctx fiber.Ctx) error {
     accessJwt, err := provider.SignJwt(accessClaims)
     if err != nil {
       fmt.Println(err)
-      return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to sign jwt"})
+      return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to sign jwt")
     }
 
     refreshClaims := provider.CreateRefreshJwtClaims(user.Id)
     refreshJwt, err := provider.SignJwt(refreshClaims)
     if err != nil {
       fmt.Println(err)
-      return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to sign refresh jwt"})
+      return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to sign refresh jwt")
     }
 
     _, err = provider.CreateSession(app.Database, identity, body.DeviceName, refreshClaims.ID, refreshClaims.ExpiresAt.Time)
     if err != nil {
       fmt.Println(err)
-      return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to create session"})
+      return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to create session")
     }
 
     publicUserProfile := provider.ConstructPublicUserProfile(user)
@@ -145,7 +145,7 @@ func (app AppEmbed) HandlePostAuthRefresh(ctx fiber.Ctx) error {
   body := new(AuthRefreshRequestBody)
   err := ctx.Bind().Body(&body)
   if err != nil {
-    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+    return ctx.Status(fiber.StatusBadRequest).SendString("Invalid request body")
   }
 
   refreshToken, err := jwt.ParseWithClaims(body.RefreshToken, &provider.JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
@@ -156,7 +156,7 @@ func (app AppEmbed) HandlePostAuthRefresh(ctx fiber.Ctx) error {
   })
   if err != nil || !refreshToken.Valid {
     fmt.Println(err)
-    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "refresh token invalid or expired"})
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Refresh token invalid or expired")
   }
 
   claims := refreshToken.Claims.(*provider.JwtClaims)
@@ -166,10 +166,10 @@ func (app AppEmbed) HandlePostAuthRefresh(ctx fiber.Ctx) error {
 
   session, err := app.Database.FindSessionByJti(oldJti, userId)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to retrieve session"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to retrieve session")
   }
   if session == nil {
-    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "session not found"})
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Invalid session")
   }
 
   newAccessToken := provider.CreateAccessJwtClaims(userId)
@@ -177,16 +177,16 @@ func (app AppEmbed) HandlePostAuthRefresh(ctx fiber.Ctx) error {
 
   newAccessJwt, err := provider.SignJwt(newAccessToken)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to sign jwt"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to sign jwt")
   }
   newRefreshJwt, err := provider.SignJwt(newRefreshToken)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to sign refresh jwt"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to sign refresh jwt")
   }
 
   err = app.Database.UpdateSession(session.Id, newRefreshToken.ExpiresAt.Time, newRefreshToken.ID, body.DeviceName)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update session"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to update session")
   }
 
   return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"access_token": newAccessJwt, "refresh_token": newRefreshJwt})
@@ -196,7 +196,7 @@ func (app AppEmbed) HandlePostAuthLogout(ctx fiber.Ctx) error {
   body := new(AuthLogoutRequestBody)
   err := ctx.Bind().Body(&body)
   if err != nil {
-    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+    return ctx.Status(fiber.StatusBadRequest).SendString("Invalid request body")
   }
 
   refreshToken, err := jwt.ParseWithClaims(body.RefreshToken, &provider.JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
@@ -207,7 +207,7 @@ func (app AppEmbed) HandlePostAuthLogout(ctx fiber.Ctx) error {
   })
   if err != nil || !refreshToken.Valid {
     fmt.Println(err)
-    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "refresh token invalid or expired"})
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Refresh token invalid or expired")
   }
 
   claims := refreshToken.Claims.(*provider.JwtClaims)
@@ -217,8 +217,8 @@ func (app AppEmbed) HandlePostAuthLogout(ctx fiber.Ctx) error {
 
   err = app.Database.DeleteSessionByJti(jti, userId)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to delete session"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to delete session")
   }
 
-  return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success"})
+  return ctx.SendStatus(fiber.StatusOK)
 }

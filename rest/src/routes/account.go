@@ -37,7 +37,7 @@ type AccountSubjectPostBody struct {
 func (app AppEmbed) HandlePostAccountSync(ctx fiber.Ctx) error {
   userId, err := ExtractUserId(ctx)
   if err != nil {
-    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Invalid jwt token")
   }
 
   // print body as string for debugging
@@ -48,7 +48,7 @@ func (app AppEmbed) HandlePostAccountSync(ctx fiber.Ctx) error {
   if err != nil {
     fmt.Println(err.Error())
     fmt.Println(err)
-    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+    return ctx.Status(fiber.StatusBadRequest).SendString("Invalid request body")
   }
 
   // print body as json encoded for debugging
@@ -57,7 +57,7 @@ func (app AppEmbed) HandlePostAccountSync(ctx fiber.Ctx) error {
 
   user, err := app.Database.FindUserById(userId)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to find user"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to find user")
   }
 
   mergedStorage := provider.MergeUserStorageAndChanges(user.UserStorage, body.Data, body.Changes, user.LastSync)
@@ -68,7 +68,7 @@ func (app AppEmbed) HandlePostAccountSync(ctx fiber.Ctx) error {
 
   err = app.Database.UpdateUserStorage(userId, mergedStorage, provider.IncludeAllUserStorageUpdate())
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to update user storage")
   }
 
   return ctx.JSON(mergedStorage)
@@ -77,18 +77,18 @@ func (app AppEmbed) HandlePostAccountSync(ctx fiber.Ctx) error {
 func (app AppEmbed) HandlePostAccountSubjectSemesterGrades(ctx fiber.Ctx) error {
   userId, err := ExtractUserId(ctx)
   if err != nil {
-    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Invalid jwt token")
   }
 
   var body AccountSubjectSemesterGradesPostBody
   err = ctx.Bind().Body(&body)
   if err != nil {
-    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+    return ctx.Status(fiber.StatusBadRequest).SendString("Invalid request body")
   }
 
   user, err := app.Database.FindUserById(userId)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to find user"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to find user")
   }
 
   subjectParam := ctx.Params("subject")
@@ -96,7 +96,7 @@ func (app AppEmbed) HandlePostAccountSubjectSemesterGrades(ctx fiber.Ctx) error 
 
   subjectId, err := utils.ParseUint8(subjectParam)
   if err != nil {
-    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid subject id"})
+    return ctx.Status(fiber.StatusBadRequest).SendString("Invalid subject id")
   }
 
   if user.UserStorage.Grades == nil {
@@ -109,22 +109,22 @@ func (app AppEmbed) HandlePostAccountSubjectSemesterGrades(ctx fiber.Ctx) error 
 
   err = app.Database.UpdateUserStorage(userId, user.UserStorage, provider.IncludeUserStorageUpdate{IncludeGrades: true})
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to update user storage")
   }
 
-  return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success"})
+  return ctx.SendStatus(fiber.StatusOK)
 }
 
 func (app AppEmbed) HandlePostAccountChoice(ctx fiber.Ctx) error {
   userId, err := ExtractUserId(ctx)
   if err != nil {
-    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Invalid jwt token")
   }
 
   var body AccountChoicePostBody
   err = ctx.Bind().Body(&body)
   if err != nil {
-    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+    return ctx.Status(fiber.StatusBadRequest).SendString("Invalid request body")
   }
 
   updateStorage := provider.UserStorage{
@@ -133,34 +133,34 @@ func (app AppEmbed) HandlePostAccountChoice(ctx fiber.Ctx) error {
 
   err = app.Database.UpdateUserStorage(userId, updateStorage, provider.IncludeUserStorageUpdate{IncludeChoice: true})
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to update user storage")
   }
 
-  return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success"})
+  return ctx.SendStatus(fiber.StatusOK)
 }
 
 func (app AppEmbed) HandlePostAccountSubjectAbiPrediction(ctx fiber.Ctx) error {
   userId, err := ExtractUserId(ctx)
   if err != nil {
-    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Invalid jwt token")
   }
 
   var body AccountSubjectAbiPredictionPostBody
   err = ctx.Bind().Body(&body)
   if err != nil {
-    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+    return ctx.Status(fiber.StatusBadRequest).SendString("Invalid request body")
   }
 
   subjectParam := ctx.Params("subject")
 
   subjectId, err := utils.ParseUint8(subjectParam)
   if err != nil {
-    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid subject id"})
+    return ctx.Status(fiber.StatusBadRequest).SendString("Invalid subject id")
   }
 
   user, err := app.Database.FindUserById(userId)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to find user"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to find user")
   }
 
   var abiPredictions = user.UserStorage.AbiPredictions
@@ -179,47 +179,47 @@ func (app AppEmbed) HandlePostAccountSubjectAbiPrediction(ctx fiber.Ctx) error {
 
   err = app.Database.UpdateUserStorage(userId, updatedStorage, provider.IncludeUserStorageUpdate{IncludeAbiPredictions: true})
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to update user storage")
   }
 
-  return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success"})
+  return ctx.SendStatus(fiber.StatusOK)
 }
 
 func (app AppEmbed) HandleDeleteAccount(ctx fiber.Ctx) error {
   userId, err := ExtractUserId(ctx)
   if err != nil {
-    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Invalid jwt token")
   }
 
   err = app.Database.DeleteIdentities(userId)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to delete user identities"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to delete user identities")
   }
 
   err = app.Database.DeleteUser(userId)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to delete user"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to delete user")
   }
 
   err = app.Database.DeleteSessions(userId)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to delete user sessions"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to delete user sessions")
   }
 
-  return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success"})
+  return ctx.SendStatus(fiber.StatusOK)
 }
 
 func (app AppEmbed) HandleGetAccountSessions(ctx fiber.Ctx) error {
   userId, err := ExtractUserId(ctx)
   if err != nil {
-    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Invalid jwt token")
   }
 
   currentSessionJti := ctx.Get("Current-Session-ID", "")
 
   sessions, err := app.Database.FindAllSessionByUserId(userId)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to retrieve user sessions"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to retrieve user sessions")
   }
 
   var currentSessionId string
@@ -235,34 +235,34 @@ func (app AppEmbed) HandleGetAccountSessions(ctx fiber.Ctx) error {
 func (app AppEmbed) HandleDeleteAccountSession(ctx fiber.Ctx) error {
   userId, err := ExtractUserId(ctx)
   if err != nil {
-    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Invalid jwt token")
   }
 
   sessionIdParam := ctx.Params("session")
 
   sessionId, err := bson.ObjectIDFromHex(sessionIdParam)
   if err != nil {
-    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid session id"})
+    return ctx.Status(fiber.StatusBadRequest).SendString("Invalid session id")
   }
 
   err = app.Database.DeleteSessionById(sessionId, userId)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to delete session"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("failed to delete session")
   }
 
-  return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success"})
+  return ctx.SendStatus(fiber.StatusOK)
 }
 
 func (app AppEmbed) HandlePostAccountSemester(ctx fiber.Ctx) error {
   userId, err := ExtractUserId(ctx)
   if err != nil {
-    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Invalid jwt token")
   }
 
   var body AccountSemesterPostBody
   err = ctx.Bind().Body(&body)
   if err != nil {
-    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+    return ctx.Status(fiber.StatusBadRequest).SendString("Invalid request body")
   }
 
   updateStorage := provider.UserStorage{
@@ -271,34 +271,34 @@ func (app AppEmbed) HandlePostAccountSemester(ctx fiber.Ctx) error {
 
   err = app.Database.UpdateUserStorage(userId, updateStorage, provider.IncludeUserStorageUpdate{IncludeSemester: true})
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to update user storage")
   }
 
-  return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success"})
+  return ctx.SendStatus(fiber.StatusOK)
 }
 
 func (app AppEmbed) HandlePostAccountSubjectSettings(ctx fiber.Ctx) error {
   userId, err := ExtractUserId(ctx)
   if err != nil {
-    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Invalid jwt token")
   }
 
   var body AccountSubjectPostBody
   err = ctx.Bind().Body(&body)
   if err != nil {
-    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+    return ctx.Status(fiber.StatusBadRequest).SendString("Invalid request body")
   }
 
   subjectParam := ctx.Params("subject")
 
   subjectId, err := utils.ParseUint8(subjectParam)
   if err != nil {
-    return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid subject id"})
+    return ctx.Status(fiber.StatusBadRequest).SendString("Invalid subject id")
   }
 
   user, err := app.Database.FindUserById(userId)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to find user"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to find user")
   }
 
   var subjectSettings = user.UserStorage.SubjectSettings
@@ -317,31 +317,31 @@ func (app AppEmbed) HandlePostAccountSubjectSettings(ctx fiber.Ctx) error {
 
   err = app.Database.UpdateUserStorage(userId, updatedStorage, provider.IncludeUserStorageUpdate{IncludeSubjectSettings: true})
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update user storage"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to update user storage")
   }
 
-  return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success"})
+  return ctx.SendStatus(fiber.StatusOK)
 }
 
 func (app AppEmbed) HandleGetAccountExport(ctx fiber.Ctx) error {
   userId, err := ExtractUserId(ctx)
   if err != nil {
-    return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid jwt token"})
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Invalid jwt token")
   }
 
   user, err := app.Database.FindUserById(userId)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to find user"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to find user")
   }
 
   sessions, err := app.Database.FindAllSessionByUserId(userId)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to retrieve user sessions"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to retrieve user sessions")
   }
 
   identities, err := app.Database.FindAllIdentitiesByUserId(userId)
   if err != nil {
-    return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to retrieve user identities"})
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to retrieve user identities")
   }
 
   return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"user_data": user, "sessions": sessions, "identities": identities})

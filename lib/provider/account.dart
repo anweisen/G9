@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -39,70 +40,36 @@ class AccountDataProvider extends ChangeNotifier {
 
   bool _awaitingOAuth = false;
   bool get isAwaitingOAuth => _awaitingOAuth;
-  set awaitingOAuth(bool value) {
-    _awaitingOAuth = value;
-    if (value) notifyListeners();
-  }
+  set awaitingOAuth(bool value) => _awaitingOAuth = value;
 
   bool _authenticating = false;
   bool get isAuthenticating => _authenticating;
-  set authenticating(bool value) {
-    _authenticating = value;
-    notifyListeners();
-  }
+  set authenticating(bool value) => _authenticating = value;
 
   late AuthenticatedApi _api;
   Timer? _refreshTimer;
+  bool get hasRefreshScheduled => _refreshTimer != null && _refreshTimer!.isActive;
 
   String? _accessToken;
   String? _refreshToken;
-  String? _provider;
-  PublicUserProfile? _userProfile;
-  PrivateUserProfile? _privateProfile;
+  String? provider;
+  PublicUserProfile? userProfile;
+  PrivateUserProfile? privateProfile;
   StashedChanges? _stashedChanges;
-
-  bool get hasRefreshScheduled => _refreshTimer != null && _refreshTimer!.isActive;
 
   String? get accessToken => _accessToken;
   set accessToken(String? value) {
     _accessToken = value;
     _api = AuthenticatedApi(_accessToken ?? "");
     scheduleTokenRefresh();
-    notifyListeners();
-    save();
   }
 
   String? get refreshToken => _refreshToken;
-  set refreshToken(String? value) {
-    _refreshToken = value;
-    notifyListeners();
-    save();
-  }
+  set refreshToken(String? value) => _refreshToken = value;
 
   AuthenticatedApi get api => _api;
 
-  PublicUserProfile? get userProfile => _userProfile;
-  set userProfile(PublicUserProfile? value) {
-    _userProfile = value;
-    notifyListeners();
-    save();
-  }
-
-  PrivateUserProfile? get privateProfile => _privateProfile;
-  set privateProfile(PrivateUserProfile? value) {
-    _privateProfile = value;
-    notifyListeners();
-    save();
-  }
-
-  String? get provider => _provider;
-  set provider(String? value) {
-    _provider = value;
-    notifyListeners();
-    save();
-  }
-
-  bool get isLoggedIn => _accessToken != null && _userProfile != null && _privateProfile != null;
+  bool get isLoggedIn => _accessToken != null && userProfile != null && privateProfile != null;
 
   AccountDataProvider() {
     load();
@@ -118,9 +85,12 @@ class AccountDataProvider extends ChangeNotifier {
     Api.postLogout(this);
     _accessToken = null;
     _refreshToken = null;
-    _userProfile = null;
-    _privateProfile = null;
+    userProfile = null;
+    privateProfile = null;
     _refreshTimer?.cancel();
+    _refreshTimer = null;
+    _syncingFailed = false;
+    _synced = false;
     notifyListeners();
     save();
   }
@@ -131,12 +101,10 @@ class AccountDataProvider extends ChangeNotifier {
     _api = AuthenticatedApi(_accessToken ?? "");
 
     var box = await Hive.openBox(hiveBoxName);
-    _userProfile = box.get(hiveProfileKey);
-    _privateProfile = box.get(hivePrivateProfileKey);
-
+    userProfile = box.get(hiveProfileKey);
+    privateProfile = box.get(hivePrivateProfileKey);
     _stashedChanges = box.get(hiveStashedChangesKey);
-
-    _provider = box.get(hiveProviderKey);
+    provider = box.get(hiveProviderKey);
 
     _loaded = true;
     notifyListeners();
@@ -147,11 +115,9 @@ class AccountDataProvider extends ChangeNotifier {
     await storage.write(key: "refreshToken", value: _refreshToken);
 
     var box = await Hive.openBox(hiveBoxName);
-    await box.put(hiveProfileKey, _userProfile);
-    await box.put(hivePrivateProfileKey, _privateProfile);
-
-    await box.put(hiveProviderKey, _provider);
-
+    await box.put(hiveProfileKey, userProfile);
+    await box.put(hivePrivateProfileKey, privateProfile);
+    await box.put(hiveProviderKey, provider);
     await box.put(hiveStashedChangesKey, _stashedChanges);
   }
 
@@ -177,8 +143,8 @@ class AccountDataProvider extends ChangeNotifier {
       return;
     }
 
+    // already includes notify calls
     await Api.refreshAccessTokenWithBackend(this);
-    notifyListeners();
   }
 
   void scheduleTokenRefresh() {
@@ -205,9 +171,9 @@ class AccountDataProvider extends ChangeNotifier {
     }
   }
 
-  void syncStoredData(SettingsDataProvider settingsProvider, GradesDataProvider gradesProvider, {notifyInstantly = false}) async {
+  void syncStoredData(SettingsDataProvider settingsProvider, GradesDataProvider gradesProvider) async {
     _syncing = true;
-    if (notifyInstantly) notifyListeners();
+    notifyListeners();
 
     await Future.delayed(const Duration(milliseconds: 500));
 
@@ -215,7 +181,6 @@ class AccountDataProvider extends ChangeNotifier {
       choice: settingsProvider.choice,
       currentSemester: gradesProvider.currentSemester,
       usesSlider: settingsProvider.usesSlider,
-      // theme: settingsProvider.theme.index,
       abiPredictions: gradesProvider.abiPredictions,
       grades: gradesProvider.data,
       subjectSettings: settingsProvider.subjectSettings,
@@ -241,10 +206,6 @@ class AccountDataProvider extends ChangeNotifier {
     if (responsePayload.usesSlider != null) {
       settingsProvider.usesSlider = responsePayload.usesSlider!;
     }
-    // if (responsePayload.theme != null) {
-    //   print("Updating theme from sync data: ${responsePayload.theme}");
-    //   settingsProvider.theme = ThemeMode.values[responsePayload.theme!];
-    // }
     if (responsePayload.abiPredictions != null) {
       gradesProvider.abiPredictions = responsePayload.abiPredictions!;
     }
@@ -255,17 +216,16 @@ class AccountDataProvider extends ChangeNotifier {
       settingsProvider.subjectSettings = responsePayload.subjectSettings!;
     }
 
-    gradesProvider.save();
-    gradesProvider.notifyListeners();
-    settingsProvider.save();
-    settingsProvider.notifyListeners();
-
     _stashedChanges = null;
-    saveStash();
+    save(); // also saves stashed changes
+    gradesProvider.save();
+    settingsProvider.save();
 
     _syncing = false;
     _synced = true;
     notifyListeners();
+    gradesProvider.notifyListeners();
+    settingsProvider.notifyListeners();
   }
 
   void updateSubjectGradesFromResult(GradeEditResult result, GradesDataProvider gradesProvider) {
@@ -370,6 +330,18 @@ class AccountDataProvider extends ChangeNotifier {
     _stashedChanges!.stashedSubjectSettings ??= {};
     _stashedChanges!.stashedSubjectSettings![subjectId] = StashedSubjectSettingsChange.now(settings);
     saveStash();
+  }
+
+  @override
+  void notifyListeners() {
+    // expose + defer if called during build phase to avoid "setState() or markNeedsBuild() called during build" errors
+    if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      // currently in the build phase, so schedule it for later
+      SchedulerBinding.instance.addPostFrameCallback((_) => super.notifyListeners());
+    } else {
+      // safe to notify immediately
+      super.notifyListeners();
+    }
   }
 
 }

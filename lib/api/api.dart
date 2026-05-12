@@ -47,6 +47,7 @@ class Api {
 
   static Future<void> handleGoogleAuth(AccountDataProvider provider) async {
     provider.awaitingOAuth = true;
+    provider.notifyListeners();
 
     final flow = getAuthFlow();
     final result = await flow.googleAuthFlow();
@@ -58,12 +59,14 @@ class Api {
       await exchangeWithBackend(result, flow, "google", provider);
     } else {
       print("No auth code received from Google.");
+      provider.notifyListeners();
     }
   }
 
   static Future<void> exchangeWithBackend(String code, AuthFlow flow, String providerName, AccountDataProvider dataProvider) async {
     print("Sending Auth Code to Backend: $code");
     dataProvider.authenticating = true;
+    dataProvider.notifyListeners();
 
     String? deviceName;
     try {
@@ -96,6 +99,7 @@ class Api {
         dataProvider.userProfile = body.userProfile;
         dataProvider.privateProfile = body.privateProfile;
         dataProvider.provider = providerName;
+        dataProvider.save();
 
       } else {
         print("Backend Auth Failed: ${response.statusCode} - ${response.body} (${response.request?.url.toString()})");
@@ -105,10 +109,12 @@ class Api {
     }
 
     dataProvider.authenticating = false;
+    dataProvider.notifyListeners();
   }
 
   static Future<void> refreshAccessTokenWithBackend(AccountDataProvider dataProvider, [tries = 0]) async {
     dataProvider.authenticating = true;
+    if (tries == 0) dataProvider.notifyListeners();
 
     String? deviceName;
     try {
@@ -155,6 +161,7 @@ class Api {
     }
 
     dataProvider.authenticating = false;
+    dataProvider.notifyListeners();
   }
 
   static Future<void> postLogout(AccountDataProvider dataProvider) async {

@@ -97,7 +97,7 @@ class _AccountPageState extends State<AccountPage> {
                       textColor: account.isSyncing ? theme.shadowColor : theme.primaryColor,
                       backgroundColor: null,
                       borderColor: theme.dividerColor,
-                      onTap: account.isSyncing ? null : () => account.syncStoredData(settings, grades, notifyInstantly: true),
+                      onTap: account.isSyncing ? null : () => account.syncStoredData(settings, grades),
                     )
                   ],
                 ),

@@ -602,7 +602,6 @@ class HomePage extends StatelessWidget {
     return usedResults;
   }
 
-  List<MapEntry<int, int>> _calculateSingleGradesDistribution(SettingsDataProvider settings, Map<SubjectId, GradesList> currentSemesterGrades) {
   List<MapEntry<int, int>> _calculateSingleGradesDistribution(SettingsDataProvider settings, Map<SubjectId, GradesList> currentSemesterGrades, Semester semester) {
     Map<int, int> gradesDistribution = {};
     for (int i = 0; i <= 15; i++) {

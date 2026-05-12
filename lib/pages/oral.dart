@@ -348,7 +348,11 @@ class _SelectOralDatePageState extends State<SelectOralDatePage> {
     final kmapi = Provider.of<KmApiProvider>(context);
 
     return SubpageSkeleton(
-        title: SubjectPageTitle(subject: widget.subject),
+        title: Row(
+          children: [
+            SubjectPageTitle(subject: widget.subject),
+          ],
+        ),
         actions: [
           SaveButtonContainer(btn1: SaveButton(
             onTap: () {

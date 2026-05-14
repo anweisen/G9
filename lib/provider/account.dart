@@ -83,12 +83,15 @@ class AccountDataProvider extends ChangeNotifier {
 
   void logout() {
     Api.postLogout(this);
-    _accessToken = null;
-    _refreshToken = null;
+    _authenticating = false;
+    _awaitingOAuth = false;
     userProfile = null;
     privateProfile = null;
+    _accessToken = null;
+    _refreshToken = null;
     _refreshTimer?.cancel();
     _refreshTimer = null;
+    _syncing = false;
     _syncingFailed = false;
     _synced = false;
     notifyListeners();

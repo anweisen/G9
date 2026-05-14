@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -145,14 +146,27 @@ class Api {
         // TODO update user profile data as well?
 
       } else {
-        dataProvider.logout();
         print("Backend Refresh Failed: ${response.statusCode} - ${response.body} (${response.request?.url.toString()})");
+        if (response.statusCode == 401) { // token invalid
+          print("Unauthorized during token refresh. Logging out.");
+          dataProvider.logout();
+          return;
+        }
+
+        if (tries < 3) {
+          await exponentialBackoff(tries);
+          return await refreshAccessTokenWithBackend(dataProvider, tries + 1);
+        } else {
+          print("Error during token refresh after multiple attempts: $e");
+          dataProvider.logout();
+          return;
+        }
+
       }
 
     } catch (e) {
       if (tries < 3) {
-        print("Error during token refresh: $e. Retrying in 3 seconds...");
-        await Future.delayed(const Duration(seconds: 3));
+        await exponentialBackoff(tries);
         return await refreshAccessTokenWithBackend(dataProvider, tries + 1);
       } else {
         // don't logout immediately, probably just offline
@@ -162,6 +176,12 @@ class Api {
 
     dataProvider.authenticating = false;
     dataProvider.notifyListeners();
+  }
+
+  static Future<void> exponentialBackoff(int tries, {baseSeconds = 3}) async {
+    int delay = min(30, baseSeconds * pow(2, tries).toInt()); // max 30s
+    print("Retrying in $delay seconds...");
+    return await Future.delayed(Duration(seconds: delay));
   }
 
   static Future<void> postLogout(AccountDataProvider dataProvider) async {

@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 
-class ErrorPage extends StatelessWidget {
-  const ErrorPage({super.key, required this.details});
-
-  final FlutterErrorDetails details;
-
-  @override
-  Widget build(BuildContext context) {
+class ErrorPageHelper {
+  static Widget buildErrorPage(FlutterErrorDetails details) {
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(

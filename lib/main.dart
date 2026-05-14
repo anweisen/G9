@@ -70,10 +70,9 @@ void main() async {
         }
       }
     ),
-  ], child: const MyApp()));
-  ErrorWidget.builder = (FlutterErrorDetails details) {
-    return ErrorPage(details: details);
-  };
+  ], child: const MyApp())));
+
+  ErrorWidget.builder = ErrorPageHelper.buildErrorPage;
 
   if (WindowTitleBar.isWindows) {
     doWhenWindowReady(() {
@@ -104,7 +103,7 @@ class MyApp extends StatelessWidget {
           scaffoldBackgroundColor: Colors.black,
           cardColor: const Color.fromRGBO(16, 16, 18, 1.0),
           hintColor: const Color.fromRGBO(143, 143, 147, 1.0),
-          dividerColor: const Color.fromRGBO(24, 24, 30, 1.0),
+          dividerColor: const Color.fromRGBO(24, 24, 28, 1.0),
           primaryColor: Colors.white,
           shadowColor: const Color.fromRGBO(117, 116, 131, 1.0),
           splashColor: const Color.fromRGBO(252, 130, 130, 0.25),

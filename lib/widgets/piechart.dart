@@ -241,7 +241,7 @@ class _GradesPieChartState extends State<GradesPieChart> {
 
   Widget _buildExpandedDrawerContent(ThemeData theme, Map<int, int> fullCounts, Map<int, int> collapsedCounts) {
     if (fullCounts.isEmpty) {
-      return Flexible(child: Center(child: Text("Keine Noten vorhanden", style: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, fontWeight: FontWeight.w500,), textAlign: TextAlign.center,)));
+      return SizedBox(height: 30, child: Center(child: Text("Keine Noten vorhanden", style: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, fontWeight: FontWeight.w500,), textAlign: TextAlign.center,)));
     }
     // keys: order in chart (descending by value/count), collapsed (-1 for remaining)
     // entries: order in drawer (descending by key/grade), full (including collapsed)

@@ -166,9 +166,7 @@ class AccountDataProvider extends ChangeNotifier {
       final refreshTime = timeUntilExpiration - const Duration(minutes: 1);
 
       _refreshTimer?.cancel();
-      _refreshTimer = Timer(refreshTime, () {
-        refreshTokens();
-      });
+      _refreshTimer = Timer(refreshTime, refreshTokens);
     } catch (e) {
       print("Error scheduling token refresh: $e");
     }

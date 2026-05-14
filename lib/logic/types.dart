@@ -75,7 +75,7 @@ class Subject {
 
     sport = Subject(id: 81, name: "Sport", color: const Color.fromRGBO(128, 255, 100, 1.0), category: SubjectCategory.sport),
 
-    seminar = Subject(id: 91, name: "W-Seminar", color: const Color.fromRGBO(231, 236, 239, 1.0), category: SubjectCategory.seminar),
+    seminar = Subject(id: 91, name: "W-Seminar", color: const Color.fromRGBO(206, 212, 225, 1.0), category: SubjectCategory.seminar),
 
     wahl = Subject(id: 100, name: "Wahlfach", color: const Color.fromRGBO(0, 233, 255, 1.0), category: SubjectCategory.profil),
 

@@ -717,7 +717,7 @@ class _GradeBarChartState extends State<GradeBarChart> {
                       Transform.translate(
                         offset: Offset(segmentInsideWidth * (1 - offset), -2), // offset = 0 → left, 1 → right(
                         child: Container(
-                          height: 24,
+                          height: 26,
                           width: 3,
                           decoration: BoxDecoration(
                             color: theme.primaryColor.withOpacity(0.75),
@@ -826,7 +826,7 @@ class _GradeBarChartState extends State<GradeBarChart> {
                       Transform.translate(
                         offset: Offset(barWidth * (1 - offset), -2), // offset = 0 → left, 1 → right(
                         child: Container(
-                          height: 24,
+                          height: 26,
                           width: 3,
                           decoration: BoxDecoration(
                             color: theme.primaryColor.withOpacity(0.75),
@@ -1266,7 +1266,7 @@ class AbiDatesWidget extends StatelessWidget {
         ),
 
         if (extraExamSpan) ...[
-          ExtraExamInfoWidget(choice: choice, examDate: kmapi.abiDates!.extraExamDate),
+          ExtraExamInfoWidget(choice: choice, examDate: kmapi.abiDates!.extraExamDate, anyHurdles: graduationHurdles.isNotEmpty,),
         ],
       ],
     );
@@ -1307,10 +1307,11 @@ class AbiDatesWidget extends StatelessWidget {
 }
 
 class ExtraExamInfoWidget extends StatelessWidget {
-  const ExtraExamInfoWidget({super.key, required this.choice, required this.examDate});
+  const ExtraExamInfoWidget({super.key, required this.choice, required this.examDate, required this.anyHurdles});
 
   final Choice choice;
   final ExtraExamDate examDate;
+  final bool anyHurdles;
 
   @override
   Widget build(BuildContext context) {
@@ -1318,7 +1319,7 @@ class ExtraExamInfoWidget extends StatelessWidget {
     final dataProvider = Provider.of<GradesDataProvider>(context);
 
     List<ExtraExamOptionResult> options = ExtraExamOptionResult.getExtraExamSubjectOptions(choice, dataProvider);
-    bool mandatory = options.any((option) => option.mandatory);
+    bool mandatory = options.any((option) => option.mandatory) || anyHurdles;
     bool mandatoryOrImprovement = options.any((option) => option.mandatory || option.improvement);
 
     return SubpageTrigger(
@@ -1338,9 +1339,9 @@ class ExtraExamInfoWidget extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Mündliche Zusatzprüfungen (Nachprüfungen)", style: theme.textTheme.bodySmall),
+                  Text("${mandatory ? "Verpflichtende" : "Freiwillige"} mündliche Zusatzprüfungen (Nachprüfungen)", style: theme.textTheme.bodySmall),
                   const SizedBox(height: 4),
-                  Text("Möglich bis ${examDate.formattedDate}", style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600)),
+                  Text("Spätestens bis ${examDate.formattedDate}", style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 4),
 
                   if (mandatoryOrImprovement) Row(
@@ -1348,6 +1349,12 @@ class ExtraExamInfoWidget extends StatelessWidget {
                     children: [
                       SmallSubjectWidget(subject: options.first.subject, old: false, choice: null),
                       if (mandatory) Icon(Icons.error_outline_rounded, size: 18, color: theme.disabledColor,),
+                      Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(color: theme.shadowColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(5)),
+                          child: Text("min. ${options.first.requiredGrade} P.",
+                              style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600, color: mandatory ? theme.disabledColor : theme.shadowColor))
+                      ),
                     ],
                   )
                   else Text("Unrealistische Verbesserungschancen", style: theme.textTheme.bodyMedium, softWrap: true, overflow: TextOverflow.ellipsis,),

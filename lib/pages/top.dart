@@ -25,13 +25,17 @@ class TopSubjectsSubpage extends StatelessWidget {
               if (width > 480) Row(children: [
                 for (Semester semester in Semester.values)
                   if (results[stats.bestSubjects[i].$1]?[semester]?.valid ?? false) Container(
-                      margin: const EdgeInsets.fromLTRB(0, 0, 4, 0),
-                      width: 21,
-                      height: 19,
-                      decoration: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? BoxDecoration(color: semester.semesterCountEquivalent > 1 ? theme.shadowColor : theme.primaryColor, borderRadius: BorderRadius.circular(4)) : null,
+                      margin: EdgeInsets.symmetric(horizontal: semester.semesterCountEquivalent > 1 ? 1 : 2),
+                      width: 21 + (semester.semesterCountEquivalent > 1 ? 4 : 2),
+                      height: 19 + (semester.semesterCountEquivalent > 1 ? 4 : 2),
+                      decoration: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? BoxDecoration(
+                        color: semester.semesterCountEquivalent > 1 ? Colors.transparent : theme.primaryColor,
+                        border: semester.semesterCountEquivalent > 1 ? Border.all(color: theme.primaryColor, width: 2) : null,
+                        borderRadius: BorderRadius.circular(semester.semesterCountEquivalent > 1 ? 6 : 5)
+                      ) : null,
                       child: Center(child: Text(results[stats.bestSubjects[i].$1]?[semester]?.effectiveGrade.toString() ?? "-",
                         style: theme.textTheme.bodyMedium?.copyWith(
-                            fontSize: 13, fontWeight: FontWeight.w600,
+                            fontSize: 13, fontWeight: semester.semesterCountEquivalent > 1 ? FontWeight.w700 : FontWeight.w600,
                             color: semester.semesterCountEquivalent > 1 ? theme.primaryColor : !(results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? theme.primaryColor : theme.scaffoldBackgroundColor),
                         textAlign: TextAlign.center,
                       ))

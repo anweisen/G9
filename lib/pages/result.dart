@@ -364,7 +364,7 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                               borderRadius: BorderRadius.circular(6),
                               border: Border.fromBorderSide(BorderSide(color: predicted <= 0 ? Colors.transparent : theme.shadowColor, width: 2)),
                             ),
-                            child: Icon(Icons.remove_rounded, size: 16, color: predicted <= 0 ? Colors.transparent : theme.primaryColor)
+                            child: Icon(Icons.remove_rounded, size: 16, color: predicted <= 0 ? Colors.transparent : theme.primaryColor,)
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -385,7 +385,7 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                               borderRadius: BorderRadius.circular(6),
                               border: Border.fromBorderSide(BorderSide(color: predicted <= 0 ? Colors.transparent : theme.shadowColor, width: 2)),
                             ),
-                            child: Icon(Icons.add_rounded, size: 16, color: predicted >= 15 ? Colors.transparent : theme.primaryColor)
+                            child: Icon(Icons.add_rounded, size: 16, color: predicted >= 15 ? Colors.transparent : theme.primaryColor,)
                         ),
                       ),
                     ],

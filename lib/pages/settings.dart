@@ -30,10 +30,10 @@ class SettingsPage extends StatelessWidget {
             SubpageTrigger(
               createSubpage: () => const AccountPage(),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: theme.dividerColor, width: 4),
+                  color: theme.dividerColor,
                 ),
                 child: Row(
                   children: [
@@ -66,23 +66,24 @@ class SettingsPage extends StatelessWidget {
             GestureDetector(
               onTap: () => Api.doGoogleLoginAndSync(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: theme.dividerColor, width: 4),
+                  color: theme.dividerColor,
                 ),
                 child: Row(
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.account_circle_rounded, size: 38, color: theme.shadowColor,),
+                        Icon(Icons.account_circle_rounded, size: 46, color: theme.shadowColor,),
                         const SizedBox(width: 10,),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
+                          spacing: 6,
                           children: [
                             Text("mit Google", style: theme.textTheme.bodySmall),
-                            Text("anmelden", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1)),
+                            Text("anmelden", style: theme.textTheme.bodyMedium?.copyWith(height: 1)),
                           ],
                         )
                       ],

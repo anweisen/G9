@@ -27,8 +27,10 @@ class BayEfgHurdlePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Hürden des gymnasialen Auswahlverfahrens für das Max-Weber-Programm nach dem Bayerischen Elite-Förderungsgesetz (BayEFG) Stand 2026", style: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, height: 0)),
-                const SizedBox(height: 10),
+                Text("Hürden des gymnasialen Auswahlverfahrens für das Max-Weber-Programm nach dem Bayerischen Elite-Förderungsgesetz (BayEFG)", style: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, height: 0)),
+                const SizedBox(height: 2),
+                Text("(Stand 2026)", style: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, fontWeight: FontWeight.w600, height: 0)),
+                const SizedBox(height: 8),
                 GestureDetector(
                   onTap: () async {
                     const url = "https://www.elitenetzwerk.bayern.de/start/foerderangebote/max-weber-programm/von-der-schule-zum-stipendium";

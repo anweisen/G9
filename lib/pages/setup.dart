@@ -869,7 +869,7 @@ class SetupFinishPage extends StatelessWidget {
   }
 
   static List<Widget> buildSubjects(Choice choice, ThemeData theme) {
-    const double labelSpacing = 5, sectionSpacing = 20, subjectSpacing = 3;
+    const double labelSpacing = 5, sectionSpacing = 18, subjectSpacing = 3;
 
     return [
       Text("Leistungsfach", style: theme.textTheme.bodySmall),

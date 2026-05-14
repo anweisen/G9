@@ -48,7 +48,7 @@ class ExtraExamPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Möglich bis ${examDate?.formattedDate}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.shadowColor, height: 0)),
+              Text("Spätestens bis ${examDate?.formattedDate}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.shadowColor, height: 0)),
               const SizedBox(height: 4),
               Text("Mündliche Zusatzprüfungen sind nur in schriftlichen Abiturfächern möglich", style: theme.textTheme.displayMedium?.copyWith(height: 0)),
               const SizedBox(height: 4),
@@ -123,9 +123,9 @@ class ExtraExamPage extends StatelessWidget {
                       spacing: 8,
                       children: [
                         Text("Ø ${SemesterResult.pointsToAbiGrade(bestPossibleTotal - otherOptionsTotalDelta)}",
-                            style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, decoration: TextDecoration.lineThrough, decorationColor: theme.shadowColor, decorationThickness: 2,)),
-                        Icon(Icons.keyboard_double_arrow_right_rounded, size: 18, color: theme.shadowColor,),
-                        Text("Ø ${SemesterResult.pointsToAbiGrade(bestPossibleTotal)}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600)),
+                            style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, height: 0, decoration: TextDecoration.lineThrough, decorationColor: theme.shadowColor, decorationThickness: 2,)),
+                        Center(child: Icon(Icons.keyboard_double_arrow_right_rounded, size: 18, color: theme.shadowColor,)),
+                        Text("Ø ${SemesterResult.pointsToAbiGrade(bestPossibleTotal)}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, height: 0)),
                       ],
                     ),
                   ],

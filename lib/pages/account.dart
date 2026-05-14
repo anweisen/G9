@@ -76,7 +76,7 @@ class _AccountPageState extends State<AccountPage> {
                   ],
                 ),
 
-                const SizedBox(height: 16,),
+                const SizedBox(height: 20,),
 
                 Wrap(
                   spacing: 10,

@@ -418,58 +418,58 @@ class _MarkdownPageState extends State<MarkdownPage> {
                   );
                 } else if (snapshot.hasError) {
                   return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                          color: theme.splashColor,
-                          borderRadius: BorderRadius.circular(8)
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.max,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        spacing: 16,
-                        children: [
-                          Icon(Icons.warning_amber_rounded, color: theme.disabledColor, size: 24,),
-                          Flexible(child: Text("Fehler beim Laden der ${widget.errorName}", style: theme.textTheme.displayMedium?.copyWith(color: theme.disabledColor, fontSize: 16, height: 0), softWrap: true,)),
-                        ],
-                      )
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: theme.splashColor,
+                      borderRadius: BorderRadius.circular(8)
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      spacing: 16,
+                      children: [
+                        Icon(Icons.warning_amber_rounded, color: theme.disabledColor, size: 24,),
+                        Flexible(child: Text("Fehler beim Laden der ${widget.errorName}", style: theme.textTheme.displayMedium?.copyWith(color: theme.disabledColor, fontSize: 16, height: 0), softWrap: true,)),
+                      ],
+                    )
                   );
                 } else {
                   return MarkdownBody(
-                      onTapLink: (text, href, title) {
-                        if (href == null) return;
-                        if (href.startsWith("/")) {
-                          context.push(href);
-                          return;
-                        }
-                        if (href.startsWith('#')) {
-                          _scrollToAnchor(Uri.decodeFull(href.substring(1))); // strip #, decode special chars
-                          return;
-                        }
+                    onTapLink: (text, href, title) {
+                      if (href == null) return;
+                      if (href.startsWith("/")) {
+                        context.push(href);
+                        return;
+                      }
+                      if (href.startsWith('#')) {
+                        _scrollToAnchor(Uri.decodeFull(href.substring(1))); // strip #, decode special chars
+                        return;
+                      }
 
-                        final uri = Uri.parse(href);
-                        canLaunchUrl(uri).then((can) => {
-                          if (can) launchUrl(uri, mode: LaunchMode.externalApplication)
-                        });
-                      },
-                      builders: {
-                        "h2": AnchorHeaderBuilder(_anchorKeys),
-                      },
-                      styleSheet: MarkdownStyleSheet(
-                        // custom style: only used elements...
-                        h1: theme.textTheme.headlineMedium,
-                        h2: theme.textTheme.bodyMedium,
-                        h3: theme.textTheme.bodyMedium?.copyWith(fontSize: 16),
-                        p: theme.textTheme.displayMedium?.copyWith(color: theme.shadowColor, height: 0),
-                        a: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, height: 0),
-                        code: theme.textTheme.displayMedium?.copyWith(
-                            color: Colors.transparent, fontSize: 12, height: 0, letterSpacing: 0.8, shadows: [ Shadow(color: theme.primaryColor, offset: const Offset(0, -2)) ],
-                            decoration: TextDecoration.underline, decorationStyle: TextDecorationStyle.dashed, decorationColor: theme.primaryColor, decorationThickness: 2
-                        ),
-                        tableBody: theme.textTheme.displayMedium?.copyWith(color: theme.shadowColor, height: 0),
-                        tableBorder: TableBorder.all(color: theme.dividerColor, width: 2, borderRadius: BorderRadius.circular(8))
+                      final uri = Uri.parse(href);
+                      canLaunchUrl(uri).then((can) => {
+                        if (can) launchUrl(uri, mode: LaunchMode.externalApplication)
+                      });
+                    },
+                    builders: {
+                      "h2": AnchorHeaderBuilder(_anchorKeys),
+                    },
+                    styleSheet: MarkdownStyleSheet(
+                      // custom style: only used elements...
+                      h1: theme.textTheme.headlineMedium,
+                      h2: theme.textTheme.bodyMedium,
+                      h3: theme.textTheme.bodyMedium?.copyWith(fontSize: 16),
+                      p: theme.textTheme.displayMedium?.copyWith(color: theme.shadowColor, height: 0),
+                      a: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, height: 0),
+                      code: theme.textTheme.displayMedium?.copyWith(
+                        color: Colors.transparent, fontSize: 12, height: 0, letterSpacing: 0.8, shadows: [ Shadow(color: theme.primaryColor, offset: const Offset(0, -2)) ],
+                        decoration: TextDecoration.underline, decorationStyle: TextDecorationStyle.dashed, decorationColor: theme.primaryColor, decorationThickness: 2
                       ),
-                      data: snapshot.data as String
+                      tableBody: theme.textTheme.displayMedium?.copyWith(color: theme.shadowColor, height: 0),
+                      tableBorder: TableBorder.all(color: theme.dividerColor, width: 2, borderRadius: BorderRadius.circular(8))
+                    ),
+                    data: snapshot.data as String
                   );
                 }
               }

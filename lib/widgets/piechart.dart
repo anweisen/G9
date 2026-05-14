@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../logic/grades.dart';
 import '../logic/results.dart';
+import '../provider/grades.dart';
 import 'general.dart';
 
 class GradesPieChart extends StatefulWidget {
@@ -67,6 +68,15 @@ class _GradesPieChartState extends State<GradesPieChart> {
     return resultCounts;
   }
 
+  Map<int, int> _countAbi() {
+    Map<int, int> abiCounts = {};
+    for (var entry in widget.results) {
+      if (entry.semester != Semester.abi) continue;
+      abiCounts[entry.effectiveGrade] = (abiCounts[entry.effectiveGrade] ?? 0) + 1;
+    }
+    return abiCounts;
+  }
+
   Map<int, int> _withGroupedAsRemaining(Map<int, int> counts) {
     Map<int, int> collapsed = {};
     int total = counts.values.fold(0, (sum, val) => sum + val);
@@ -100,9 +110,11 @@ class _GradesPieChartState extends State<GradesPieChart> {
     Map<int, int> gradeCounts = _countGrades();
     Map<int, int> resultCounts = _countResults();
     Map<int, int> klausurenCounts = _countKlausuren();
+    Map<int, int> abiCounts = _countAbi();
     Map<int, int> collapsedGradeCounts = _withGroupedAsRemaining(gradeCounts);
     Map<int, int> collapsedResultCounts = _withGroupedAsRemaining(resultCounts);
     Map<int, int> collapsedKlausurenCounts = _withGroupedAsRemaining(klausurenCounts);
+    Map<int, int> collapsedAbiCounts = _withGroupedAsRemaining(abiCounts);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,9 +160,10 @@ class _GradesPieChartState extends State<GradesPieChart> {
                             PageView(
                               controller: _controller,
                               children: [
-                                _buildPage(theme, cappedMinSide, "einzelne Noten", GradesPieChartPainter(gradeCounts: collapsedGradeCounts, theme: theme)),
-                                _buildPage(theme, cappedMinSide, "Einbringungen", GradesPieChartPainter(gradeCounts: collapsedResultCounts, theme: theme)),
-                                _buildPage(theme, cappedMinSide, "Klausuren", GradesPieChartPainter(gradeCounts: collapsedKlausurenCounts, theme: theme)),
+                                _buildPage(theme, cappedMinSide, "einzelne Noten", GradesPieChartPainter(gradeCounts: collapsedGradeCounts, theme: theme), _expanded),
+                                _buildPage(theme, cappedMinSide, "Einbringungen", GradesPieChartPainter(gradeCounts: collapsedResultCounts, theme: theme), _expanded),
+                                _buildPage(theme, cappedMinSide, "Klausuren", GradesPieChartPainter(gradeCounts: collapsedKlausurenCounts, theme: theme), _expanded),
+                                _buildPage(theme, cappedMinSide, "Abiturprüfungen", GradesPieChartPainter(gradeCounts: collapsedAbiCounts, theme: theme), _expanded),
                               ],
                             ),
 
@@ -173,14 +186,14 @@ class _GradesPieChartState extends State<GradesPieChart> {
                         duration: const Duration(milliseconds: 500),
                         margin: const EdgeInsets.only(top: 10),
                         child: _buildExpandedDrawerContent(theme,
-                            _selectCurrentCounts([gradeCounts, resultCounts, klausurenCounts]),
-                            _selectCurrentCounts([collapsedGradeCounts, collapsedResultCounts, collapsedKlausurenCounts])
+                            _selectCurrentCounts([gradeCounts, resultCounts, klausurenCounts, abiCounts]),
+                            _selectCurrentCounts([collapsedGradeCounts, collapsedResultCounts, collapsedKlausurenCounts, collapsedAbiCounts])
                         ),
                       ),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(3, (index) => _buildDot(index, theme)),
+                        children: List.generate(4, (index) => _buildDot(index, theme)),
                       ),
                     ],
                   ),
@@ -192,7 +205,7 @@ class _GradesPieChartState extends State<GradesPieChart> {
     );
   }
 
-  Widget _buildPage(ThemeData theme, double cappedSize, String name, CustomPainter painter) {
+  Widget _buildPage(ThemeData theme, double cappedSize, String name, CustomPainter painter, bool expanded) {
     return Column(
       children: [
         const SizedBox(height: 4,),
@@ -218,7 +231,7 @@ class _GradesPieChartState extends State<GradesPieChart> {
             spacing: 6,
             children: [
               Text(name, style: theme.textTheme.displayMedium?.copyWith(color: theme.shadowColor, fontWeight: FontWeight.w500, fontSize: 12, height: 0)),
-              Icon(Icons.info_outline_rounded, size: 14, color: theme.shadowColor),
+              Icon(expanded ? Icons.info_rounded : Icons.info_outline_rounded, size: 14, color: theme.shadowColor),
             ],
           )
         ),
@@ -227,6 +240,9 @@ class _GradesPieChartState extends State<GradesPieChart> {
   }
 
   Widget _buildExpandedDrawerContent(ThemeData theme, Map<int, int> fullCounts, Map<int, int> collapsedCounts) {
+    if (fullCounts.isEmpty) {
+      return Flexible(child: Center(child: Text("Keine Noten vorhanden", style: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, fontWeight: FontWeight.w500,), textAlign: TextAlign.center,)));
+    }
     // keys: order in chart (descending by value/count), collapsed (-1 for remaining)
     // entries: order in drawer (descending by key/grade), full (including collapsed)
     final keys = (collapsedCounts.entries.where((e) => e.value > 0).toList()..sort((a, b) => b.key - a.key)).map<int>((e) => e.key).toList();
@@ -326,7 +342,17 @@ class GradesPieChartPainter extends CustomPainter {
     const cornerRadius = 5.0;
 
     final totalCount = gradeCounts.values.fold<int>(0, (sum, val) => sum + val);
-    if (totalCount == 0) return;
+    if (totalCount == 0) {
+      final paint = Paint()
+        ..style = PaintingStyle.fill
+        ..isAntiAlias = true
+        ..color = lerpEntryColor(theme, 1, 1);
+
+      canvas.drawCircle(center, radius, paint);
+      _drawLabel(canvas, "Keine Noten", "/", center, 1.0);
+      return;
+    }
+
     final keys = (gradeCounts.entries.where((e) => e.value > 0).toList()..sort((a, b) => b.value - a.value)).map<int>((e) => e.key).toList();
 
     if (keys.length == 1) {

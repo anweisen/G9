@@ -163,6 +163,9 @@ func (app AppEmbed) HandlePostAuthRefresh(ctx fiber.Ctx) error {
   oldJti := claims.ID
   userIdString := claims.Subject
   userId, err := bson.ObjectIDFromHex(userIdString)
+  if err != nil {
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Invalid user id in token")
+  }
 
   session, err := app.Database.FindSessionByJti(oldJti, userId)
   if err != nil {

@@ -143,6 +143,7 @@ class Api {
 
         dataProvider.accessToken = body.accessToken;
         dataProvider.refreshToken = body.refreshToken;
+        dataProvider.save();
         // TODO update user profile data as well?
 
       } else {

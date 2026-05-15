@@ -870,104 +870,178 @@ class SetupFinishPage extends StatelessWidget {
 
   static List<Widget> buildSubjects(Choice choice, ThemeData theme) {
     const double labelSpacing = 5, sectionSpacing = 18, subjectSpacing = 3;
+    const CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.start;
 
     return [
-      Text("Leistungsfach", style: theme.textTheme.bodySmall),
-      const SizedBox(height: labelSpacing),
-      MediumSubjectWidget(subject: choice.lk),
-      const SizedBox(height: sectionSpacing),
+      Column(
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          Text("Leistungsfach", style: theme.textTheme.bodySmall),
+          const SizedBox(height: labelSpacing),
+          MediumSubjectWidget(subject: choice.lk),
+          const SizedBox(height: sectionSpacing),
+        ],
+      ),
 
       // 1. Fremdsprache
-      if (choice.lk != choice.sg1) ...[
-        Text("1. Fremdsprache", style: theme.textTheme.bodySmall),
-        const SizedBox(height: labelSpacing),
-        MediumSubjectWidget(subject: choice.sg1),
-        const SizedBox(height: sectionSpacing),
-      ],
+      if (choice.lk != choice.sg1) Column(
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          Text("1. Fremdsprache", style: theme.textTheme.bodySmall),
+          const SizedBox(height: labelSpacing),
+          MediumSubjectWidget(subject: choice.sg1),
+          const SizedBox(height: sectionSpacing),
+        ],
+      ),
 
       // 1. Naturwissenschaft
-      if (choice.lk != choice.ntg1) ...[
-        Text("1. Naturwissenschaft", style: theme.textTheme.bodySmall),
-        const SizedBox(height: labelSpacing),
-        MediumSubjectWidget(subject: choice.ntg1),
-        const SizedBox(height: sectionSpacing),
-      ],
+      if (choice.lk != choice.ntg1) Column(
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          Text("1. Naturwissenschaft", style: theme.textTheme.bodySmall),
+          const SizedBox(height: labelSpacing),
+          MediumSubjectWidget(subject: choice.ntg1),
+          const SizedBox(height: sectionSpacing),
+        ],
+      ),
 
       // 2. Fremdsprache / Naturwissenschaft
-      Text("2. Fremdsprache / Naturwissenschaft / Informatik", style: theme.textTheme.bodySmall),
-      const SizedBox(height: labelSpacing),
-      MediumSubjectWidget(subject: choice.mintSg2),
-      const SizedBox(height: sectionSpacing),
+      Column(
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          Text("2. Fremdsprache / Naturwissenschaft / Informatik", style: theme.textTheme.bodySmall),
+          const SizedBox(height: labelSpacing),
+          MediumSubjectWidget(subject: choice.mintSg2),
+          const SizedBox(height: sectionSpacing),
+        ],
+      ),
 
       // Kunst / Musik
-      Text("Kunst oder Musik", style: theme.textTheme.bodySmall),
-      const SizedBox(height: labelSpacing),
-      MediumSubjectWidget(subject: choice.musikKunst),
-      const SizedBox(height: sectionSpacing),
+      Column(
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          Text("Kunst oder Musik", style: theme.textTheme.bodySmall),
+          const SizedBox(height: labelSpacing),
+          MediumSubjectWidget(subject: choice.musikKunst),
+          const SizedBox(height: sectionSpacing),
+        ],
+      ),
 
       // Geo / WR
-      Text("Geographie oder Wirtschaft & Recht in Q12", style: theme.textTheme.bodySmall),
-      const SizedBox(height: labelSpacing),
-      MediumSubjectWidget(subject: choice.geoWr),
-      const SizedBox(height: sectionSpacing),
+      Column(
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          Text("Geographie oder Wirtschaft & Recht in Q12", style: theme.textTheme.bodySmall),
+          const SizedBox(height: labelSpacing),
+          MediumSubjectWidget(subject: choice.geoWr),
+          const SizedBox(height: sectionSpacing),
+        ],
+      ),
 
       // Weiterführung in Q13 (PuG vs Geo / WR)
-      Text("Weiterführung in Q13", style: theme.textTheme.bodySmall),
-      const SizedBox(height: labelSpacing),
-      MediumSubjectWidget(subject: choice.pug13 ? Subject.pug : choice.geoWr),
-      const SizedBox(height: sectionSpacing),
-
-      // Pflichtfächer
-      Text("Pflichtfächer", style: theme.textTheme.bodySmall),
-      const SizedBox(height: labelSpacing),
-      MediumSubjectWidget(subject: Subject.mathe),
-      const SizedBox(height: subjectSpacing),
-      MediumSubjectWidget(subject: Subject.deutsch),
-      const SizedBox(height: subjectSpacing),
-      if (choice.lk != Subject.sport) ...[
-        MediumSubjectWidget(subject: Subject.sport),
-        const SizedBox(height: subjectSpacing),
-      ],
-      if (choice.lk != Subject.reli) ...[
-        MediumSubjectWidget(subject: Subject.reli),
-        const SizedBox(height: subjectSpacing),
-      ],
-      if (choice.lk != Subject.geschi) ...[
-        MediumSubjectWidget(subject: Subject.geschi),
-        const SizedBox(height: subjectSpacing),
-      ],
-      if (choice.lk != Subject.pug) ...[
-        MediumSubjectWidget(subject: Subject.pug),
-        const SizedBox(height: subjectSpacing),
-      ],
-      MediumSubjectWidget(subject: choice.seminar),
-      const SizedBox(height: sectionSpacing),
-
-      // Vertiefungskurs (optional, ersetzt mintSg2 in Q13), nicht mit spät beginnender Fremdsprache/Informatik
-      Text("Vertiefungskurs", style: theme.textTheme.bodySmall),
-      const SizedBox(height: labelSpacing),
-      MediumSubjectWidget(subject: choice.vk ?? Subject.skipSubject),
-      const SizedBox(height: sectionSpacing),
+      Column(
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          Text("Weiterführung in Q13", style: theme.textTheme.bodySmall),
+          const SizedBox(height: labelSpacing),
+          MediumSubjectWidget(subject: choice.pug13 ? Subject.pug : choice.geoWr),
+          const SizedBox(height: sectionSpacing),
+        ],
+      ),
 
       // Profilfach (optional)
-      Text("Profilfach Q12 / Q13", style: theme.textTheme.bodySmall),
-      const SizedBox(height: labelSpacing),
-      MediumSubjectWidget(subject: choice.profil12 ?? Subject.skipSubject),
-      MediumSubjectWidget(subject: choice.profil13 ?? Subject.skipSubject),
-      const SizedBox(height: sectionSpacing),
+      Column(
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          Text("Profilfach Q12 / Q13", style: theme.textTheme.bodySmall),
+          const SizedBox(height: labelSpacing),
+          MediumSubjectWidget(subject: choice.profil12 ?? Subject.skipSubject),
+          MediumSubjectWidget(subject: choice.profil13 ?? Subject.skipSubject),
+          const SizedBox(height: sectionSpacing),
+        ],
+      ),
+
+      // Vertiefungskurs (optional, ersetzt mintSg2 in Q13), nicht mit spät beginnender Fremdsprache/Informatik
+      Column(
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          Text("Vertiefungskurs", style: theme.textTheme.bodySmall),
+          const SizedBox(height: labelSpacing),
+          MediumSubjectWidget(subject: choice.vk ?? Subject.skipSubject),
+          const SizedBox(height: sectionSpacing),
+        ],
+      ),
+
+      // Pflichtfächer
+      Column(
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          Text("Pflichtfächer", style: theme.textTheme.bodySmall),
+          const SizedBox(height: labelSpacing),
+          MediumSubjectWidget(subject: Subject.mathe),
+          const SizedBox(height: subjectSpacing),
+          MediumSubjectWidget(subject: Subject.deutsch),
+          const SizedBox(height: subjectSpacing),
+          if (choice.lk != Subject.sport) ...[
+            MediumSubjectWidget(subject: Subject.sport),
+            const SizedBox(height: subjectSpacing),
+          ],
+          if (choice.lk != Subject.reli) ...[
+            MediumSubjectWidget(subject: Subject.reli),
+            const SizedBox(height: subjectSpacing),
+          ],
+          if (choice.lk != Subject.geschi) ...[
+            MediumSubjectWidget(subject: Subject.geschi),
+            const SizedBox(height: subjectSpacing),
+          ],
+          if (choice.lk != Subject.pug) ...[
+            MediumSubjectWidget(subject: Subject.pug),
+            const SizedBox(height: subjectSpacing),
+          ],
+          MediumSubjectWidget(subject: choice.seminar),
+          const SizedBox(height: sectionSpacing),
+        ],
+      ),
 
       // Prüfungsfächer
-      Text("Abiturprüfungsfächer", style: theme.textTheme.bodySmall),
-      const SizedBox(height: labelSpacing),
-      ...choice.abiSubjects.map((e) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      Column(
+        crossAxisAlignment: crossAxisAlignment,
         children: [
-          MediumSubjectWidget(subject: e),
-          const SizedBox(height: subjectSpacing),
+          Text("Abiturprüfungsfächer", style: theme.textTheme.bodySmall),
+          const SizedBox(height: labelSpacing),
+          ...choice.abiSubjects.expand((e) => [
+            MediumSubjectWidget(subject: e),
+            const SizedBox(height: subjectSpacing),
+          ]),
         ],
-      )),
-
+      ),
     ];
+  }
+
+  static buildSubjectsGrid(Choice choice, ThemeData theme) {
+    List<Widget> built = buildSubjects(choice, theme);
+    const double horizontalSpacing = 40, verticalSpacing = 5;
+
+    return LayoutBuilder(
+      builder: (context, constraints) => Table(
+        defaultColumnWidth: const FlexColumnWidth(1),
+        children: (constraints.maxWidth < 620) ? built.map((element) => TableRow(children: [element])).toList() : [
+          for (int i = 0; i < built.length; i += 2)
+            TableRow(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(bottom: i + 2 < built.length ? verticalSpacing : 0),
+                  child: built[i],
+                ),
+                if (i + 1 < built.length) Padding(
+                  padding: EdgeInsets.only(bottom: i + 2 < built.length ? verticalSpacing : 0, left: horizontalSpacing),
+                  child: built[i + 1],
+                ) else const SizedBox(),
+              ],
+            )
+        ],
+      )
+    );
   }
 
 }

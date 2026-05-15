@@ -97,10 +97,9 @@ class SettingsPage extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          if (choice != null)
-            ...SetupFinishPage.buildSubjects(choice, theme),
+          if (choice != null) SetupFinishPage.buildSubjectsGrid(choice, theme),
 
-          const SizedBox(height: 30),
+          const SizedBox(height: 20),
           LayoutBuilder(
             builder: (context, constraints) {
               const spacing = 8.0;
@@ -119,8 +118,8 @@ class SettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           SubpageTrigger(
-              createSubpage: () => const PdfPreviewPage(),
-              child: buildButton(theme, "Notenübersicht drucken", Icons.print_rounded, null, primary: false)
+            createSubpage: () => const PdfPreviewPage(),
+            child: buildButton(theme, "Notenübersicht drucken", Icons.print_rounded, null, primary: false)
           ),
           const SizedBox(height: 14),
           buildButton(theme, "Zur Startseite", Icons.info_outline_rounded, () => context.push("/welcome"), primary: false),

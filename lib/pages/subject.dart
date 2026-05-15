@@ -63,7 +63,7 @@ class _SubjectPageState extends State<SubjectPage> {
     final dataProvider = Provider.of<GradesDataProvider>(context, listen: false);
     final results = SemesterResult.calculateResultsWithPredictions(choice!, dataProvider);
     final _ = SemesterResult.applyUseFlags(choice, results);
-    SubpageController.of(context).openSubpage(SubjectResultPage(subject: widget.subject, results: results[widget.subject]!, choice: choice, key: GlobalKey(),));
+    SubpageController.of(context).openSubpage(SubjectResultPage(subject: widget.subject, allResults: results, choice: choice, key: GlobalKey(),));
   }
 
   @override

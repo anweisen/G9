@@ -16,9 +16,10 @@ import 'subject.dart';
 import 'grade.dart';
 
 class SubjectResultPage extends StatelessWidget {
-  const SubjectResultPage({super.key, required this.subject, required this.results, required this.choice});
+  SubjectResultPage({super.key, required this.subject, required this.choice, required this.allResults}) : results = allResults[subject] ?? {};
 
   final Subject subject;
+  final Map<Subject, Map<Semester, SemesterResult>> allResults;
   final Map<Semester, SemesterResult> results;
   final Choice choice;
 
@@ -93,7 +94,7 @@ class SubjectResultPage extends StatelessWidget {
                   children: [
                     if (!(result?.prediction ?? true)) Row(
                       children: [
-                        Text("Ø", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w300)),
+                        Text("Ø", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w400)),
                         const SizedBox(width: 4),
                         Text(GradeHelper.formatNumber(average), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
                       ],
@@ -132,12 +133,11 @@ class SubjectResultPage extends StatelessWidget {
   }
 
   List<Widget> _buildAbi(ThemeData theme, GradesDataProvider gradesProvider) {
-    SemesterResult? result = results[Semester.abi];
     return [
       const SizedBox(height: 20,),
       Text("Abiturprüfung", style: theme.textTheme.bodySmall),
       const SizedBox(height: 6,),
-      SubjectResultAbiPrediction(subject: subject, result: result, choice: choice,)
+      SubjectResultAbiPrediction(subject: subject, choice: choice, results: allResults,)
     ];
   }
 
@@ -229,11 +229,11 @@ class SubjectResultPage extends StatelessWidget {
 }
 
 class SubjectResultAbiPrediction extends StatelessWidget {
-  const SubjectResultAbiPrediction({super.key, required this.subject, required this.result, required this.choice,});
+  const SubjectResultAbiPrediction({super.key, required this.subject, required this.results, required this.choice,});
 
   final Choice choice;
   final Subject subject;
-  final SemesterResult? result;
+  final Map<Subject, Map<Semester, SemesterResult>> results;
 
   @override
   Widget build(BuildContext context) {
@@ -242,9 +242,10 @@ class SubjectResultAbiPrediction extends StatelessWidget {
     final accountProvider = Provider.of<AccountDataProvider>(context, listen: false);
 
     Color contrastColor = subject.color.computeLuminance() > 0.78 ? (theme.brightness == Brightness.light ? Colors.black : Colors.black87) : Colors.white;
-
+    SemesterResult? result = results[subject]?[Semester.abi];
     bool prediction = result?.prediction ?? true;
-    int predicted = gradesProvider.getAbiPrediction(subject.id) ?? result?.effectiveGrade ?? 1;
+    int calculatedPrediction = SemesterResult.calculatePrediction(subject, results);
+    int predicted = gradesProvider.getAbiPrediction(subject.id) ?? calculatedPrediction;
 
     double average = GradeHelper.average(subject, Semester.abi, choice, gradesProvider.getGrades(subject.id, semester: Semester.abi));
 
@@ -299,7 +300,7 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                 children: [
                   if (!prediction) Row(
                     children: [
-                      Text("Ø", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w300)),
+                      Text("Ø", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w400)),
                       const SizedBox(width: 4),
                       Text(GradeHelper.formatNumber(average), style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600)),
                     ],

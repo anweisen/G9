@@ -36,7 +36,7 @@ class ResultsPage extends StatelessWidget {
           Text("Einbringungen / Halbjahresleistungen", style: theme.textTheme.bodySmall),
           ...results.entries.map((entry) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              child: SubjectCard(subject: entry.key, results: entry.value, choice: settings.choice!,))
+              child: SubjectCard(subject: entry.key, results: results, choice: settings.choice!,))
           ),
 
           const SizedBox(height: 24),
@@ -44,7 +44,7 @@ class ResultsPage extends StatelessWidget {
           Text("Abiturprüfungen", style: theme.textTheme.bodySmall),
           ...?settings.choice?.abiSubjects.map((subject) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            child: AbiSubjectCard(subject: subject, result: results[subject]![Semester.abi]!, results: results[subject]!, choice: settings.choice!,),
+            child: AbiSubjectCard(subject: subject, result: results[subject]![Semester.abi]!, results: results, choice: settings.choice!,),
           )),
 
           const SizedBox(height: 24),
@@ -136,15 +136,16 @@ class SubjectCard extends StatelessWidget {
   const SubjectCard({super.key, required this.subject, required this.results, required this.choice});
 
   final Subject subject;
-  final Map<Semester, SemesterResult> results;
+  final Map<Subject, Map<Semester, SemesterResult>> results;
   final Choice choice;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final subjectResults = results[subject]!;
 
     return GestureDetector(
-      onTap: () => SubpageController.of(context).openSubpage(SubjectResultPage(subject: subject, results: results, choice: choice, key: GlobalKey(),)),
+      onTap: () => SubpageController.of(context).openSubpage(SubjectResultPage(subject: subject, allResults: results, choice: choice, key: GlobalKey(),)),
       child: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth < 500) {
@@ -175,7 +176,7 @@ class SubjectCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     for (var semester in Semester.qPhaseEquivalents(subject.category))
-                      _buildSemester(theme, semester, results[semester]),
+                      _buildSemester(theme, semester, subjectResults[semester]),
                   ],
                 )
               ],
@@ -214,7 +215,7 @@ class SubjectCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           for (var semester in Semester.qPhaseEquivalents(subject.category))
-                            _buildSemester(theme, semester, results[semester]),
+                            _buildSemester(theme, semester, subjectResults[semester]),
                         ],
                       ),
                     )
@@ -265,7 +266,7 @@ class AbiSubjectCard extends StatelessWidget {
 
   final Subject subject;
   final SemesterResult result;
-  final Map<Semester, SemesterResult> results;
+  final Map<Subject, Map<Semester, SemesterResult>> results;
   final Choice choice;
 
   @override
@@ -274,7 +275,7 @@ class AbiSubjectCard extends StatelessWidget {
     final textStyle = _getTextStyleFor(theme, result);
 
     return GestureDetector(
-      onTap: () => SubpageController.of(context).openSubpage(SubjectResultPage(subject: subject, results: results, choice: choice, key: GlobalKey(),)),
+      onTap: () => SubpageController.of(context).openSubpage(SubjectResultPage(subject: subject, allResults: results, choice: choice, key: GlobalKey(),)),
       child: LayoutBuilder(
         builder: (context, constraints) {
             if (constraints.maxWidth < 500) {

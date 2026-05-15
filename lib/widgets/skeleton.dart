@@ -167,10 +167,11 @@ class PageSkeleton extends StatelessWidget {
 
 class PageTitle extends StatelessWidget {
   final String title;
+  final Widget? titleSuffix;
   final Widget? info;
   final CrossAxisAlignment crossAxisAlignment;
 
-  const PageTitle({super.key, required this.title, this.info, this.crossAxisAlignment = CrossAxisAlignment.end});
+  const PageTitle({super.key, required this.title, this.titleSuffix, this.info, this.crossAxisAlignment = CrossAxisAlignment.end});
 
   @override
   Widget build(BuildContext context) {
@@ -178,9 +179,18 @@ class PageTitle extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: crossAxisAlignment,
+      spacing: 16,
       children: [
-        Expanded(child: Text(title, style: theme.textTheme.headlineMedium, softWrap: true, maxLines: 1, overflow: TextOverflow.ellipsis,)),
-        if (info != null) const SizedBox(width: 8,),
+        Flexible(
+          child: Row(
+            spacing: 10,
+            crossAxisAlignment: crossAxisAlignment,
+            children: [
+              Flexible(child: Text(title, style: theme.textTheme.headlineMedium, softWrap: true, maxLines: 1, overflow: TextOverflow.ellipsis,)),
+              if (titleSuffix != null) titleSuffix!,
+            ],
+          ),
+        ),
         if (info != null) info!,
       ],
     );

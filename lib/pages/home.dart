@@ -101,7 +101,7 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ), [
-        Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+        Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400)),
         const SizedBox(width: 6),
         Text(GradeHelper.formatNumber(currentSemesterAvg, decimals: 2), style: theme.textTheme.bodyMedium),
         const SizedBox(width: 6),
@@ -154,7 +154,7 @@ class HomePage extends StatelessWidget {
                 Icon(Icons.warning_amber_rounded, size: 14, color: theme.disabledColor),
                 const SizedBox(width: 10),
               ],
-              Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+              Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400)),
               const SizedBox(width: 4),
               Text(SemesterResult.pointsToAbiGrade(flags.pointsTotal), style: theme.textTheme.bodyMedium),
             ]),
@@ -183,7 +183,7 @@ class HomePage extends StatelessWidget {
                   const SizedBox(width: 2),
                   Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(pastSemestersAvgUsed[entry.key] ?? 0))})", style: theme.textTheme.bodySmall),
                   const SizedBox(width: 8),
-                  Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+                  Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400)),
                   const SizedBox(width: 4),
                   Text(GradeHelper.formatNumber(entry.value, decimals: 2), style: theme.textTheme.bodyMedium),
                 ]),
@@ -200,14 +200,14 @@ class HomePage extends StatelessWidget {
             _buildTextLine(Text("Einbringungen", style: theme.textTheme.bodyMedium), [
               Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(flags.pointsQ / 40))})", style: theme.textTheme.bodySmall),
               const SizedBox(width: 8),
-              Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+              Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400)),
               const SizedBox(width: 4),
               Text(GradeHelper.formatNumber(flags.pointsQ / 40, decimals: 2), style: theme.textTheme.bodyMedium),
             ]),
             if (grades.currentSemester == Semester.abi) _buildTextLine(Text("Abiprüfungen", style: theme.textTheme.bodyMedium), [
               Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(flags.pointsAbi / 20))})", style: theme.textTheme.bodySmall),
               const SizedBox(width: 8),
-              Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+              Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400)),
               const SizedBox(width: 4),
               Text(GradeHelper.formatNumber(flags.pointsAbi / 20, decimals: 2), style: theme.textTheme.bodyMedium),
             ]),
@@ -224,14 +224,18 @@ class HomePage extends StatelessWidget {
                           margin: const EdgeInsets.fromLTRB(0, 0, 4, 0),
                           width: 21,
                           height: 19,
-                          decoration: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? BoxDecoration(color: theme.hintColor, borderRadius: BorderRadius.circular(4)) : null,
+                          decoration: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(4)) : null,
                           child: Center(child: Text(results[stats.bestSubjects[i].$1]?[semester]?.effectiveGrade.toString() ?? "-",
-                          style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, fontWeight: FontWeight.w600), textAlign: TextAlign.center,)
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: 13, fontWeight: FontWeight.w600,
+                            color: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? theme.scaffoldBackgroundColor : theme.primaryColor
+                          ),)
                         )
                       ),
                     ]),
                     const SizedBox(width: 8),
-                    Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+                    Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400)),
                     const SizedBox(width: 4),
                     Text(GradeHelper.formatNumber(stats.bestSubjects[i].$2, decimals: 1), style: theme.textTheme.bodyMedium),
                   ]),
@@ -913,7 +917,7 @@ class AccountWidget extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
-            color: theme.dividerColor.withOpacity(0.66),
+            color: theme.dividerColor.withValues(alpha: 0.75),
             borderRadius: BorderRadius.circular(9),
           ),
           child: Row(

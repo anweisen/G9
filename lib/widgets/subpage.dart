@@ -33,7 +33,7 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 350),
+      duration: const Duration(milliseconds: 360),
     );
     _animation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
       parent: _controller,
@@ -79,7 +79,7 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
   void closeSubpage([dynamic result]) {
     final toRemove = _stack.lastOrNull;
     toRemove?.callback?.call(result);
-    _controller.animateTo(0, curve: Curves.easeInOut).then((_) {
+    _controller.animateTo(0, curve: Curves.ease).then((_) {
       _handleCloseAnimationCompleted(toRemove);
     });
   }

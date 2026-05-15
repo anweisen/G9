@@ -196,7 +196,7 @@ class _GradesTendencyPageState extends State<GradesTendencyPage> {
             children: [
               Row(
                 children: [
-                  Text("Ø", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w300, color: theme.primaryColor)),
+                  Text("Ø", style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w400, color: theme.primaryColor)),
                   const SizedBox(width: 4),
                   SizedBox(
                     width: 54,

@@ -214,7 +214,7 @@ class WeightedComponentDisplay extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+            Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400)),
             const SizedBox(width: 6),
             Text(GradeHelper.formatNumber(component.calculateAverage(grades), allowZero: true), style: theme.textTheme.bodyMedium),
           ],
@@ -248,7 +248,7 @@ class WeightedGradleResultDisplay extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+            Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400)),
             const SizedBox(width: 6),
             Text(GradeHelper.formatNumber(average, decimals: 2, allowZero: true), style: theme.textTheme.bodyMedium),
           ],

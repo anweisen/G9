@@ -84,7 +84,7 @@ class _SubjectPageState extends State<SubjectPage> {
             const Spacer(),
 
             const SizedBox(width: 12),
-            Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300, fontSize: 22)),
+            Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w400, fontSize: 22)),
             const SizedBox(width: 6),
             Text(GradeHelper.formatNumber(average, decimals: (_currentSemester!.semesterCountEquivalent > 1 ? 1 : 2), allowZero: true), style: theme.textTheme.headlineMedium),
             if (_currentSemester!.semesterCountEquivalent > 1) ...[

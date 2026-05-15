@@ -31,27 +31,36 @@ class SubjectsPage extends StatelessWidget {
 
     return PageSkeleton(
         title: SubpageTrigger(
-            createSubpage: () => const SemesterSwitcherPage(),
-            callback: (result) => {
-              if (result != null && result is Semester) {
-                gradesProvider.changeCurrentSemester(result),
-                accountProvider.updateSemester(result)
-              }
-            },
-            child: PageTitle(
-              title: "Fächer  ${semester.display}",
-              info: Row(
-                  verticalDirection: VerticalDirection.down,
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w300, fontSize: 22)),
-                    const SizedBox(width: 8),
-                    Text(GradeHelper.formatNumber(average, decimals: 2), style: theme.textTheme.headlineMedium),
-                    const SizedBox(width: 8),
-                    Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(average))})", style: theme.textTheme.bodySmall),
-                  ]
-                )),
+          createSubpage: () => const SemesterSwitcherPage(),
+          callback: (result) => {
+            if (result != null && result is Semester) {
+              gradesProvider.changeCurrentSemester(result),
+              accountProvider.updateSemester(result)
+            }
+          },
+          child: PageTitle(
+            title: "Fächer",
+            titleSuffix: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(
+                color: theme.dividerColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(semester.display.toUpperCase(), style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.25,)),
+            ),
+            info: Row(
+              verticalDirection: VerticalDirection.down,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text("Ø", style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w400, fontSize: 22)),
+                const SizedBox(width: 8),
+                Text(GradeHelper.formatNumber(average, decimals: 2), style: theme.textTheme.headlineMedium),
+                const SizedBox(width: 8),
+                Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(average))})", style: theme.textTheme.bodySmall),
+              ]
+            )
+          ),
         ),
         children: [
           for (Subject subject in subjects!)
@@ -88,21 +97,21 @@ class SubjectWidget extends StatelessWidget {
         child: Row(
           children: [
             Stack(
-                alignment: Alignment.center,
-                children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(7),
-                  color: subject.color,
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(7),
+                    color: subject.color,
+                  ),
+                  width: 36,
+                  height: 22,
                 ),
-                width: 36,
-                height: 22,
-              ),
-              Center(child: Text(GradeHelper.formatNumber(GradeHelper.average(subject, semester, choice, grades) / semester.semesterCountEquivalent, allowZero: true), style: TextStyle(color: contrastColor, fontSize: 13, fontWeight: FontWeight.w500))),
-            ]),
+                Center(child: Text(GradeHelper.formatNumber(GradeHelper.average(subject, semester, choice, grades) / semester.semesterCountEquivalent, allowZero: true), style: TextStyle(color: contrastColor, fontSize: 13, fontWeight: FontWeight.w500))),
+              ]
+            ),
             const SizedBox(width: 10),
-            Text(subject.name, style: theme.textTheme.labelMedium?.copyWith(color: contrastColor), maxLines: 1, overflow: TextOverflow.clip),
-            const Spacer(),
+            Expanded(child: Text(subject.name, style: theme.textTheme.labelMedium?.copyWith(color: contrastColor), maxLines: 1, overflow: TextOverflow.ellipsis)),
             Icon(Icons.chevron_right_rounded, color: contrastColor, size: 24),
           ],
         ),

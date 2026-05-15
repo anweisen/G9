@@ -52,7 +52,7 @@ class GradesDevelopmentPage extends StatelessWidget {
           children: [
             Expanded(child: Text("Notenentwicklung", softWrap: true, overflow: TextOverflow.ellipsis, maxLines: 1, style: theme.textTheme.bodyMedium)),
             const SizedBox(width: 12),
-            Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+            Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400)),
             const SizedBox(width: 6),
             Text(GradeHelper.formatNumber(avg, decimals: 2), style: theme.textTheme.bodyMedium),
           ],

@@ -42,7 +42,7 @@ class TopSubjectsSubpage extends StatelessWidget {
                   ),
               ]),
               const SizedBox(width: 8),
-              Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w300)),
+              Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400)),
               const SizedBox(width: 4),
               Text(GradeHelper.formatNumber(stats.bestSubjects[i].$2, decimals: 2), style: theme.textTheme.bodyMedium),
             ]),

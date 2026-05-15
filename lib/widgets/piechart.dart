@@ -149,7 +149,7 @@ class _GradesPieChartState extends State<GradesPieChart> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: theme.shadowColor.withValues(alpha: 0.1)
+                    color: theme.shadowColor.withValues(alpha: 0.08)
                   ),
                   child: Column(
                     children: [

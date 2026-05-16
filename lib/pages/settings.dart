@@ -127,11 +127,11 @@ class SettingsPage extends StatelessWidget {
         ]);
   }
 
-  static Widget buildButton(ThemeData theme, String text, IconData icon, Function()? onTap, {bool primary = true}) {
+  static Widget buildButton(ThemeData theme, String text, IconData icon, Function()? onTap, {bool primary = true, double? iconSize}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           color: primary ? theme.primaryColor : theme.dividerColor,
@@ -142,7 +142,7 @@ class SettingsPage extends StatelessWidget {
           children: [
             Expanded(child: Text(text, style: (primary ? theme.textTheme.labelMedium : theme.textTheme.bodyMedium), overflow: TextOverflow.ellipsis, maxLines: 1, softWrap: true,)),
             const SizedBox(width: 16),
-            Icon(icon, color: (primary ? theme.textTheme.labelMedium : theme.textTheme.bodyMedium)?.color, size: 18),
+            Icon(icon, color: (primary ? theme.textTheme.labelMedium : theme.textTheme.bodyMedium)?.color, size: iconSize ?? 18),
           ],
         ),
       ),

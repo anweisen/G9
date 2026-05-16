@@ -21,10 +21,10 @@ class WelcomePage extends StatelessWidget {
 
     return UnauthorizedPageSkeleton(
         children: [
-          SettingsPage.buildButton(theme, "Starten", Icons.chevron_right_rounded, () => context.push(settingsProvider.onboarding ? "/setup" : "/home")),
+          SettingsPage.buildButton(theme, "Starten", Icons.chevron_right_rounded, iconSize: 24, () => context.push(settingsProvider.onboarding ? "/setup" : "/home")),
           const SizedBox(height: 25),
 
-         CustomLineBreakText(
+          CustomLineBreakText(
               """Hier entsteht die Startseite deiner Notenapp. Bald findest du hier alle wichtigen Infos und Funktionen auf einen Blick.
 Schon jetzt kannst du deinen Notendurchschnitt berechnen, Prognosen erstellen und die besten Einbringungen automatisch bestimmen – perfekt abgestimmt auf das neue G9 in Bayern.
 Tippe auf Starten, um direkt loszulegen.

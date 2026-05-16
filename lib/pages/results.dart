@@ -56,9 +56,10 @@ class ResultsPage extends StatelessWidget {
                 children: [
                   Icon(Icons.bar_chart_rounded, size: 18, color: theme.shadowColor),
                   const SizedBox(width: 5),
-                  Text("Statistiken", style: theme.textTheme.bodySmall),
+                  Text("Statistiken", style: theme.textTheme.bodySmall?.copyWith(height: 0)),
                 ],
               ),
+              const SizedBox(height: 2,),
 
               _buildText(theme, "Pflicht Einbringungen", "${flags.forcedSemesters}"),
               _buildText(theme, "Punkte Q Phase", "${flags.pointsQ}"),
@@ -82,7 +83,7 @@ class ResultsPage extends StatelessWidget {
                       children: [
                         Icon(Icons.gavel_rounded, size: 18, color: theme.shadowColor),
                         const SizedBox(width: 5),
-                        Text("Zulassungs- & Anerkennungshürden", style: theme.textTheme.bodySmall),
+                        Text("Zulassungs- & Anerkennungshürden", style: theme.textTheme.bodySmall?.copyWith(height: 0)),
                       ],
                     ),
                     if (admissionHurdleCheckResults.isEmpty && graduationHurdleCheckResults.isEmpty) Text("Alle nötigen Hürden erfüllt", style: theme.textTheme.bodyMedium)
@@ -98,8 +99,8 @@ class ResultsPage extends StatelessWidget {
           const SizedBox(height: 24),
 
           SubpageTrigger(
-              createSubpage: () => const PdfPreviewPage(),
-              child: SettingsPage.buildButton(theme, "Notenübersicht drucken", Icons.print_rounded, null, primary: true)
+            createSubpage: () => const PdfPreviewPage(),
+            child: SettingsPage.buildButton(theme, "Notenübersicht drucken", Icons.print_rounded, null, primary: true)
           ),
         ]);
   }
@@ -125,7 +126,7 @@ class ResultsPage extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(text, style: theme.textTheme.bodyMedium),
+        Text(text, style: theme.textTheme.bodyMedium?.copyWith(fontSize: 17)),
         Text(value, style: theme.textTheme.bodyMedium),
       ],
     );
@@ -170,7 +171,7 @@ class SubjectCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -255,10 +256,10 @@ class SubjectCard extends StatelessWidget {
 
 TextStyle? _getTextStyleFor(ThemeData theme, SemesterResult? result) {
   return result?.prediction ?? false
-      ? theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic, fontWeight: FontWeight.normal, color: theme.textTheme.bodySmall?.color)
+      ? theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic, fontWeight: FontWeight.w400, color: theme.textTheme.bodySmall?.color)
       : result?.used ?? false
         ? theme.textTheme.bodyMedium
-        : theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.normal);
+        : theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400);
 }
 
 class AbiSubjectCard extends StatelessWidget {

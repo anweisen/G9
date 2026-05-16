@@ -224,14 +224,12 @@ class HomePage extends StatelessWidget {
                           margin: const EdgeInsets.fromLTRB(0, 0, 4, 0),
                           width: 21,
                           height: 19,
-                          decoration: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? BoxDecoration(color: theme.primaryColor, borderRadius: BorderRadius.circular(4)) : null,
+                          decoration: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? BoxDecoration(color: theme.shadowColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)) : null,
                           child: Center(child: Text(results[stats.bestSubjects[i].$1]?[semester]?.effectiveGrade.toString() ?? "-",
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontSize: 13, fontWeight: FontWeight.w600,
-                            color: (results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? theme.scaffoldBackgroundColor : theme.primaryColor
-                          ),)
-                        )
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, fontWeight: FontWeight.w600, color: theme.shadowColor,
+                          )),
+                        ),
                       ),
                     ]),
                     const SizedBox(width: 8),
@@ -966,14 +964,15 @@ class CompletedWidget extends StatelessWidget {
               children: [
                 noHurdles ? Flexible(
                   child: Row(
-                    spacing: 12,
+                    spacing: 16,
                     children: [
                       Icon(Icons.check_circle_outline_rounded, size: 28, color: noHurdles ? theme.indicatorColor : theme.disabledColor,),
                       Flexible(
                         child: Column(
+                          spacing: 4,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("Herzlichen Glückwunsch", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.indicatorColor), softWrap: true,),
+                            Text("Herzlichen Glückwunsch", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.indicatorColor, height: 1), softWrap: true,),
                             Text("zum bestanden Abitur", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600), softWrap: true,),
                           ],
                         ),
@@ -981,11 +980,20 @@ class CompletedWidget extends StatelessWidget {
                     ],
                   ),
                 ) : Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
+                    spacing: 16,
                     children: [
-                      Text("Tut uns leid", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600), softWrap: true,),
-                      Text("Hürden nicht alle überwunden", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.disabledColor), softWrap: true,),
+                      Icon(Icons.cancel_outlined, size: 28, color: noHurdles ? theme.indicatorColor : theme.disabledColor,),
+                      Flexible(
+                        child: Column(
+                          spacing: 4,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Tut uns leid", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.disabledColor, height: 1), softWrap: true,),
+                            Text("Hürden nicht alle überwunden", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.primaryColor,), softWrap: true,),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -993,16 +1001,16 @@ class CompletedWidget extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: noHurdles ? theme.primaryColor : theme.splashColor,
+                    color: noHurdles ? theme.shadowColor.withValues(alpha: 0.2) : theme.splashColor,
                   ),
                   child: noHurdles ? Column(
                     children: [
-                      Text(SemesterResult.pointsToAbiGrade(flags.pointsTotal), style: theme.textTheme.headlineMedium?.copyWith(color: theme.scaffoldBackgroundColor)),
-                      Text("${flags.pointsTotal}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.scaffoldBackgroundColor)),
+                      Text(SemesterResult.pointsToAbiGrade(flags.pointsTotal), style: theme.textTheme.headlineMedium?.copyWith(color: theme.primaryColor)),
+                      Text("${flags.pointsTotal}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.shadowColor)),
                     ],
                   ) : Column(
                     children: [
-                      Icon(Icons.cancel_outlined, size: 28, color: theme.disabledColor),
+                      Icon(Icons.warning_amber_rounded, size: 28, color: theme.disabledColor),
                       const SizedBox(height: 5,),
                       Text("${flags.pointsTotal}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.primaryColor)),
                     ],

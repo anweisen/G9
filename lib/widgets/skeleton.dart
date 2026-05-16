@@ -179,11 +179,11 @@ class PageTitle extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: crossAxisAlignment,
-      spacing: 16,
+      spacing: 20,
       children: [
         Flexible(
           child: Row(
-            spacing: 10,
+            spacing: 12,
             crossAxisAlignment: crossAxisAlignment,
             children: [
               Flexible(child: Text(title, style: theme.textTheme.headlineMedium, softWrap: true, maxLines: 1, overflow: TextOverflow.ellipsis,)),
@@ -365,21 +365,23 @@ class UnauthorizedPageSkeleton extends StatelessWidget {
 
   Center _buildFooter(ThemeData theme, BuildContext context) {
     return Center(
-        child: Column(
-      children: [
-        Text("© ${DateTime.now().year} anweisen", style: theme.textTheme.displayMedium),
-        const SizedBox(height: 6,),
-        Wrap(
-          spacing: 10,
-          children: [
-            GestureDetector(
+      child: Column(
+        children: [
+          Text("© ${DateTime.now().year} anweisen", style: theme.textTheme.displayMedium),
+          const SizedBox(height: 6,),
+          Wrap(
+            spacing: 10,
+            children: [
+              GestureDetector(
                 onTap: () => context.push("/legal"),
-                child: Text("Datenschutz & Impressum", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600))),
-          ],
-        ),
-        const SizedBox(height: 4,),
-      ],
-    ));
+                child: Text("Datenschutz & Impressum", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600))
+              ),
+            ],
+          ),
+          const SizedBox(height: 4,),
+        ],
+      )
+    );
   }
 }
 
@@ -396,9 +398,16 @@ class MarkdownPage extends StatefulWidget {
 class _MarkdownPageState extends State<MarkdownPage> {
   final Map<String, GlobalKey> _anchorKeys = {};
   final ScrollController _scrollController = ScrollController();
+  late Future<String> _future;
 
-  Future<String> _loadPrivacyPolicy() async {
-    return await rootBundle.loadString(widget.assetsPath);
+  @override
+  void initState() {
+    super.initState();
+    _future = _loadAssetFuture();
+  }
+
+  Future<String> _loadAssetFuture([bool cache = true]) async {
+    return await rootBundle.loadString(widget.assetsPath, cache: cache);
   }
 
   void _scrollToAnchor(String anchor) {
@@ -419,7 +428,7 @@ class _MarkdownPageState extends State<MarkdownPage> {
         scrollController: _scrollController,
         children: [
           FutureBuilder(
-              future: _loadPrivacyPolicy(),
+              future: _future,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Padding(
@@ -427,22 +436,43 @@ class _MarkdownPageState extends State<MarkdownPage> {
                     child: Center(child: CircularProgressIndicator(color: theme.primaryColor,)),
                   );
                 } else if (snapshot.hasError) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: theme.splashColor,
-                      borderRadius: BorderRadius.circular(8)
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      spacing: 16,
-                      children: [
-                        Icon(Icons.warning_amber_rounded, color: theme.disabledColor, size: 24,),
-                        Flexible(child: Text("Fehler beim Laden der ${widget.errorName}", style: theme.textTheme.displayMedium?.copyWith(color: theme.disabledColor, fontSize: 16, height: 0), softWrap: true,)),
-                      ],
-                    )
+                  return Column(
+                    spacing: 14,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: theme.splashColor,
+                          borderRadius: BorderRadius.circular(8)
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          spacing: 12,
+                          children: [
+                            Icon(Icons.warning_amber_rounded, color: theme.disabledColor, size: 24,),
+                            Flexible(child: Text("Fehler beim Laden der ${widget.errorName}", style: theme.textTheme.displayMedium?.copyWith(color: theme.disabledColor, fontSize: 16, height: 0), softWrap: true,)),
+                          ],
+                        )
+                      ),
+                      GestureDetector(
+                        onTap: () => setState(() => _future = _loadAssetFuture(false)),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: theme.dividerColor,
+                            borderRadius: BorderRadius.circular(8)
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            spacing: 8,
+                            children: [
+                              Icon(Icons.refresh_rounded, color: theme.shadowColor, size: 20,),
+                              Text("Erneut versuchen", style: theme.textTheme.displayMedium?.copyWith(color: theme.shadowColor, fontSize: 15, fontWeight: FontWeight.w600, height: 0)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   );
                 } else {
                   return MarkdownBody(

@@ -384,7 +384,7 @@ class SubjectResultAbiPrediction extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.fromBorderSide(BorderSide(color: predicted <= 0 ? Colors.transparent : theme.shadowColor, width: 2)),
+                              border: Border.fromBorderSide(BorderSide(color: predicted >= 15 ? Colors.transparent : theme.shadowColor, width: 2)),
                             ),
                             child: Icon(Icons.add_rounded, size: 16, color: predicted >= 15 ? Colors.transparent : theme.primaryColor,)
                         ),

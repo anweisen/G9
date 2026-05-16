@@ -40,13 +40,15 @@ class SubjectsPage extends StatelessWidget {
           },
           child: PageTitle(
             title: "Fächer",
+            crossAxisAlignment: CrossAxisAlignment.center,
             titleSuffix: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: theme.dividerColor,
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: theme.shadowColor.withValues(alpha: 0.15), width: 2)
               ),
-              child: Text(semester.display.toUpperCase(), style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.25,)),
+              child: Text(semester.display.toUpperCase(), style: theme.textTheme.bodyMedium?.copyWith(fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 0.5, color: theme.shadowColor,)),
             ),
             info: Row(
               verticalDirection: VerticalDirection.down,
@@ -90,7 +92,15 @@ class SubjectWidget extends StatelessWidget {
       onTap: () => SubpageController.of(context).openSubpage(SubjectPage(subject: subject, key: GlobalKey(),)),
       child: Container(
         decoration: BoxDecoration(
-          color: subject.color.withAlpha(theme.brightness == Brightness.dark ? 150 : 166), // ~58,5%  ~64,8%
+          gradient: LinearGradient(
+            colors: [
+              subject.color.withValues(alpha: theme.brightness == Brightness.dark ? 0.52 : 0.62),
+              subject.color.withValues(alpha: theme.brightness == Brightness.dark ? 0.62 : 0.72),
+            ],
+            stops: const [ 0.0, 0.66 ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.fromLTRB(16, 7, 8, 7),
@@ -104,10 +114,10 @@ class SubjectWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(7),
                     color: subject.color,
                   ),
-                  width: 36,
+                  width: 37,
                   height: 22,
                 ),
-                Center(child: Text(GradeHelper.formatNumber(GradeHelper.average(subject, semester, choice, grades) / semester.semesterCountEquivalent, allowZero: true), style: TextStyle(color: contrastColor, fontSize: 13, fontWeight: FontWeight.w500))),
+                Center(child: Text(GradeHelper.formatNumber(GradeHelper.average(subject, semester, choice, grades) / semester.semesterCountEquivalent, allowZero: true), style: TextStyle(color: contrastColor, fontSize: 13, fontWeight: FontWeight.w600))),
               ]
             ),
             const SizedBox(width: 10),

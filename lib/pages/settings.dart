@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../api/api.dart';
+import '../logic/choice.dart';
 import '../provider/account.dart';
 import '../provider/settings.dart';
 import '../pdf/pdf_widget.dart';
 import '../widgets/subpage.dart';
 import '../widgets/skeleton.dart';
 import 'account.dart';
+import 'change.dart';
+import 'extra.dart';
 import 'setup.dart';
+import 'oral.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -18,8 +23,10 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
-    var accountProvider = Provider.of<AccountDataProvider>(context);
-    var choice = Provider.of<SettingsDataProvider>(context).choice;
+    final accountProvider = Provider.of<AccountDataProvider>(context);
+    final settings = Provider.of<SettingsDataProvider>(context);
+
+    Choice? choice = settings.choice;
 
     return PageSkeleton(
         title: const PageTitle(title: "Präferenzen"),
@@ -100,49 +107,85 @@ class SettingsPage extends StatelessWidget {
           if (choice != null) SetupFinishPage.buildSubjectsGrid(choice, theme),
 
           const SizedBox(height: 20),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              const spacing = 8.0;
-              const minButtonWidth = 240.0;
-              final buttonWidth = constraints.maxWidth >= (minButtonWidth * 2 + spacing) ? constraints.maxWidth / 2 - spacing : constraints.maxWidth;
-              return Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                spacing: spacing,
-                runSpacing: 12,
-                children: [
-                  SizedBox(width: buttonWidth, child: buildButton(theme, "Wahl ändern", Icons.settings_backup_restore_rounded, () => context.push("/setup"))),
-                  SizedBox(width: buttonWidth, child: buildButton(theme, "Abifächer ändern", Icons.published_with_changes_rounded, () => context.push("/setup/abi"))),
-                ],
-              );
-            }
+          buildButtonLayout((context) => [
+            buildButton(theme, "Wahl ändern", Icons.settings_backup_restore_rounded, () => context.push("/setup"), small: true),
+            buildButton(theme, "Abifächer ändern", Icons.published_with_changes_rounded, () => context.push("/setup/abi"), small: true),
+          ]),
+          const SizedBox(height: 10),
+          buildButtonLayout((context) => [
+            buildButton(theme, "Prüfungsarten ändern", Icons.tune_rounded, SubpageTrigger.onTap(context, () => OralExamTypeSelectorPage(choice: choice!, initialSubjectSettings: settings.subjectSettings, key: GlobalKey())), small: true),
+          ]),
+          const SizedBox(height: 10),
+          buildButtonLayout((context) => [
+            buildButton(theme, "Abiwahl verbessern", Icons.swap_horiz_rounded, SubpageTrigger.onTap(context, () => const ChangeAbiSubpage()), small: true),
+            buildButton(theme, "Nachprüfungsempfehlungen", Icons.arrow_circle_up_rounded, SubpageTrigger.onTap(context, () => const ExtraExamPage()), small: true),
+          ]),
+          const SizedBox(height: 10),
+          buildButtonLayout((context) => [
+            buildButton(theme, "Zur Startseite", Icons.info_outline_rounded, () => context.go("/welcome"), small: true),
+            buildButton(theme, "OpenSource auf GitHub", Icons.code_rounded, () async {
+              const url = "https://github.com/anweisen/G9";
+              if (await canLaunchUrl(Uri.parse(url))) {
+                await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+              }
+            }, small: true),
+          ]),
+          const SizedBox(height: 10),
+          buildButtonLayout((context) => [
+            buildButton(theme, "Notenübersicht drucken", Icons.print_rounded, SubpageTrigger.onTap(context, () => const PdfPreviewPage()), small: true),
+          ]),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              color: theme.dividerColor,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: UnauthorizedPageSkeleton.buildFooter(theme, context)
           ),
-          const SizedBox(height: 14),
-          SubpageTrigger(
-            createSubpage: () => const PdfPreviewPage(),
-            child: buildButton(theme, "Notenübersicht drucken", Icons.print_rounded, null, primary: false)
-          ),
-          const SizedBox(height: 14),
-          buildButton(theme, "Zur Startseite", Icons.info_outline_rounded, () => context.push("/welcome"), primary: false),
-          const SizedBox(height: 20),
         ]);
   }
 
-  static Widget buildButton(ThemeData theme, String text, IconData icon, Function()? onTap, {bool primary = true, double? iconSize}) {
+  static Widget buildButtonLayout(List<Widget> Function(BuildContext context) buttonsBuilder) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        List<Widget> buttons = buttonsBuilder(context);
+        const spacing = 12.0;
+        const minButtonWidth = 240.0;
+        final minButtonWidthSum = minButtonWidth * buttons.length + spacing * (buttons.length - 1);
+        final buttonWidth = constraints.maxWidth >= minButtonWidthSum ? (constraints.maxWidth - spacing * (buttons.length - 1)) / buttons.length : constraints.maxWidth;
+        return Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          spacing: spacing,
+          runSpacing: 12,
+          children: [
+            for (Widget button in buttons)
+              SizedBox(width: buttonWidth, child: button),
+          ],
+        );
+      }
+    );
+  }
+
+  static Widget buildButton(ThemeData theme, String text, IconData icon, Function()? onTap, {bool primary = true, bool small = false, double? iconSize, bool danger = false}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: small ? 15 : 18, vertical: small ? 7 : 10),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: primary ? theme.primaryColor : theme.dividerColor,
+          borderRadius: BorderRadius.circular(small ? 8 : 10),
+          color: small ? null : danger ? theme.splashColor : primary ? theme.primaryColor : theme.dividerColor,
+          border: small ? Border.all(color: theme.dividerColor, width: 2) : null,
         ),
         child: Row(
+          spacing: 12,
           mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: small ? MainAxisAlignment.start : MainAxisAlignment.spaceBetween,
+          textDirection: small ? TextDirection.rtl : TextDirection.ltr,
           children: [
-            Expanded(child: Text(text, style: (primary ? theme.textTheme.labelMedium : theme.textTheme.bodyMedium), overflow: TextOverflow.ellipsis, maxLines: 1, softWrap: true,)),
-            const SizedBox(width: 16),
-            Icon(icon, color: (primary ? theme.textTheme.labelMedium : theme.textTheme.bodyMedium)?.color, size: iconSize ?? 18),
+            Expanded(child: Text(text, style: (primary ? theme.textTheme.labelMedium : theme.textTheme.bodyMedium)
+                ?.copyWith(fontSize: small ? 17 : null, color: danger ? theme.disabledColor : small ? (primary ? theme.primaryColor : theme.shadowColor) : null), overflow: TextOverflow.ellipsis, maxLines: 1, softWrap: true,)),
+            SizedBox(width: 18, child: Icon(icon, color: danger ? theme.disabledColor : small ? (primary ? theme.primaryColor : theme.shadowColor) : (primary ? theme.textTheme.labelMedium : theme.textTheme.bodyMedium)?.color, size: iconSize ?? 18)),
           ],
         ),
       ),

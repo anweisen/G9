@@ -567,8 +567,8 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
               margin: const EdgeInsets.fromLTRB(leftOffset, 8, leftOffset, 20),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                  color: theme.dividerColor,
-                  borderRadius: const BorderRadius.all(Radius.circular(8))
+                color: theme.dividerColor,
+                borderRadius: const BorderRadius.all(Radius.circular(8))
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -586,18 +586,18 @@ class _SetupStepPageState extends State<SetupStepPage> with TickerProviderStateM
                 onChanged: onSearchChanged,
                 onTap: () => selectSubject(null),
                 decoration: InputDecoration(
-                    hintText: "Suche ein Fach...",
-                    hintStyle: theme.textTheme.labelMedium,
-                    filled: true,
-                    fillColor: theme.primaryColor,
-                    suffixIcon: const Padding(
-                      padding: EdgeInsets.only(right: 20),
-                      child: Icon(Icons.search),
-                    ),
-                    suffixIconColor: theme.scaffoldBackgroundColor,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  hintText: "Suche ein Fach...",
+                  hintStyle: theme.textTheme.labelMedium,
+                  filled: true,
+                  fillColor: theme.primaryColor,
+                  suffixIcon: const Padding(
+                    padding: EdgeInsets.only(right: 20),
+                    child: Icon(Icons.search),
+                  ),
+                  suffixIconColor: theme.scaffoldBackgroundColor,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: theme.primaryColor)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: theme.primaryColor)),
                 ),
               ),
             ),
@@ -841,16 +841,16 @@ class SetupFinishPage extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 25, horizontal: leftOffset),
-                child: Text("Abgeschlossen!",
+                child: Text("Fächerwahl abgeschlossen!",
                     style: theme.textTheme.headlineMedium,
                     textAlign: TextAlign.left),
               ),
               Expanded(
                   child: Stack(
                 children: [
-                  ListView(
+                  Padding(
                     padding: const EdgeInsets.fromLTRB(leftOffset + 5, 0, leftOffset + 5, 120),
-                    children: buildSubjects(choice, theme),
+                    child: buildSubjectsGrid(choice, theme),
                   ),
                   const SizedBox(height: 50, width: 50),
                   NextButton(
@@ -1010,7 +1010,20 @@ class SetupFinishPage extends StatelessWidget {
           Text("Abiturprüfungsfächer", style: theme.textTheme.bodySmall),
           const SizedBox(height: labelSpacing),
           ...choice.abiSubjects.expand((e) => [
-            MediumSubjectWidget(subject: e),
+            Row(
+              spacing: 8,
+              children: [
+                MediumSubjectWidget(subject: e),
+                if (choice.hasSelectedExamTypes) Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: theme.dividerColor,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(choice.isSubjectOral(e) ? Icons.message_rounded :  Icons.edit_rounded, color: theme.shadowColor, size: 16,)
+                ),
+              ],
+            ),
             const SizedBox(height: subjectSpacing),
           ]),
         ],
@@ -1030,11 +1043,11 @@ class SetupFinishPage extends StatelessWidget {
             TableRow(
               children: [
                 Padding(
-                  padding: EdgeInsets.only(bottom: i + 2 < built.length ? verticalSpacing : 0),
+                  padding: EdgeInsets.only(bottom: i + 2 < built.length ? verticalSpacing : 0, right: horizontalSpacing / 2),
                   child: built[i],
                 ),
                 if (i + 1 < built.length) Padding(
-                  padding: EdgeInsets.only(bottom: i + 2 < built.length ? verticalSpacing : 0, left: horizontalSpacing),
+                  padding: EdgeInsets.only(bottom: i + 2 < built.length ? verticalSpacing : 0, left: horizontalSpacing / 2),
                   child: built[i + 1],
                 ) else const SizedBox(),
               ],

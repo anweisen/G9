@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../logic/hurdles.dart';
-import '../provider/settings.dart';
 import '../widgets/skeleton.dart';
 
 class BayEfgHurdlePage extends StatelessWidget {

@@ -82,7 +82,7 @@ class _AccountPageState extends State<AccountPage> {
                   spacing: 10,
                   runSpacing: 10,
                   children: [
-                    AccountActionButton(
+                    ActionButton(
                       text: stage.text,
                       icon: stage.icon,
                       textColor: stage.color(theme),
@@ -91,7 +91,7 @@ class _AccountPageState extends State<AccountPage> {
                       onTap: null,
                       suffix: stage.isLoading ? DotLoadingIndicator(style: theme.textTheme.bodyMedium!.copyWith(fontSize: 16), duration: const Duration(milliseconds: 1500)) : null,
                     ),
-                    AccountActionButton(
+                    ActionButton(
                       text: null,
                       icon: Icons.sync_rounded,
                       textColor: account.isSyncing ? theme.shadowColor : theme.primaryColor,
@@ -107,21 +107,21 @@ class _AccountPageState extends State<AccountPage> {
                   spacing: 10,
                   runSpacing: 10,
                   children: [
-                    AccountActionButton(
-                        text: "Daten exportieren",
-                        icon: Icons.download_rounded,
-                        textColor: theme.primaryColor,
-                        backgroundColor: null,
-                        borderColor: theme.dividerColor,
-                        suffix: exportingActive ? DotLoadingIndicator(style: theme.textTheme.bodyMedium!.copyWith(fontSize: 15), duration: const Duration(milliseconds: 1500)) : null,
-                        onTap: () async {
-                          setState(() => exportingActive = true);
-                          final data = await account.api.getExportData();
-                          await FileExportService.exportJson("user_data", data);
-                          setState(() => exportingActive = false);
-                        }
+                    ActionButton(
+                      text: "Daten exportieren",
+                      icon: Icons.download_rounded,
+                      textColor: theme.primaryColor,
+                      backgroundColor: null,
+                      borderColor: theme.dividerColor,
+                      suffix: exportingActive ? DotLoadingIndicator(style: theme.textTheme.bodyMedium!.copyWith(fontSize: 15), duration: const Duration(milliseconds: 1500)) : null,
+                      onTap: () async {
+                        setState(() => exportingActive = true);
+                        final data = await account.api.getExportData();
+                        await FileExportService.exportJson("user_data", data);
+                        setState(() => exportingActive = false);
+                      }
                     ),
-                    AccountActionButton(
+                    ActionButton(
                       text: "Erklärung Accountdaten",
                       icon: Icons.open_in_new_rounded,
                       textColor: theme.primaryColor,
@@ -137,7 +137,7 @@ class _AccountPageState extends State<AccountPage> {
                   spacing: 10,
                   runSpacing: 10,
                   children: [
-                    AccountActionButton(
+                    ActionButton(
                       text: "Abmelden",
                       icon: Icons.logout_rounded,
                       textColor: theme.disabledColor,
@@ -145,14 +145,14 @@ class _AccountPageState extends State<AccountPage> {
                       borderColor: theme.dividerColor,
                       onTap: account.logout
                     ),
-                    AccountActionButton(
+                    ActionButton(
                       text: "Account löschen",
                       icon: Icons.delete_rounded,
                       textColor: theme.disabledColor,
                       backgroundColor: theme.splashColor,
                       borderColor: theme.splashColor,
                       onTap: null,
-                      createSubpage: () => const ConfirmDeleteAccountDialoge(),
+                      createSubpage: () => const ConfirmDeleteAccountDialogePage(),
                     )
                   ],
                 ),
@@ -310,87 +310,18 @@ class _AccountPageState extends State<AccountPage> {
   }
 }
 
-class AccountActionButton extends StatelessWidget {
-  const AccountActionButton({super.key, required this.text, required this.icon, required this.textColor, required this.backgroundColor, required this.borderColor, required this.onTap, this.createSubpage, this.suffix});
-
-  final Widget? suffix;
-  final String? text;
-  final IconData icon;
-  final Color textColor;
-  final Color? backgroundColor;
-  final Color borderColor;
-  final void Function()? onTap;
-  final Widget Function()? createSubpage;
+class ConfirmDeleteAccountDialogePage extends StatelessWidget {
+  const ConfirmDeleteAccountDialogePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: createSubpage != null ? () => SubpageController.of(context).openSubpage(createSubpage!()) : onTap,
-      child: Container(
-        padding: text != null ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6) : const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: borderColor, width: 2),
-          color: backgroundColor,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 22, color: textColor,),
-            if (text != null) ...[
-              const SizedBox(width: 8,),
-              Flexible(child: Text(text!, style: theme.textTheme.bodyMedium?.copyWith(color: textColor, fontSize: 15, height: 0), softWrap: true, maxLines: 1, overflow: TextOverflow.ellipsis,)),
-            ],
-            if (suffix != null) ...[
-              const SizedBox(width: 5,),
-              suffix!,
-            ]
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ConfirmDeleteAccountDialoge extends StatelessWidget {
-  const ConfirmDeleteAccountDialoge({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final accountProvider = Provider.of<AccountDataProvider>(context);
-    return SubpageSkeleton(
-      title: Text("Account löschen", style: theme.textTheme.headlineMedium),
-      children: [
-        Text("Bist du sicher, dass du deinen Account löschen möchtest? Diese Aktion ist unwiderruflich. Deine Daten sind weiterhin lokal in der App verfügbar.", style: Theme.of(context).textTheme.displayMedium,),
-        const SizedBox(height: 24,),
-        Wrap(
-          spacing: 12,
-          runSpacing: 8,
-          children: [
-            AccountActionButton(
-              text: "Abbrechen",
-              icon: Icons.close_rounded,
-              textColor: Theme.of(context).primaryColor,
-              backgroundColor: null,
-              borderColor: Theme.of(context).dividerColor,
-              onTap: () => SubpageController.of(context).closeSubpage(),
-            ),
-            AccountActionButton(
-              text: "Account löschen",
-              icon: Icons.delete_rounded,
-              textColor: theme.disabledColor,
-              backgroundColor: theme.splashColor,
-              borderColor: theme.splashColor,
-              onTap: () {
-                accountProvider.deleteAccount();
-                SubpageController.of(context).closeSubpage();
-              },
-            )
-          ],
-        )
-      ]
+    final account = Provider.of<AccountDataProvider>(context);
+    return ConfirmActionDialogePage(
+      title: "Account löschen",
+      confirmText: "Account löschen",
+      confirmIcon: Icons.delete_rounded,
+      description: "Bist du sicher, dass du deinen Account löschen möchtest? Diese Aktion ist unwiderruflich. Deine Daten sind weiterhin lokal in der App verfügbar.",
+      onConfirm: (context) => account.deleteAccount(),
     );
   }
 }

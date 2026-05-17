@@ -474,3 +474,46 @@ class G9TitleBar extends StatelessWidget {
     );
   }
 }
+
+class ActionButton extends StatelessWidget {
+  const ActionButton({super.key, required this.text, required this.icon, required this.textColor, required this.backgroundColor, required this.borderColor, required this.onTap, this.createSubpage, this.suffix});
+
+  final Widget? suffix;
+  final String? text;
+  final IconData icon;
+  final Color textColor;
+  final Color? backgroundColor;
+  final Color borderColor;
+  final void Function()? onTap;
+  final Widget Function()? createSubpage;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: createSubpage != null ? () => SubpageController.of(context).openSubpage(createSubpage!()) : onTap,
+      child: Container(
+        padding: text != null ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6) : const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: borderColor, width: 2),
+          color: backgroundColor,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 22, color: textColor,),
+            if (text != null) ...[
+              const SizedBox(width: 8,),
+              Flexible(child: Text(text!, style: theme.textTheme.bodyMedium?.copyWith(color: textColor, fontSize: 15, height: 0), softWrap: true, maxLines: 1, overflow: TextOverflow.ellipsis,)),
+            ],
+            if (suffix != null) ...[
+              const SizedBox(width: 5,),
+              suffix!,
+            ]
+          ],
+        ),
+      ),
+    );
+  }
+}

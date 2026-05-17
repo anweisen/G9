@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 
+import 'general.dart';
 import 'skeleton.dart';
 
 class SubpageController extends StatefulWidget {
@@ -77,6 +78,7 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
   }
 
   void closeSubpage([dynamic result]) {
+    if (!mounted) return;
     final toRemove = _stack.lastOrNull;
     toRemove?.callback?.call(result);
     _controller.animateTo(0, curve: Curves.ease).then((_) {
@@ -265,8 +267,59 @@ class SubpageTrigger extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: enabled ? () => SubpageController.of(context).openSubpage(createSubpage(), callback: callback) : null,
+      onTap: onTap(context, createSubpage, callback, enabled),
       child: Container(color: Colors.transparent, child: child), // make tappable
+    );
+  }
+
+  static Function()? onTap(BuildContext context, Widget Function() createSubpage, [Function(dynamic result)? callback, bool enabled = true]) {
+    return enabled ? () => SubpageController.of(context).openSubpage(createSubpage(), callback: callback) : null;
+  }
+}
+
+class ConfirmActionDialogePage extends StatelessWidget {
+  const ConfirmActionDialogePage({super.key, required this.title, required this.confirmText, required this.confirmIcon, required this.description, required this.onConfirm});
+
+  final String title;
+  final String confirmText;
+  final IconData confirmIcon;
+  final String description;
+  final void Function(BuildContext context) onConfirm;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SubpageSkeleton(
+        title: PageTitle(title: title),
+        children: [
+          Text(description, style: theme.textTheme.displayMedium,),
+          const SizedBox(height: 24,),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              ActionButton(
+                text: "Abbrechen",
+                icon: Icons.close_rounded,
+                textColor: theme.primaryColor,
+                backgroundColor: null,
+                borderColor: theme.dividerColor,
+                onTap: () => SubpageController.of(context).closeSubpage(),
+              ),
+              ActionButton(
+                text: confirmText,
+                icon: confirmIcon,
+                textColor: theme.disabledColor,
+                backgroundColor: theme.splashColor,
+                borderColor: theme.splashColor,
+                onTap: () {
+                  onConfirm(context);
+                  SubpageController.of(context).closeSubpage();
+                },
+              )
+            ],
+          )
+        ]
     );
   }
 }

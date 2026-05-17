@@ -8,9 +8,12 @@ import '../logic/results.dart';
 import '../logic/types.dart';
 import '../widgets/general.dart';
 import '../widgets/skeleton.dart';
+import '../widgets/subpage.dart';
+import '../provider/account.dart';
 import '../provider/grades.dart';
 import '../provider/settings.dart';
 import 'settings.dart';
+import 'setup.dart';
 
 class ChangeAbiSubpage extends StatefulWidget {
   const ChangeAbiSubpage({super.key});
@@ -106,12 +109,25 @@ class _ChangeAbiSubpageState extends State<ChangeAbiSubpage> {
 
         for (ChangeAbiChoiceResult choiceResult in choices) ...[
           const SizedBox(height: 16),
-          ChangeAbiChoiceResultWidget(modifiedResult: choiceResult, originalResult: currentResult,),
+          ChangeAbiChoiceResultWidget(
+            modifiedResult: choiceResult, originalResult: currentResult,
+            buildHeadline: (context, theme) => [
+              for (int i = 0; i < choiceResult.choice.abiSubjects.length; i++)
+                if (currentResult.choice.abiSubjects[i] != choiceResult.choice.abiSubjects[i]) ...[
+                  const SizedBox(height: 3),
+                  SmallSubjectWidget(subject: currentResult.choice.abiSubjects[i], old: true, choice: currentResult.choice,),
+                  const SizedBox(height: 1),
+                  Icon(Icons.keyboard_double_arrow_down_rounded, size: 14, color: theme.shadowColor),
+                  SmallSubjectWidget(subject: choiceResult.choice.abiSubjects[i], old: false, choice: choiceResult.choice,),
+                  const SizedBox(height: 3),
+                ]
+            ],
+          ),
         ],
 
         const SizedBox(height: 36,),
 
-        SettingsPage.buildButton(theme, "Abifächer ändern", Icons.published_with_changes_rounded, () => context.push("/setup/abi")),
+        SettingsPage.buildButton(theme, "Abifächer ändern", Icons.published_with_changes_rounded, () => context.push("/setup/abi"), small: true),
 
       ]);
   }
@@ -125,6 +141,12 @@ class ChangeAbiChoiceResult {
 
   ChangeAbiChoiceResult(this.choice, this.results, this.flags, this.hurdles);
 
+  @override
+  bool operator ==(Object other) => identical(this, other) || other is ChangeAbiChoiceResult && runtimeType == other.runtimeType && choice == other.choice;
+
+  @override
+  int get hashCode => choice.hashCode;
+
   static ChangeAbiChoiceResult? getBetterChoiceResult(Choice currentChoice, ResultsFlags currentResultFlags, GradesDataProvider gradesProvider) {
     List<ChangeAbiChoiceResult> results = getSortedChoiceResultsForAbi(currentChoice, gradesProvider);
     if (results.isEmpty) return null;
@@ -136,13 +158,17 @@ class ChangeAbiChoiceResult {
     List<ChangeAbiChoiceResult> results = getChoiceResultsForSubstitution(currentChoice, gradesProvider, applyAbiPredictions: applyAbiPredictions)
         + getChoiceResultsForAbi4(currentChoice, gradesProvider, applyAbiPredictions: applyAbiPredictions)
         + getChoiceResultsForAbi5(currentChoice, gradesProvider, applyAbiPredictions: applyAbiPredictions);
+    sortChoiceResults(results);
+    return results;
+  }
+
+  static void sortChoiceResults(List<ChangeAbiChoiceResult> results) {
     results.sort((a, b) {
       if (a.hurdles.isEmpty && b.hurdles.isNotEmpty) return -1;
       if (a.hurdles.isNotEmpty && b.hurdles.isEmpty) return 1;
       if (a.flags.underscored != b.flags.underscored) return a.flags.underscored.compareTo(b.flags.underscored);
       return b.flags.pointsTotal.compareTo(a.flags.pointsTotal);
     });
-    return results;
   }
 
   static List<ChangeAbiChoiceResult> getChoiceResultsForSubstitution(Choice choice, GradesDataProvider gradesProvider, {applyAbiPredictions = true}) {
@@ -170,7 +196,10 @@ class ChangeAbiChoiceResult {
     //             Dieser effektive Tausch von abi4/abi5 hat jedoch keinen Einfluss auf das Ergebnis, und wird somit in diesem Sonderfall übersprungen, ohne die Beschränkungen für abi5 neu zu berechnen.
     //             In der initialen Wahl (auf die ChoiceHelper ausgelegt ist) kann dieser Sonderfall nicht auftreten, da die Schritte und deren Beschränkungen nacheinander berechnet werden.
     return options.subjects.where((subject) => subject != choice.abi5 && (includeSame || subject != choice.abi4)).map((subject) {
-      final modifiedChoice = (ChoiceBuilder.fromChoice(choice)..abi4 = subject).build();
+      final modifiedChoice = (ChoiceBuilder.fromChoice(choice)
+        ..abi4 = subject
+        ..copyOralSettings(choice.abi4, subject)
+      ).build();
       return createChoiceResult(modifiedChoice, gradesProvider, applyAbiPredictions: applyAbiPredictions);
     }).toList();
   }
@@ -178,7 +207,10 @@ class ChangeAbiChoiceResult {
   static List<ChangeAbiChoiceResult> getChoiceResultsForAbi5(Choice choice, GradesDataProvider gradesProvider, {includeSame = false, applyAbiPredictions = true}) {
     ChoiceOptions options = ChoiceHelper.getAbi5Options(ChoiceBuilder.fromChoice(choice));
     return options.subjects.where((subject) => includeSame || subject != choice.abi5).map((subject) {
-      final modifiedChoice = (ChoiceBuilder.fromChoice(choice)..abi5 = subject).build();
+      final modifiedChoice = (ChoiceBuilder.fromChoice(choice)
+        ..abi5 = subject
+        ..copyOralSettings(choice.abi5, subject)
+      ).build();
       return createChoiceResult(modifiedChoice, gradesProvider, applyAbiPredictions: applyAbiPredictions);
     }).toList();
   }
@@ -202,10 +234,11 @@ class ChangeAbiChoiceResult {
 }
 
 class ChangeAbiChoiceResultWidget extends StatefulWidget {
-  const ChangeAbiChoiceResultWidget({super.key, required this.modifiedResult, required this.originalResult});
+  const ChangeAbiChoiceResultWidget({super.key, required this.modifiedResult, required this.originalResult, required this.buildHeadline});
 
   final ChangeAbiChoiceResult originalResult;
   final ChangeAbiChoiceResult modifiedResult;
+  final List<Widget> Function(BuildContext context, ThemeData theme) buildHeadline;
 
   @override
   State<ChangeAbiChoiceResultWidget> createState() => _ChangeAbiChoiceResultWidgetState();
@@ -236,9 +269,6 @@ class _ChangeAbiChoiceResultWidgetState extends State<ChangeAbiChoiceResultWidge
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    final originalSubjects = widget.originalResult.choice.abiSubjects;
-    final modifiedSubjects = widget.modifiedResult.choice.abiSubjects;
 
     final pointsDifference = widget.modifiedResult.flags.pointsTotal - widget.originalResult.flags.pointsTotal;
     final underscoredDifference = widget.modifiedResult.flags.underscored - widget.originalResult.flags.underscored;
@@ -271,17 +301,7 @@ class _ChangeAbiChoiceResultWidgetState extends State<ChangeAbiChoiceResultWidge
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          for (int i = 0; i < modifiedSubjects.length; i++)
-                            if (originalSubjects[i] != modifiedSubjects[i]) ...[
-                              const SizedBox(height: 3),
-                              SmallSubjectWidget(subject: originalSubjects[i], old: true, choice: widget.originalResult.choice,),
-                              const SizedBox(height: 1),
-                              Icon(Icons.keyboard_double_arrow_down_rounded, size: 14, color: theme.shadowColor),
-                              SmallSubjectWidget(subject: modifiedSubjects[i], old: false, choice: widget.modifiedResult.choice,),
-                              const SizedBox(height: 3),
-                            ]
-                        ],
+                        children: widget.buildHeadline(context, theme),
                       ),
                     ),
                     Container(
@@ -367,6 +387,28 @@ class _ChangeAbiChoiceResultWidgetState extends State<ChangeAbiChoiceResultWidge
                           ],
                         ),
                       ),
+
+                      SubpageTrigger(
+                        createSubpage: () => ChangeChoicePage(choiceSupplier: () => widget.modifiedResult.choice),
+                        child: Container(
+                          margin: const EdgeInsets.only(top: 16),
+                          width: constraints.maxWidth,
+                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+                          decoration: BoxDecoration(
+                            color: theme.shadowColor.withValues(alpha: .15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: theme.shadowColor.withValues(alpha: .15), width: 2),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            spacing: 12,
+                            children: [
+                              Icon(Icons.swap_horiz_rounded, size: 20, color: theme.primaryColor),
+                              Text("Diese Wahl übernehmen", style: theme.textTheme.displayMedium?.copyWith(color: theme.primaryColor, fontSize: 15, height: 0, fontWeight: FontWeight.w600)),
+                            ]
+                          )
+                        )
+                      ),
                     ],
                   ),
                 ),
@@ -415,11 +457,12 @@ class _ChangeAbiChoiceResultWidgetState extends State<ChangeAbiChoiceResultWidge
 }
 
 class SmallSubjectWidget extends StatelessWidget {
-  const SmallSubjectWidget({super.key, required this.subject, required this.old, required this.choice});
+  const SmallSubjectWidget({super.key, required this.subject, required this.old, required this.choice, this.includeAbiTag = false});
 
   final Choice? choice;
   final Subject subject;
   final bool old;
+  final bool includeAbiTag;
 
   static TextStyle getTextStyle(ThemeData theme, bool old) {
     return theme.textTheme.displayMedium?.copyWith(
@@ -447,30 +490,72 @@ class SmallSubjectWidget extends StatelessWidget {
           child: Text(subject.name, style: getTextStyle(theme, old), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,
           ),
         ),
-        if (choice != null) ...buildSubjectTags(theme, choice!, subject),
+        if (choice != null) ...buildSubjectTags(theme, choice!, subject, includeAbiTag: includeAbiTag),
       ],
     );
   }
 
-  static List<Widget> buildSubjectTags(ThemeData theme, Choice choice, Subject subject) {
+  static List<Widget> buildSubjectTags(ThemeData theme, Choice choice, Subject subject, {bool includeAbiTag = false}) {
     if (choice.lk == subject) {
       return [
         const SizedBox(width: 4),
         Text("(LF)", style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: theme.shadowColor, fontWeight: FontWeight.w600)),
       ];
-    }
-    if (choice.substituteMathe && subject == (choice.lk.category == SubjectCategory.info ? choice.ntg1 : choice.mintSg2)) {
+    } else if (choice.substituteMathe && subject == (choice.lk.category == SubjectCategory.info ? choice.ntg1 : choice.mintSg2)) {
       return [
         const SizedBox(width: 4),
         Text("(M)", style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: theme.shadowColor, fontWeight: FontWeight.w600)),
       ];
-    }
-    if (choice.substituteDeutsch && subject == choice.mintSg2) {
+    } else if (choice.substituteDeutsch && subject == choice.mintSg2) {
       return [
         const SizedBox(width: 4),
         Text("(D)", style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: theme.shadowColor, fontWeight: FontWeight.w600)),
       ];
+    } else if (includeAbiTag && choice.abiSubjects.contains(subject)) {
+      return [
+        const SizedBox(width: 4),
+        Text("(Abi)", style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: theme.shadowColor, fontWeight: FontWeight.w600)),
+      ];
+    } else if (choice.profil12 == subject || choice.profil13 == subject) {
+      return [
+        const SizedBox(width: 4),
+        Text("(Profil)", style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: theme.shadowColor, fontWeight: FontWeight.w600)),
+      ];
     }
     return [];
+  }
+}
+
+class ChangeChoicePage extends StatelessWidget {
+  const ChangeChoicePage({super.key, required this.choiceSupplier});
+
+  final Choice Function() choiceSupplier;
+
+  @override
+  Widget build(BuildContext context) {
+    const double leftOffset = PageSkeleton.leftOffset;
+    final ThemeData theme = Theme.of(context);
+
+    final Choice choice = choiceSupplier();
+
+    return SubpageSkeleton(
+      title: const PageTitle(title: "Fächerwahl ändern"),
+      actions: [
+        NextButton(
+          text: "Bestätigen",
+          icon: Icons.check_rounded,
+          callback: () {
+            Provider.of<SettingsDataProvider>(context, listen: false).choice = choice;
+            Provider.of<AccountDataProvider>(context, listen: false).updateChoice(choice);
+            SubpageController.of(context).closeSubpage();
+          },
+          leftOffset: leftOffset,
+          animationProgress: 1
+        )
+      ],
+      children: [
+        SetupFinishPage.buildSubjectsGrid(choice, theme),
+      ],
+    );
   }
 }

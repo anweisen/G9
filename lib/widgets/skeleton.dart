@@ -323,7 +323,7 @@ class UnauthorizedPageSkeleton extends StatelessWidget {
 
                               const Spacer(),
                               const SizedBox(height: 36,),
-                              _buildFooter(theme, context),
+                              buildFooter(theme, context),
                             ]
                         ),
                       ),
@@ -363,11 +363,19 @@ class UnauthorizedPageSkeleton extends StatelessWidget {
     );
   }
 
-  Center _buildFooter(ThemeData theme, BuildContext context) {
+  static Center buildFooter(ThemeData theme, BuildContext context) {
     return Center(
       child: Column(
         children: [
-          Text("© ${DateTime.now().year} anweisen", style: theme.textTheme.displayMedium),
+          const SizedBox(height: 4,),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            spacing: 4,
+            children: [
+              Icon(Icons.copyright_rounded, size: 14, color: theme.shadowColor,),
+              Text("${DateTime.now().year} anweisen", style: theme.textTheme.displayMedium?.copyWith(height: 1.7)),
+            ],
+          ),
           const SizedBox(height: 6,),
           Wrap(
             spacing: 10,

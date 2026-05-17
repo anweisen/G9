@@ -1352,24 +1352,25 @@ class ExtraExamInfoWidget extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text("${mandatory ? "Verpflichtende" : "Freiwillige"} mündliche Zusatzprüfungen (Nachprüfungen)", style: theme.textTheme.bodySmall),
-                  const SizedBox(height: 4),
-                  Text("Spätestens bis ${examDate.formattedDate}", style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
+                  Text("Spätestens bis ${examDate.formattedDate}", style: theme.textTheme.displayMedium?.copyWith(height: 1, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
 
                   if (mandatoryOrImprovement) Row(
                     spacing: 8,
                     children: [
                       SmallSubjectWidget(subject: options.first.subject, old: false, choice: null),
-                      if (mandatory) Icon(Icons.error_outline_rounded, size: 18, color: theme.disabledColor,),
+                      if (mandatory) Icon(Icons.error_outline_rounded, size: 18, color: theme.disabledColor,)
+                      else if (mandatoryOrImprovement) Icon(Icons.arrow_circle_up_rounded, size: 18, color: theme.shadowColor,),
                       Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(color: theme.shadowColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(5)),
+                          decoration: BoxDecoration(color: mandatory ? theme.splashColor : theme.shadowColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(5)),
                           child: Text("min. ${options.first.requiredGrade} P.",
                               style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600, color: mandatory ? theme.disabledColor : theme.shadowColor))
                       ),
                     ],
                   )
-                  else Text("Unrealistische Verbesserungschancen", style: theme.textTheme.bodyMedium, softWrap: true, overflow: TextOverflow.ellipsis,),
+                  else Text("Unrealistische Verbesserungschancen", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1), maxLines: 2, softWrap: true, overflow: TextOverflow.ellipsis,),
                 ]
               ),
             ),

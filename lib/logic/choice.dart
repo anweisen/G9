@@ -120,6 +120,16 @@ class ChoiceBuilder {
       oral2?.id,
     );
   }
+
+  void copyOralSettings(Subject fromAbiSubject, Subject toAbiSubject) {
+    if (oral1 == fromAbiSubject) {
+      oral1 = toAbiSubject;
+    }
+    if (oral2 == fromAbiSubject) {
+      oral2 = toAbiSubject;
+    }
+  }
+
 }
 
 @HiveType(typeId: 1)
@@ -338,6 +348,32 @@ class Choice extends HiveObject {
   String toString() {
     return 'Choice{lk: $lkId, sg1: $sg1Id, ntg1: $ntg1Id, mintSg2: $mintSg2Id, pug13: $pug13, geoWr: $geoWrId, musikKunst: $musikKunstId, vk: $vkId, seminar: $seminarId, profil12: $profil12Id, profil13: $profil13Id, substituteMathe: $substituteMathe, substituteDeutsch: $substituteDeutsch, abi4: $abi4Id, abi5: $abi5Id}';
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Choice &&
+          runtimeType == other.runtimeType &&
+          lkId == other.lkId &&
+          sg1Id == other.sg1Id &&
+          ntg1Id == other.ntg1Id &&
+          mintSg2Id == other.mintSg2Id &&
+          pug13 == other.pug13 &&
+          geoWrId == other.geoWrId &&
+          musikKunstId == other.musikKunstId &&
+          vkId == other.vkId &&
+          seminarId == other.seminarId &&
+          profil12Id == other.profil12Id &&
+          profil13Id == other.profil13Id &&
+          substituteMathe == other.substituteMathe &&
+          substituteDeutsch == other.substituteDeutsch &&
+          abi4Id == other.abi4Id &&
+          abi5Id == other.abi5Id &&
+          oral1Id == other.oral1Id &&
+          oral2Id == other.oral2Id;
+
+  @override
+  int get hashCode => Object.hash(lkId, sg1Id, ntg1Id, mintSg2Id, pug13, geoWrId, musikKunstId, vkId, seminarId, profil12Id, profil13Id, substituteMathe, substituteDeutsch, abi4Id, abi5Id, oral1Id, oral2Id);
 }
 
 // https://www.gesetze-bayern.de/Content/Document/BayGSO-48

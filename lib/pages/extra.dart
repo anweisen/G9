@@ -33,8 +33,13 @@ class ExtraExamPage extends StatelessWidget {
     List<ExtraExamOptionResult> mandatoryOptions = options.where((option) => option.mandatory).toList();
     List<ExtraExamOptionResult> voluntaryImprovementOptions = options.where((option) => !option.mandatory && option.improvement).toList();
     List<ExtraExamOptionResult> otherOptions = options.where((option) => !option.mandatory && !option.improvement).toList();
-    int otherOptionsTotalDelta = otherOptions.fold(0, (sum, option) => sum + option.deltaPoints);
-    int bestPossibleTotal = options.first.newPointsTotal - options.first.deltaPoints + otherOptionsTotalDelta;
+    int bestOptionsTotalDelta = options.where((option) => option.requiredGrade == 15).fold(0, (sum, option) => sum + option.deltaPoints);
+    int bestPossibleTotal = options.first.newPointsTotal - options.first.deltaPoints + bestOptionsTotalDelta;
+
+    List<(Subject, int)> hasDirectResults = [];
+    for (Subject subject in settingsProvider.choice!.writtenAbiSubjects) {
+      hasDirectResults.addAll(dataProvider.getGrades(subject.id, semester: Semester.abi).where((entry) => entry.type == GradeType.result).map((entry) => (subject, entry.grade)));
+    }
 
     return SubpageSkeleton(
       title: const PageTitle(title: "Nachprüfungen"),
@@ -48,7 +53,7 @@ class ExtraExamPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Spätestens bis ${examDate?.formattedDate}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.shadowColor, height: 0)),
+              Text("Spätestens bis ${examDate?.formattedDate ?? "?"}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.shadowColor, height: 0)),
               const SizedBox(height: 4),
               Text("Mündliche Zusatzprüfungen sind nur in schriftlichen Abiturfächern möglich", style: theme.textTheme.displayMedium?.copyWith(height: 0)),
               const SizedBox(height: 4),
@@ -58,6 +63,43 @@ class ExtraExamPage extends StatelessWidget {
         ),
 
         const SizedBox(height: 28),
+
+        if (hasDirectResults.isNotEmpty) ...[
+          Row(
+            spacing: 12,
+            children: [
+              Icon(Icons.lock_outline_rounded, color: theme.shadowColor, size: 20,),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Bei direkt eingetragene Ergebnisse können keine Vorschläge für Nachprüfungen berechnet werden", style: theme.textTheme.displayMedium?.copyWith(height: 1, color: theme.shadowColor), softWrap: true,),
+                    const SizedBox(height: 4),
+                    for (var (subject, grade) in hasDirectResults)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: theme.dividerColor,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(subject.name, style: theme.textTheme.bodySmall?.copyWith(height: 1.25, color: theme.primaryColor,)),
+                            const SizedBox(width: 10,),
+                            Text(grade.toString(), style: theme.textTheme.bodySmall?.copyWith(height: 1.25, fontWeight: FontWeight.w600, color: theme.primaryColor,)),
+                            const SizedBox(width: 8,),
+                            Text("≈ ${grade ~/ 4}", style: theme.textTheme.bodySmall?.copyWith(height: 1.25, fontWeight: FontWeight.w600, color: theme.primaryColor,)),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+        ],
 
         Text("Verpflichtende Zusatzprüfung zum Bestehen", style: theme.textTheme.bodySmall),
         const SizedBox(height: 6),
@@ -114,7 +156,7 @@ class ExtraExamPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text("$bestPossibleTotal", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        Text("+$otherOptionsTotalDelta", style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: theme.indicatorColor)),
+                        Text("+$bestOptionsTotalDelta", style: theme.textTheme.displayMedium?.copyWith(fontSize: 13, color: theme.indicatorColor)),
                       ],
                     ),
 
@@ -122,7 +164,7 @@ class ExtraExamPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       spacing: 8,
                       children: [
-                        Text("Ø ${SemesterResult.pointsToAbiGrade(bestPossibleTotal - otherOptionsTotalDelta)}",
+                        Text("Ø ${SemesterResult.pointsToAbiGrade(bestPossibleTotal - bestOptionsTotalDelta)}",
                             style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, height: 0, decoration: TextDecoration.lineThrough, decorationColor: theme.shadowColor, decorationThickness: 2,)),
                         Center(child: Icon(Icons.keyboard_double_arrow_right_rounded, size: 18, color: theme.shadowColor,)),
                         Text("Ø ${SemesterResult.pointsToAbiGrade(bestPossibleTotal)}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, height: 0)),

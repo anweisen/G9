@@ -90,6 +90,13 @@ class SettingsDataProvider extends ChangeNotifier {
     await box.put(hiveSettingsKey, _data!);
   }
 
+  Future<void> clearAllData() async {
+    var box = await Hive.openLazyBox<SettingsData>(hiveBoxName);
+    await box.delete(hiveSettingsKey);
+    _loaded = false;
+    _data = null;
+  }
+
   void applySubjectSettings(Map<SubjectId, SubjectSettings>? settings) {
     if (settings == null) return;
 

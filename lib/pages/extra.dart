@@ -35,6 +35,7 @@ class ExtraExamPage extends StatelessWidget {
     List<ExtraExamOptionResult> otherOptions = options.where((option) => !option.mandatory && !option.improvement).toList();
     int bestOptionsTotalDelta = options.where((option) => option.requiredGrade == 15).fold(0, (sum, option) => sum + option.deltaPoints);
     int bestPossibleTotal = options.first.newPointsTotal - options.first.deltaPoints + bestOptionsTotalDelta;
+    bool hasPredictions = options.any((option) => option.prediction);
 
     List<(Subject, int)> hasDirectResults = [];
     for (Subject subject in settingsProvider.choice!.writtenAbiSubjects) {
@@ -64,20 +65,46 @@ class ExtraExamPage extends StatelessWidget {
 
         const SizedBox(height: 28),
 
+        if (!settingsProvider.choice!.hasSelectedExamTypes) ...[
+          Row(
+            spacing: 10,
+            children: [
+              Icon(Icons.warning_amber_rounded, color: theme.shadowColor, size: 20,),
+              Flexible(
+                child: Text("Fehlende Wahl von schriftlichen / mündlichen Abiturfächern führt zu unpassenden Vorschlägen", style: theme.textTheme.bodySmall, softWrap: true,),
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+        ],
+
+        if (hasPredictions) ...[
+          Row(
+            spacing: 10,
+            children: [
+              Icon(Icons.info_outline_rounded, color: theme.shadowColor, size: 18,),
+              Flexible(
+                child: Text("Abiturprüfungsergebnisse wurden noch nicht eingetragen. Die Vorschläge basieren auf Prognosen und spiegeln nicht die Realität wider.", style: theme.textTheme.bodySmall, softWrap: true,),
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+        ],
+
         if (hasDirectResults.isNotEmpty) ...[
           Row(
-            spacing: 12,
+            spacing: 10,
             children: [
-              Icon(Icons.lock_outline_rounded, color: theme.shadowColor, size: 20,),
+              Icon(Icons.lock_outline_rounded, color: theme.shadowColor, size: 18,),
               Flexible(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Bei direkt eingetragene Ergebnisse können keine Vorschläge für Nachprüfungen berechnet werden", style: theme.textTheme.displayMedium?.copyWith(height: 1, color: theme.shadowColor), softWrap: true,),
+                    Text("Bei direkt eingetragenen Ergebnissen können keine Vorschläge für Nachprüfungen berechnet werden", style: theme.textTheme.bodySmall, softWrap: true,),
                     const SizedBox(height: 4),
                     for (var (subject, grade) in hasDirectResults)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: theme.dividerColor,
                           borderRadius: BorderRadius.circular(5),
@@ -113,7 +140,7 @@ class ExtraExamPage extends StatelessWidget {
         if (voluntaryImprovementOptions.isNotEmpty || mandatoryOptions.isEmpty) ...[
           const SizedBox(height: 28),
 
-          Text("Freiwillige Zusatzprüfungen zum Verbessern", style: theme.textTheme.bodySmall),
+          Text("Freiwillige Zusatzprüfung zum Verbessern", style: theme.textTheme.bodySmall),
           const SizedBox(height: 6),
           for (ExtraExamOptionResult option in voluntaryImprovementOptions) ...[
             ..._buildOption(theme, option, settingsProvider.choice!, dataProvider),
@@ -188,7 +215,7 @@ class ExtraExamPage extends StatelessWidget {
         runSpacing: 6,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          MediumSubjectWidget(subject: option.subject),
+          MediumSubjectWidget(subject: option.subject, faded: option.prediction,),
           Container(
             decoration: BoxDecoration(
               color: option.mandatory ? theme.splashColor : theme.dividerColor,
@@ -231,6 +258,14 @@ class ExtraExamPage extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(entry.grade.toString(), style: theme.textTheme.displayMedium?.copyWith(height: 1.6, fontWeight: FontWeight.w600, color: (entry.type == GradeType.zusatz) ? theme.primaryColor : theme.shadowColor, fontSize: 14)),
+                        ),
+                        if (option.prediction && entry.type != GradeType.zusatz) Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: theme.dividerColor,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text("Prognose", style: theme.textTheme.displayMedium?.copyWith(height: 1.6, color: theme.shadowColor, fontSize: 14)),
                         )
                       ],
                     ),
@@ -308,6 +343,7 @@ class ExtraExamPage extends StatelessWidget {
 
 class ExtraExamOptionResult {
 
+  final bool prediction;
   final bool mandatory;
   final bool improvement;
   final Subject subject;
@@ -318,7 +354,7 @@ class ExtraExamOptionResult {
   final int deltaPoints;
   final int newPointsTotal;
 
-  const ExtraExamOptionResult(this.mandatory, this.improvement, this.subject, this.requiredGrade, this.grades, this.pointsSubjectBefore, this.pointsSubjectAfter, this.newPointsTotal) : deltaPoints = pointsSubjectAfter - pointsSubjectBefore;
+  const ExtraExamOptionResult(this.mandatory, this.improvement, this.subject, this.requiredGrade, this.grades, this.pointsSubjectBefore, this.pointsSubjectAfter, this.newPointsTotal, this.prediction) : deltaPoints = pointsSubjectAfter - pointsSubjectBefore;
 
   static List<ExtraExamOptionResult> getExtraExamSubjectOptions(Choice choice, GradesDataProvider dataProvider) {
     // TODO multiple exams may be required to meet hurdles
@@ -336,11 +372,13 @@ class ExtraExamOptionResult {
     // Nachprüfung nur in schriftlichen Abiturfächern möglich
     for (Subject writtenSubject in choice.writtenAbiSubjects) {
       GradesList grades = dataProvider.getGrades(writtenSubject.id, semester: Semester.abi);
+      bool prediction = false;
       if (grades.isEmpty) {
         // Noch keine schriftliche Prüfung eingetragen: nutze Prognose
         int? enteredPrediction = dataProvider.getAbiPrediction(writtenSubject.id);
         int calculatedPrediction = SemesterResult.calculatePrediction(writtenSubject, results);
         grades = [GradeEntry(enteredPrediction ?? calculatedPrediction, GradeType.schriftlich, DateTime.now())];
+        prediction = true;
       }
 
       // Zusatzprüfung nicht mehr möglich (bereits eingetragen / schriftliche Prüfung noch nicht eingetragen)
@@ -368,11 +406,11 @@ class ExtraExamOptionResult {
         double newAbiGrade = SemesterResult.pointsToAbiGradeDouble(newFlags.pointsTotal) ?? 4.0;
 
         if (!added && ((mandatory && newGraduationHurdles.isEmpty) || (!mandatory && newAbiGrade < previousAbiGrade) )) {
-          options.add(ExtraExamOptionResult(mandatory, true, writtenSubject, grade, gradesWithExam, currentPoints, resultPoints, newFlags.pointsTotal));
+          options.add(ExtraExamOptionResult(mandatory, true, writtenSubject, grade, gradesWithExam, currentPoints, resultPoints, newFlags.pointsTotal, prediction));
           added = true;
         } else if (grade == 15) {
           // Keine Verbesserung möglich, aber trotzdem Option zur freiwilligen Prüfung anbieten
-          options.add(ExtraExamOptionResult(false, false, writtenSubject, grade, gradesWithExam, currentPoints, resultPoints, newFlags.pointsTotal));
+          options.add(ExtraExamOptionResult(false, false, writtenSubject, grade, gradesWithExam, currentPoints, resultPoints, newFlags.pointsTotal, prediction));
           break;
         }
 

@@ -15,6 +15,8 @@ import 'change.dart';
 import 'extra.dart';
 import 'setup.dart';
 import 'oral.dart';
+import 'reset.dart';
+import 'vk.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -114,6 +116,7 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: 10),
           buildButtonLayout((context) => [
             buildButton(theme, "Prüfungsarten ändern", Icons.tune_rounded, SubpageTrigger.onTap(context, () => OralExamTypeSelectorPage(choice: choice!, initialSubjectSettings: settings.subjectSettings, key: GlobalKey())), small: true),
+            buildButton(theme, "Vertiefungskurs anpassen", Icons.merge_type_rounded, SubpageTrigger.onTap(context, () => const ChangeVkPage()), small: true),
           ]),
           const SizedBox(height: 10),
           buildButtonLayout((context) => [
@@ -135,6 +138,10 @@ class SettingsPage extends StatelessWidget {
             buildButton(theme, "Notenübersicht drucken", Icons.print_rounded, SubpageTrigger.onTap(context, () => const PdfPreviewPage()), small: true),
           ]),
           const SizedBox(height: 10),
+          buildButtonLayout((context) => [
+            buildButton(theme, "Daten zurücksetzen", Icons.delete_forever_rounded, iconSize: 20, SubpageTrigger.onTap(context, () => const ResetPage()), small: true, danger: true),
+          ]),
+          const SizedBox(height: 30),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             decoration: BoxDecoration(

@@ -98,6 +98,18 @@ class GradesDataProvider extends ChangeNotifier {
     save();
   }
 
+  void clearAllAbiPredictions() {
+    abiPredictions!.clear();
+    notifyListeners();
+    save();
+  }
+
+  void clearSemesterGrades(Semester semester) {
+    data![semester] = {};
+    notifyListeners();
+    save();
+  }
+
   void addGrade(SubjectId subjectId, GradeEntry grade, {Semester? semester}) {
     print("Adding grade $grade to $subjectId in $semester");
     assert (data != null);
@@ -176,6 +188,19 @@ class GradesDataProvider extends ChangeNotifier {
 
     var predictionsBox = await Hive.openBox<Map>(hivePredictionsBoxName);
     predictionsBox.put("abiPredictions", abiPredictions!);
+  }
+
+  Future<void> clearAllData() async {
+    var box = await Hive.openBox<Map>(hiveBoxName);
+    await box.clear();
+
+    var predictionsBox = await Hive.openBox<Map>(hivePredictionsBoxName);
+    await predictionsBox.clear();
+
+    _loaded = false;
+    data = null;
+    abiPredictions = null;
+    currentSemester = Semester.q12_1;
   }
 }
 

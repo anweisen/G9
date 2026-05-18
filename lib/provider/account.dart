@@ -130,6 +130,12 @@ class AccountDataProvider extends ChangeNotifier {
     box.put(hiveStashedChangesKey, _stashedChanges);
   }
 
+  void clearStash() async {
+    _stashedChanges = null;
+    var box = await Hive.openBox(hiveBoxName);
+    box.delete(hiveStashedChangesKey);
+  }
+
   void deleteAccount() async {
     if (!isLoggedIn) {
       return;

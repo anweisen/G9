@@ -836,36 +836,42 @@ class SetupFinishPage extends StatelessWidget {
     final Choice choice = choiceSupplier();
 
     return Center(
-        child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 860, maxHeight: 1200),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 25, horizontal: leftOffset),
-                child: Text("Fächerwahl abgeschlossen!",
-                    style: theme.textTheme.headlineMedium,
-                    textAlign: TextAlign.left),
-              ),
-              Expanded(
-                  child: Stack(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 860, maxHeight: 1200),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 25, horizontal: leftOffset),
+              child: Text("Fächerwahl abgeschlossen!", style: theme.textTheme.headlineMedium, textAlign: TextAlign.left),
+            ),
+            Expanded(
+              child: Stack(
                 children: [
-                  Padding(
+                  ListView(
                     padding: const EdgeInsets.fromLTRB(leftOffset + 5, 0, leftOffset + 5, 120),
-                    child: buildSubjectsGrid(choice, theme),
+                    children: [
+                      buildSubjectsGrid(choice, theme)
+                    ],
                   ),
-                  const SizedBox(height: 50, width: 50),
                   NextButton(
-                      text: "Bestätigen",
-                      icon: Icons.check_rounded,
-                      callback: () {
-                        Provider.of<SettingsDataProvider>(context, listen: false).choice = choice;
-                        Provider.of<AccountDataProvider>(context, listen: false).updateChoice(choice);
-                        context.push("/home");
-                      },
-                      leftOffset: leftOffset,
-                      animationProgress: 1)
+                    text: "Bestätigen",
+                    icon: Icons.check_rounded,
+                    callback: () {
+                      Provider.of<SettingsDataProvider>(context, listen: false).choice = choice;
+                      Provider.of<AccountDataProvider>(context, listen: false).updateChoice(choice);
+                      context.push("/home");
+                    },
+                    leftOffset: leftOffset,
+                    animationProgress: 1
+                  )
                 ],
-              )),
-            ])));
+              )
+            ),
+          ]
+        )
+      )
+    );
   }
 
   static List<Widget> buildSubjects(Choice choice, ThemeData theme) {
@@ -917,7 +923,7 @@ class SetupFinishPage extends StatelessWidget {
       ),
 
       // Kunst / Musik
-      Column(
+      if (choice.lk != choice.musikKunst) Column(
         crossAxisAlignment: crossAxisAlignment,
         children: [
           Text("Kunst oder Musik", style: theme.textTheme.bodySmall),
@@ -928,7 +934,7 @@ class SetupFinishPage extends StatelessWidget {
       ),
 
       // Geo / WR
-      Column(
+      if (choice.lk != choice.geoWr) Column(
         crossAxisAlignment: crossAxisAlignment,
         children: [
           Text("Geographie oder Wirtschaft & Recht in Q12", style: theme.textTheme.bodySmall),
@@ -939,7 +945,7 @@ class SetupFinishPage extends StatelessWidget {
       ),
 
       // Weiterführung in Q13 (PuG vs Geo / WR)
-      Column(
+      if (choice.lk != Subject.pug) Column(
         crossAxisAlignment: crossAxisAlignment,
         children: [
           Text("Weiterführung in Q13", style: theme.textTheme.bodySmall),
@@ -1034,6 +1040,11 @@ class SetupFinishPage extends StatelessWidget {
   static buildSubjectsGrid(Choice choice, ThemeData theme) {
     List<Widget> built = buildSubjects(choice, theme);
     const double horizontalSpacing = 40, verticalSpacing = 5;
+
+    // last two sections (Pflichtfächer, Abiturfächer) are long and should be next to each other
+    if (built.length % 2 == 1) {
+      built.insert(built.length - 2, const SizedBox.shrink());
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) => Table(

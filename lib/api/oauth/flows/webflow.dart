@@ -29,9 +29,11 @@ class WebAuthFlow extends AuthFlow {
     }
 
     Completer<String?> completer = Completer<String?>();
+    Timer? pollTimer;
+    StreamSubscription<html.MessageEvent>? sub;
 
-    // Listen to message send with `postMessage`.
-    html.window.onMessage.listen((event) {
+    // Listen to message sent with `postMessage`.
+    sub = html.window.onMessage.listen((event) {
       // The event contains the token which means the user is connected.
       print("Received message: ${event.data}");
 
@@ -39,7 +41,11 @@ class WebAuthFlow extends AuthFlow {
         final url = event.data as String;
         final uri = Uri.parse(url);
         final code = uri.queryParameters['code'];
-        completer.complete(code);
+        if (!completer.isCompleted) {
+          completer.complete(code);
+        }
+        pollTimer?.cancel();
+        sub?.cancel();
         _window?.close();
         _window = null;
       }
@@ -64,6 +70,22 @@ class WebAuthFlow extends AuthFlow {
     print("redirect Uri: ${redirectUrl()}");
 
     _window = html.window.open(authUri.toString(), "Google OAuth Login", features);
+
+    // Poll for window close: if user closes popup, complete with null.
+    pollTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
+      try {
+        if (_window == null || (_window?.closed ?? true)) {
+          if (!completer.isCompleted) {
+            completer.complete(null);
+          }
+          pollTimer?.cancel();
+          sub?.cancel();
+          _window = null;
+        }
+      } catch (_) {
+        // ignore cross-origin access errors
+      }
+    });
 
     return completer.future;
   }

@@ -43,7 +43,9 @@ class Api {
 
     await handleGoogleAuth(accountProvider);
 
-    accountProvider.syncStoredData(settingsProvider, gradesProvider);
+    if (accountProvider.isLoggedIn) {
+      accountProvider.syncStoredData(settingsProvider, gradesProvider);
+    }
   }
 
   static Future<void> handleGoogleAuth(AccountDataProvider provider) async {

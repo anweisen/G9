@@ -391,7 +391,7 @@ class _ChangeAbiChoiceResultWidgetState extends State<ChangeAbiChoiceResultWidge
                       SubpageTrigger(
                         createSubpage: () => ChangeChoicePage(choiceSupplier: () => widget.modifiedResult.choice),
                         child: Container(
-                          margin: const EdgeInsets.only(top: 16),
+                          margin: const EdgeInsets.only(top: 12),
                           width: constraints.maxWidth,
                           padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
                           decoration: BoxDecoration(

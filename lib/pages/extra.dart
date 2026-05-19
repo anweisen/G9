@@ -8,6 +8,7 @@ import '../logic/types.dart';
 import '../logic/grades.dart';
 import '../logic/hurdles.dart';
 import '../logic/results.dart';
+import '../logic/year.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/subjects.dart';
 import '../widgets/subpage.dart';
@@ -26,6 +27,8 @@ class ExtraExamPage extends StatelessWidget {
     final kmapiProvider = Provider.of<KmApiProvider>(context);
     final settingsProvider = Provider.of<SettingsDataProvider>(context);
 
+    int predictedGraduationYear = YearHelper.extractGraduationYear(dataProvider);
+    kmapiProvider.fetchDataIfNotPresent(predictedGraduationYear);
     ExtraExamDate? examDate = kmapiProvider.abiDates?.extraExamDate;
 
     List<ExtraExamOptionResult> options = ExtraExamOptionResult.getExtraExamSubjectOptions(settingsProvider.choice!, dataProvider);

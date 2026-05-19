@@ -31,7 +31,7 @@ class _ResetPageState extends State<ResetPage> {
     return SubpageSkeleton(
       title: const PageTitle(title: "Daten zurücksetzen"),
       children: [
-        Text("Hier kannst du alle lokal gespeicherten Daten zurücksetzen. Um deinen Account und mitsamt jeglichen Daten von unseren Servern zu löschen wähle \"Account löschen\". Diese Aktionen sind unwiderruflich. ", style: theme.textTheme.displayMedium),
+        Text("Hier kannst du alle lokal gespeicherten Daten zurücksetzen. Um deinen Account mitsamt jeglichen auf unseren Servern gespeicherten Daten zu löschen, wähle \"Account löschen\". Diese Aktionen sind unwiderruflich. ", style: theme.textTheme.displayMedium),
         const SizedBox(height: 24,),
 
         Text("Lösche zuerst deine Accountdaten", style: theme.textTheme.bodySmall),

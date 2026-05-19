@@ -212,7 +212,7 @@ class HomePage extends StatelessWidget {
               Text(GradeHelper.formatNumber(flags.pointsAbi / 20, decimals: 2), style: theme.textTheme.bodyMedium),
             ]),
             if (!flags.isEmpty && stats.bestSubjects.isNotEmpty) SubpageTrigger(
-              createSubpage: () => TopSubjectsSubpage(stats: stats, results: results),
+              createSubpage: () => TopSubjectsSubpage(choice: settings.choice!, results: results),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const SizedBox(height: 15),
                 Text("Top ${min(3, stats.bestSubjects.length)} Fächer", style: theme.textTheme.bodySmall),

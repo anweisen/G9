@@ -122,11 +122,23 @@ class ChoiceBuilder {
   }
 
   void copyOralSettings(Subject fromAbiSubject, Subject toAbiSubject) {
+    if (oral1 == null && oral2 == null) return; // nothing to copy
+
     if (oral1 == fromAbiSubject) {
       oral1 = toAbiSubject;
-    }
-    if (oral2 == fromAbiSubject) {
+    } else if (oral2 == fromAbiSubject) {
       oral2 = toAbiSubject;
+    }
+
+    List<ExamTypeChoice> choices = ExamTypeChoice.getChoicesForSubjectFromLk(toAbiSubject, lk!);
+    if (!choices.contains(ExamTypeChoice.oral) && (oral1 == toAbiSubject || oral2 == toAbiSubject)) {
+      // new subject should be oral to maintain constraints, but can't due to choice restriction -> reset
+      oral1 = null;
+      oral2 = null;
+    } else if (!choices.contains(ExamTypeChoice.written) && (oral1 != toAbiSubject && oral2 != toAbiSubject)) {
+      // new subject should be written to maintain constraints, but can't due to choice restriction -> reset
+      oral1 = null;
+      oral2 = null;
     }
   }
 
@@ -404,11 +416,15 @@ enum ExamTypeChoice {
 
   const ExamTypeChoice(this.name);
 
-  static List<ExamTypeChoice> getChoicesForSubject(Subject subject, Choice choiceBuilder) {
+  static List<ExamTypeChoice> getChoicesForSubject(Subject subject, Choice choice) {
+    return getChoicesForSubjectFromLk(subject, choice.lk);
+  }
+
+  static List<ExamTypeChoice> getChoicesForSubjectFromLk(Subject subject, Subject lk) {
     // (1) 8. 1.  [Kunst/Musik]: eA=schriftlich, gA=mündlich
     //          ( [Sport]: eA=schriftlich/mündlich, gA=/ )
     if (subject == Subject.kunst || subject == Subject.musik) {
-      if (choiceBuilder.lk == subject) {
+      if (lk == subject) {
         return [ExamTypeChoice.written];
       } else {
         return [ExamTypeChoice.oral];

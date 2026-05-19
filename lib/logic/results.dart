@@ -393,7 +393,7 @@ class SemesterResult {
     return incomplete;
   }
 
-  static Statistics calculateStatistics(Choice choice, Map<Subject, Map<Semester, SemesterResult>> result) {
+  static Statistics calculateStatistics(Choice choice, Map<Subject, Map<Semester, SemesterResult>> result, {bool includeEmpty = false, bool includeAbiSem = true, bool includeUnused = true}) {
     List<(Subject, double)> bestSubjects = [];
     int numberGrades = 0;
 
@@ -406,11 +406,18 @@ class SemesterResult {
         if (!result[subject]![semester]!.valid) continue;
 
         numberGrades += result[subject]![semester]!.basedOnGradeCount;
-        points += result[subject]![semester]!.effectiveGrade;
-        semesters++;
+
+        if (!includeAbiSem && semester.semesterCountEquivalent > 1) continue;
+        if (!includeUnused && !result[subject]![semester]!.used) continue;
+
+        points += result[subject]![semester]!.grade;
+        semesters += semester.semesterCountEquivalent;
       }
 
-      if (semesters == 0) continue;
+      if (semesters == 0) {
+        if (includeEmpty) bestSubjects.add((subject, -1));
+        continue;
+      }
       double avg = points.toDouble() / semesters.toDouble();
       bestSubjects.add((subject, avg));
     }

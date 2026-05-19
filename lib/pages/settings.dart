@@ -5,7 +5,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../api/api.dart';
 import '../logic/choice.dart';
+import '../logic/year.dart';
 import '../provider/account.dart';
+import '../provider/grades.dart';
 import '../provider/settings.dart';
 import '../pdf/pdf_widget.dart';
 import '../widgets/subpage.dart';
@@ -26,9 +28,11 @@ class SettingsPage extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
 
     final accountProvider = Provider.of<AccountDataProvider>(context);
-    final settings = Provider.of<SettingsDataProvider>(context);
+    final gradesProvider = Provider.of<GradesDataProvider>(context);
+    final settingsProvider = Provider.of<SettingsDataProvider>(context);
 
-    Choice? choice = settings.choice;
+    Choice? choice = settingsProvider.choice;
+    int predictedGraduationYear = YearHelper.extractGraduationYear(gradesProvider);
 
     return PageSkeleton(
         title: const PageTitle(title: "Präferenzen"),
@@ -108,6 +112,16 @@ class SettingsPage extends StatelessWidget {
 
           if (choice != null) SetupFinishPage.buildSubjectsGrid(choice, theme),
 
+          // subjects list contains section spacing
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Abiturjahrgang", style: theme.textTheme.bodySmall),
+              const SizedBox(height: 1),
+              Text(YearHelper.formatClassOfYear(predictedGraduationYear), style: theme.textTheme.bodyMedium),
+            ],
+          ),
+
           const SizedBox(height: 20),
           buildButtonLayout((context) => [
             buildButton(theme, "Wahl ändern", Icons.settings_backup_restore_rounded, () => context.push("/setup"), small: true),
@@ -115,8 +129,8 @@ class SettingsPage extends StatelessWidget {
           ]),
           const SizedBox(height: 10),
           buildButtonLayout((context) => [
-            buildButton(theme, "Prüfungsarten ändern", Icons.tune_rounded, SubpageTrigger.onTap(context, () => OralExamTypeSelectorPage(choice: choice!, initialSubjectSettings: settings.subjectSettings, key: GlobalKey())), small: true),
-            buildButton(theme, "Vertiefungskurs anpassen", Icons.merge_type_rounded, SubpageTrigger.onTap(context, () => const ChangeVkPage()), small: true),
+            buildButton(theme, "Prüfungsarten festlegen", Icons.tune_rounded, SubpageTrigger.onTap(context, () => OralExamTypeSelectorPage(choice: choice!, initialSubjectSettings: settingsProvider.subjectSettings, key: GlobalKey())), small: true),
+            buildButton(theme, "Vertiefungskurs tauschen", Icons.merge_type_rounded, SubpageTrigger.onTap(context, () => const ChangeVkPage()), small: true),
           ]),
           const SizedBox(height: 10),
           buildButtonLayout((context) => [

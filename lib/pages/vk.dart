@@ -93,7 +93,7 @@ class ChangeVkPage extends StatelessWidget {
     ChangeAbiChoiceResult originalResult = ChangeAbiChoiceResult.createChoiceResult(choice, grades);
 
     return SubpageSkeleton(
-      title: const PageTitle(title: "Vertiefungskurs ändern"),
+      title: const PageTitle(title: "Vertiefungskurs tauschen"),
       children: [
 
         Text("Aktuelle Vertiefungskurswahl", style: theme.textTheme.bodySmall),

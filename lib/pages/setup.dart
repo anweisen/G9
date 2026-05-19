@@ -875,7 +875,7 @@ class SetupFinishPage extends StatelessWidget {
   }
 
   static List<Widget> buildSubjects(Choice choice, ThemeData theme) {
-    const double labelSpacing = 5, sectionSpacing = 18, subjectSpacing = 3;
+    const double labelSpacing = 4, sectionSpacing = 18, subjectSpacing = 3;
     const CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.start;
 
     return [
@@ -1032,6 +1032,7 @@ class SetupFinishPage extends StatelessWidget {
             ),
             const SizedBox(height: subjectSpacing),
           ]),
+          const SizedBox(height: sectionSpacing),
         ],
       ),
     ];
@@ -1039,7 +1040,7 @@ class SetupFinishPage extends StatelessWidget {
 
   static buildSubjectsGrid(Choice choice, ThemeData theme) {
     List<Widget> built = buildSubjects(choice, theme);
-    const double horizontalSpacing = 40, verticalSpacing = 5;
+    const double horizontalSpacing = 40, verticalSpacing = 0;
 
     // last two sections (Pflichtfächer, Abiturfächer) are long and should be next to each other
     if (built.length % 2 == 1) {

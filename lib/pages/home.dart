@@ -125,6 +125,12 @@ class HomePage extends StatelessWidget {
 
       const SizedBox(height: 20),
 
+      if (flags.isEmpty) ...[
+        const SizedBox(height: 10),
+        ..._buildEmptyHomePage(context, theme, grades, account),
+        const SizedBox(height: 30),
+      ],
+
       if (!flags.isEmpty && admissionHurdleCheckResults.isNotEmpty)
         ..._buildHurdleInfo(theme, "Zulassungshürde", admissionHurdleCheckResults.first, [...admissionHurdleCheckResults, ...graduationHurdleCheckResults])
       else if (!flags.isEmpty && graduationHurdleCheckResults.isNotEmpty)
@@ -140,7 +146,7 @@ class HomePage extends StatelessWidget {
       ],
 
       // Abitur Vorhersage
-      Container(
+      if (!flags.isEmpty) Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
@@ -181,7 +187,7 @@ class HomePage extends StatelessWidget {
                   Text("Ø", style: theme.textTheme.displayMedium),
                   const SizedBox(width: 2),
                   Text(GradeHelper.formatNumber(pastSemestersAvgUsed[entry.key] ?? 0, decimals: 2), style: theme.textTheme.displayMedium),
-                  const SizedBox(width: 2),
+                  const SizedBox(width: 4),
                   Text("(≙ ${GradeHelper.formatNumber(SemesterResult.convertAverage(pastSemestersAvgUsed[entry.key] ?? 0))})", style: theme.textTheme.bodySmall),
                   const SizedBox(width: 8),
                   Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400)),
@@ -262,9 +268,10 @@ class HomePage extends StatelessWidget {
         ),
       ],
 
-      const SizedBox(height: 20),
-      HomeSemesterSwitchButtons(
-        btn1: grades.currentSemester != Semester.abi ? GestureDetector(
+      if (!flags.isEmpty) ...[
+        const SizedBox(height: 20),
+        HomeSemesterSwitchButtons(
+          btn1: grades.currentSemester != Semester.abi ? GestureDetector(
             onTap: () {
               final result = grades.currentSemester.nextSemester();
               grades.changeCurrentSemester(result);
@@ -322,9 +329,56 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ) : null
-      )
+        )
+      ]
 
     ]);
+  }
+
+  List<Widget> _buildEmptyHomePage(BuildContext context, ThemeData theme, GradesDataProvider grades, AccountDataProvider account) {
+    return [
+      Text("Noch keine Noten", style: theme.textTheme.bodyMedium),
+      const SizedBox(height: 6),
+      Text("Füge deine Noten hinzu, um deine Abiturvorhersage zu berechnen und Empfehlungen zu erhalten. Melde dich an um deine Daten über mehrere Geräte zu synchronisieren.", style: theme.textTheme.bodySmall,),
+      const SizedBox(height: 12),
+      Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        children: [
+          ActionButton(
+            text: "Note hinzufügen",
+            icon: Icons.add_rounded,
+            textColor: theme.primaryColor,
+            backgroundColor: null,
+            borderColor: theme.dividerColor,
+            onTap: null,
+            createSubpage: () => GradePage(semester: grades.currentSemester, key: GlobalKey(),),
+            callback: (result) {
+              if (result is GradeEditResult) {
+                grades.addGrade(result.subject.id, result.entry, semester: result.semester);
+                account.updateSubjectGradesFromResult(result, grades);
+              }
+            }
+          ),
+          ActionButton(
+            text: "Zur Fächerübersicht",
+            icon: Icons.library_books_outlined,
+            textColor: theme.primaryColor,
+            backgroundColor: null,
+            borderColor: theme.dividerColor,
+            onTap: () => context.go("/subjects"),
+          ),
+          if (!account.isLoggedIn) ActionButton(
+            text: "Login",
+            icon: Icons.login_rounded,
+            textColor: theme.primaryColor,
+            backgroundColor: null,
+            borderColor: theme.dividerColor,
+            onTap: () => Api.doGoogleLoginAndSync(context),
+          ),
+        ],
+      ),
+    ];
   }
 
   List<Widget> _buildHurdleInfo(ThemeData theme, String title, HurdleCheckResult show, List<HurdleCheckResult> checkResults) {

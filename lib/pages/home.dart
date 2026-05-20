@@ -30,6 +30,7 @@ import 'hurdles.dart';
 import 'switcher.dart';
 import 'oral.dart';
 import 'top.dart';
+import 'vk.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -243,7 +244,8 @@ class HomePage extends StatelessWidget {
         )
       ),
 
-      ..._buildImproveAbiChoice(theme, betterChoice, settings.choice!, flags),
+      if (!flags.isEmpty && grades.currentSemester.isBefore(Semester.q13_1) && (settings.choice?.vk != null || settings.choice?.profil12?.category == SubjectCategory.vk)) ..._buildImproveVkChoice(theme, betterVkChoice, settings.choice!, flags),
+      if (!flags.isEmpty) ..._buildImproveAbiChoice(theme, betterChoice, settings.choice!, flags),
 
       if (graduationHurdleCheckResults.isEmpty && admissionHurdleCheckResults.isEmpty)
         ..._buildHurdlePassingInfoAndBayEfg(theme, completed, settings.choice!, results, flags, grades),
@@ -420,6 +422,52 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildImproveVkChoice(ThemeData theme, ChangeAbiChoiceResult? betterChoice, Choice currentChoice, ResultsFlags currentFlags) {
+    final pointsDifference = betterChoice != null ? betterChoice.flags.pointsTotal - currentFlags.pointsTotal : 0;
+    return [
+      const SizedBox(height: 20),
+      SubpageTrigger(
+        createSubpage: () => const ChangeVkPage(),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: theme.dividerColor,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(
+                  children: [
+                    Icon(Icons.swap_horiz_rounded, size: 17, color: theme.textTheme.bodySmall?.color,),
+                    const SizedBox(width: 3,),
+                    Text("Vertiefungskurs tauschen", style: theme.textTheme.bodySmall),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                if (betterChoice == null)Text("Bereits bestmögliche Wahl", style: theme.textTheme.bodyMedium?.copyWith(height: 1.1))
+                else ...ChangeVkPage.buildVkChangeSummary(betterChoice),
+              ]),
+              if (betterChoice == null)
+                Icon(Icons.info_outline_rounded, size: 20, color: theme.primaryColor,)
+              else Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("${betterChoice.flags.pointsTotal}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 15)),
+                  Text("${pointsDifference >= 0 ? "+" : ""}$pointsDifference",
+                      style: theme.textTheme.displayMedium?.copyWith(fontSize: 14, color: pointsDifference > 0 ? theme.indicatorColor : pointsDifference < 0 ? theme.disabledColor : theme.primaryColor)),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     ];

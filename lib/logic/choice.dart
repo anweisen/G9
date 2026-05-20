@@ -121,6 +121,17 @@ class ChoiceBuilder {
     );
   }
 
+  void switchAbiSubject(Subject fromAbiSubject, Subject toAbiSubject) {
+    // only allows to switch either abi4 or 5 to something else
+    if (fromAbiSubject == abi4) {
+      abi4 = toAbiSubject;
+      copyOralSettings(fromAbiSubject, toAbiSubject);
+    } else if (fromAbiSubject == abi5) {
+      abi5 = toAbiSubject;
+      copyOralSettings(fromAbiSubject, toAbiSubject);
+    }
+  }
+
   void copyOralSettings(Subject fromAbiSubject, Subject toAbiSubject) {
     if (oral1 == null && oral2 == null) return; // nothing to copy
 

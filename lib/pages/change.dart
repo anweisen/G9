@@ -149,9 +149,7 @@ class ChangeAbiChoiceResult {
 
   static ChangeAbiChoiceResult? getBetterChoiceResult(Choice currentChoice, ResultsFlags currentResultFlags, GradesDataProvider gradesProvider) {
     List<ChangeAbiChoiceResult> results = getSortedChoiceResultsForAbi(currentChoice, gradesProvider);
-    if (results.isEmpty) return null;
-    if (results.first.flags.pointsTotal > currentResultFlags.pointsTotal) return results.first;
-    return null;
+    return findBetterChoiceResult(results, currentResultFlags);
   }
 
   static List<ChangeAbiChoiceResult> getSortedChoiceResultsForAbi(Choice currentChoice, GradesDataProvider gradesProvider, {applyAbiPredictions = true}) {
@@ -169,6 +167,12 @@ class ChangeAbiChoiceResult {
       if (a.flags.underscored != b.flags.underscored) return a.flags.underscored.compareTo(b.flags.underscored);
       return b.flags.pointsTotal.compareTo(a.flags.pointsTotal);
     });
+  }
+
+  static ChangeAbiChoiceResult? findBetterChoiceResult(List<ChangeAbiChoiceResult> results, ResultsFlags currentResultFlags) {
+    if (results.isEmpty) return null;
+    if (results.first.flags.pointsTotal > currentResultFlags.pointsTotal) return results.first;
+    return null;
   }
 
   static List<ChangeAbiChoiceResult> getChoiceResultsForSubstitution(Choice choice, GradesDataProvider gradesProvider, {applyAbiPredictions = true}) {

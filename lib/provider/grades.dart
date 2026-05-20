@@ -249,6 +249,10 @@ enum Semester {
     return Semester.normal[order - 1];
   }
 
+  bool isBefore(Semester other) {
+    return order < other.order;
+  }
+
   static List<Semester> qPhaseEquivalents(SubjectCategory subjectCategory) {
     if (subjectCategory == SubjectCategory.seminar) {
       return seminarPhase;

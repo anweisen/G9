@@ -89,8 +89,6 @@ class ChangeVkPage extends StatelessWidget {
           || choice.mintSg2.category == SubjectCategory.sg && !choice.abiSubjects.contains(choice.sg1) && choice.lk != choice.sg1 && !choice.substituteDeutsch);
     bool canSwitchAsProfileAndReplacementWithAbi = canSwitchVkReplacementWithAbi && hasVkAsProfile && choice.vk == null;
     bool canSwitchAsProfileAndReplacement = canSwitchVkReplacement && hasVkAsProfile && choice.vk == null;
-    print("canSwitchAsProfileAndReplacementWithAbi $canSwitchAsProfileAndReplacementWithAbi");
-    print("canUseVkIfSwitchAbi $canUseVkIfSwitchAbi");
 
     List<ChangeAbiChoiceResult> results = [];
 

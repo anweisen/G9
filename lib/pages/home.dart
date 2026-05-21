@@ -158,7 +158,7 @@ class HomePage extends StatelessWidget {
             Text(completed ? "Abitur Ergebnis" : "Abitur Vorhersage", style: theme.textTheme.bodySmall),
             _buildTextLine(Text("Note", style: theme.textTheme.bodyMedium), [
               if (graduationHurdleCheckResults.isNotEmpty || admissionHurdleCheckResults.isNotEmpty) ...[
-                Icon(Icons.warning_amber_rounded, size: 14, color: theme.disabledColor),
+                Icon(Icons.warning_amber_rounded, size: 16, color: theme.disabledColor),
                 const SizedBox(width: 10),
               ],
               Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400)),

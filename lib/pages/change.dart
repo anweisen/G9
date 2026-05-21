@@ -253,11 +253,16 @@ class _ChangeAbiChoiceResultWidgetState extends State<ChangeAbiChoiceResultWidge
 
   Map<Subject, List<SemesterResult>> _filterModifiedSemesterResults(ChangeAbiChoiceResult from, ChangeAbiChoiceResult to) {
     Map<Subject, List<SemesterResult>> filteredResults = {};
-    for (MapEntry<Subject, Map<Semester, SemesterResult>> subjectSemesterResultsEntry in from.results.entries) {
-      for (MapEntry<Semester, SemesterResult> semesterResultEntry in subjectSemesterResultsEntry.value.entries) {
-        SemesterResult? toResult = to.results[subjectSemesterResultsEntry.key]?[semesterResultEntry.key];
-        if (toResult == null || semesterResultEntry.value.used && !toResult.used || semesterResultEntry.value.grade != toResult.grade) {
-          filteredResults.putIfAbsent(subjectSemesterResultsEntry.key, () => []).add(semesterResultEntry.value);
+
+    Set<Subject> subjects = from.results.keys.toSet().union(to.results.keys.toSet());
+    for (Subject subject in subjects) {
+      for (Semester semester in Semester.values) {
+        SemesterResult? fromResult = from.results[subject]?[semester];
+        SemesterResult? toResult = to.results[subject]?[semester];
+        if (fromResult == null) continue;
+        // no need to compare grades, since we only show diff based on choice which has no impact on grades themselves
+        if (fromResult.used && !(toResult?.used ?? false)) {
+          filteredResults.putIfAbsent(subject, () => []).add(fromResult);
         }
       }
     }
@@ -559,6 +564,7 @@ class ChangeChoicePage extends StatelessWidget {
       ],
       children: [
         SetupFinishPage.buildSubjectsGrid(choice, theme),
+        const SizedBox(height: 80,),
       ],
     );
   }

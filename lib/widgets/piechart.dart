@@ -62,8 +62,10 @@ class _GradesPieChartState extends State<GradesPieChart> {
 
   Map<int, int> _countResults() {
     Map<int, int> resultCounts = {};
-    for (var entry in widget.results) {
-      resultCounts[entry.effectiveGrade] = (resultCounts[entry.effectiveGrade] ?? 0) + entry.semester.semesterCountEquivalent;
+    for (SemesterResult entry in widget.results) {
+      for (int effectiveGrade in entry.effectiveGrades) {
+        resultCounts[effectiveGrade] = (resultCounts[effectiveGrade] ?? 0) + 1;
+      }
     }
     return resultCounts;
   }

@@ -295,7 +295,7 @@ class Choice extends HiveObject {
   List<Semester> getSemestersForSubject(Subject subject) {
     int numSemesters = numberOfSemestersFor(subject);
     List<Semester> semesters = [];
-    for (int i = 0; i < numSemesters; i++) {
+    for (int i = subject == profil13 && subject != profil12 ? 2 : 0; i < numSemesters; i++) {
       semesters.add(Semester.values[i]);
     }
     if (subject == seminar || subject.category == SubjectCategory.seminar) {

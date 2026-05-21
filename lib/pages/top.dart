@@ -31,6 +31,18 @@ class _TopSubjectsSubpageState extends State<TopSubjectsSubpage> {
 
     final stats = SemesterResult.calculateStatistics(widget.choice, widget.results, includeEmpty: true, includeAbiSem: _includeAbiSem, includeUnused: _includeUnused);
 
+    int unusedCount = 0, abiSemCount = 0;
+    for (Subject subject in widget.results.keys) {
+      for (Semester semester in Semester.values) {
+        if ((widget.results[subject]?[semester]?.valid ?? false) && (widget.results[subject]?[semester]?.used == false)) {
+          unusedCount += semester.semesterCountEquivalent;
+        }
+        if ((widget.results[subject]?[semester]?.valid ?? false) && semester.semesterCountEquivalent > 1) {
+          abiSemCount += semester.semesterCountEquivalent;
+        }
+      }
+    }
+
     return SubpageSkeleton(
         title: const PageTitle(title: "Beste Fächer"),
         children: [
@@ -50,10 +62,11 @@ class _TopSubjectsSubpageState extends State<TopSubjectsSubpage> {
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      spacing: 8,
+                      spacing: 6,
                       children: [
                         Icon(_includeUnused ? Icons.check_rounded : Icons.close_rounded, size: 18, color: _includeUnused ? theme.primaryColor : theme.shadowColor, weight: 700),
-                        Flexible(child: Text("Nicht eingebrachte Halbjahre", style: theme.textTheme.displayMedium?.copyWith(color: _includeUnused ? theme.primaryColor : theme.shadowColor, height: 1.6)))
+                        Flexible(child: Text("Nicht eingebrachte Halbjahre", style: theme.textTheme.displayMedium?.copyWith(color: _includeUnused ? theme.primaryColor : theme.shadowColor, height: 1.6))),
+                        Text("($unusedCount)", style: theme.textTheme.displayMedium?.copyWith(fontSize: 12, color: _includeUnused ? theme.primaryColor : theme.shadowColor, height: 1.6, fontWeight: FontWeight.w600)),
                       ],
                     )
                 ),
@@ -71,7 +84,8 @@ class _TopSubjectsSubpageState extends State<TopSubjectsSubpage> {
                       spacing: 8,
                       children: [
                         Icon(_includeAbiSem ? Icons.check_rounded : Icons.close_rounded, size: 18, color: _includeAbiSem ? theme.primaryColor : theme.shadowColor, weight: 700),
-                        Flexible(child: Text("Abiturprüfungen / Seminararbeit", style: theme.textTheme.displayMedium?.copyWith(color: _includeAbiSem ? theme.primaryColor : theme.shadowColor, height: 1.6)))
+                        Flexible(child: Text("Abiturprüfungen / Seminararbeit", style: theme.textTheme.displayMedium?.copyWith(color: _includeAbiSem ? theme.primaryColor : theme.shadowColor, height: 1.6))),
+                        Text("($abiSemCount)", style: theme.textTheme.displayMedium?.copyWith(fontSize: 12, color: _includeAbiSem ? theme.primaryColor : theme.shadowColor, height: 1.6, fontWeight: FontWeight.w600)),
                       ],
                     )
                 ),
@@ -83,11 +97,12 @@ class _TopSubjectsSubpageState extends State<TopSubjectsSubpage> {
           for (int i = 0, placement = 1; i < stats.bestSubjects.length; i++, placement = (stats.bestSubjects[i - 1].$2 == stats.bestSubjects[min(i, stats.bestSubjects.length - 1)].$2 ? placement : placement + 1)) ...[
             const SizedBox(height: 4,),
             _buildTextLine(_buildSubject(theme.textTheme, stats.bestSubjects[i].$1, placement), [
-              if (width > 480) Row(children: [
+              if (width > 500) Row(children: [
                 for (Semester semester in Semester.values)
                   if ((widget.results[stats.bestSubjects[i].$1]?[semester]?.valid ?? false)
                       && (_includeAbiSem || semester.semesterCountEquivalent == 1)
-                      && (_includeUnused || (widget.results[stats.bestSubjects[i].$1]?[semester]?.used ?? false))) Container(
+                      && (_includeUnused || (widget.results[stats.bestSubjects[i].$1]?[semester]?.used ?? false)))
+                    for (int effectiveGrade in widget.results[stats.bestSubjects[i].$1]![semester]!.effectiveGrades) Container(
                       margin: EdgeInsets.symmetric(horizontal: semester.semesterCountEquivalent > 1 ? 1 : 2),
                       width: 21 + (semester.semesterCountEquivalent > 1 ? 4 : 2),
                       height: 19 + (semester.semesterCountEquivalent > 1 ? 4 : 2),
@@ -96,7 +111,7 @@ class _TopSubjectsSubpageState extends State<TopSubjectsSubpage> {
                         border: semester.semesterCountEquivalent > 1 ? Border.all(color: theme.primaryColor, width: 2) : null,
                         borderRadius: BorderRadius.circular(semester.semesterCountEquivalent > 1 ? 6 : 5)
                       ) : null,
-                      child: Center(child: Text(widget.results[stats.bestSubjects[i].$1]?[semester]?.effectiveGrade.toString() ?? "-",
+                      child: Center(child: Text(effectiveGrade.toString(),
                         style: theme.textTheme.bodyMedium?.copyWith(
                             fontSize: 13, fontWeight: semester.semesterCountEquivalent > 1 ? FontWeight.w700 : FontWeight.w600,
                             color: semester.semesterCountEquivalent > 1 ? theme.primaryColor : !(widget.results[stats.bestSubjects[i].$1]?[semester]?.used ?? false) ? theme.primaryColor : theme.scaffoldBackgroundColor),
@@ -105,9 +120,17 @@ class _TopSubjectsSubpageState extends State<TopSubjectsSubpage> {
                   ),
               ]),
               const SizedBox(width: 8),
-              Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400)),
-              const SizedBox(width: 4),
-              Text(GradeHelper.formatNumber(stats.bestSubjects[i].$2, decimals: 2), style: theme.textTheme.bodyMedium),
+              SizedBox(
+                width: 70,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text("Ø", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400)),
+                    const SizedBox(width: 6),
+                    Text(GradeHelper.formatNumber(stats.bestSubjects[i].$2, decimals: 2), style: theme.textTheme.bodyMedium,),
+                  ],
+                ),
+              )
             ]),
           ]
         ]

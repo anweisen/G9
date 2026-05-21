@@ -348,41 +348,41 @@ class _SelectOralDatePageState extends State<SelectOralDatePage> {
     final kmapi = Provider.of<KmApiProvider>(context);
 
     return SubpageSkeleton(
-        title: Row(
-          children: [
-            SubjectPageTitle(subject: widget.subject),
-          ],
-        ),
-        actions: [
-          SaveButtonContainer(btn1: SaveButton(
-            onTap: () {
-              SubpageController.of(context).closeSubpage(_selectedDate);
-            },
-            shown: _selectedDate != null,
-            index: 0,
-            icon: Icons.check_rounded,
-            text: "Speichern",
-          ), btn2: null, shown: true)
-        ],
+      title: Row(
         children: [
-          Text("Kolloquiumstermin eintragen", softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: 20),
+          SubjectPageTitle(subject: widget.subject),
+        ],
+      ),
+      actions: [
+        SaveButtonContainer(btn1: SaveButton(
+          onTap: () {
+            SubpageController.of(context).closeSubpage(_selectedDate);
+          },
+          shown: _selectedDate != null,
+          index: 0,
+          icon: Icons.check_rounded,
+          text: "Speichern",
+        ), btn2: null, shown: true)
+      ],
+      children: [
+        Text("Kolloquiumstermin eintragen", softWrap: false, overflow: TextOverflow.ellipsis, maxLines: 1, style: theme.textTheme.bodyMedium),
+        const SizedBox(height: 20),
 
-          if (!kmapi.hasError && kmapi.abiDates != null) for (OralAbiExamWeek oralDate in kmapi.abiDates!.oralExamWeeks) ...[
-            Text("${oralDate.formattedWeekName} (${DateHelper.formatWeek(oralDate.startDate, oralDate.endDate)})", style: theme.textTheme.displayMedium),
-            const SizedBox(height: 8),
-            WeekDatePicker(
-              selected: _selectedDate,
-              start: oralDate.startDate,
-              end: oralDate.endDate,
-              onDateSelected: (DateTime date) => setState(() => _selectedDate = date),
-            ),
-            const SizedBox(height: 20),
-          ] else DatePicker(
-            date: _selectedDate,
-            onDateChanged: (DateTime date) => setState(() => _selectedDate = date),
+        if (!kmapi.hasError && kmapi.abiDates != null) for (OralAbiExamWeek oralDate in kmapi.abiDates!.oralExamWeeks) ...[
+          Text("${oralDate.formattedWeekName} (${DateHelper.formatWeek(oralDate.startDate, oralDate.endDate)})", style: theme.textTheme.displayMedium),
+          const SizedBox(height: 8),
+          WeekDatePicker(
+            selected: _selectedDate,
+            start: oralDate.startDate,
+            end: oralDate.endDate,
+            onDateSelected: (DateTime date) => setState(() => _selectedDate = date),
           ),
-        ]
+          const SizedBox(height: 20),
+        ] else DatePicker(
+          date: _selectedDate,
+          onDateChanged: (DateTime date) => setState(() => _selectedDate = date),
+        ),
+      ]
     );
   }
 }

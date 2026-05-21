@@ -476,7 +476,7 @@ class G9TitleBar extends StatelessWidget {
 }
 
 class ActionButton extends StatelessWidget {
-  const ActionButton({super.key, required this.text, required this.icon, required this.textColor, required this.backgroundColor, required this.borderColor, required this.onTap, this.createSubpage, this.suffix});
+  const ActionButton({super.key, required this.text, required this.icon, required this.textColor, required this.backgroundColor, required this.borderColor, required this.onTap, this.createSubpage, this.suffix, this.callback});
 
   final Widget? suffix;
   final String? text;
@@ -486,12 +486,13 @@ class ActionButton extends StatelessWidget {
   final Color borderColor;
   final void Function()? onTap;
   final Widget Function()? createSubpage;
+  final void Function(dynamic result)? callback;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return GestureDetector(
-      onTap: createSubpage != null ? () => SubpageController.of(context).openSubpage(createSubpage!()) : onTap,
+      onTap: createSubpage != null ? () => SubpageController.of(context).openSubpage(createSubpage!(), callback: callback) : onTap,
       child: Container(
         padding: text != null ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6) : const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
@@ -502,7 +503,7 @@ class ActionButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 22, color: textColor,),
+            Icon(icon, size: 20, color: textColor,),
             if (text != null) ...[
               const SizedBox(width: 8,),
               Flexible(child: Text(text!, style: theme.textTheme.bodyMedium?.copyWith(color: textColor, fontSize: 15, height: 0), softWrap: true, maxLines: 1, overflow: TextOverflow.ellipsis,)),

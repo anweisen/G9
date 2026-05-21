@@ -516,8 +516,20 @@ class SemesterResult {
   bool get flagged => grade == -1; // exempt
   bool get prediction => basedOnGradeCount == 0;
   bool get used => (useForced || useExtra || useJoker || useVk) && !replacedByJoker;
-  int get effectiveGrade => (grade / semester.semesterCountEquivalent).round();
+  int get effectiveGrade => (grade / semester.semesterCountEquivalent).floor();
   bool get valid => !flagged && !prediction;
+
+  List<int> get effectiveGrades {
+    if (flagged) return [];
+    List<int> grades = [];
+    int remainingGrade = grade;
+    for (int i = 0; i < semester.semesterCountEquivalent; i++) {
+      int gradeForSemester = (remainingGrade / (semester.semesterCountEquivalent - i)).round();
+      grades.add(gradeForSemester);
+      remainingGrade -= gradeForSemester;
+    }
+    return grades;
+  }
 
   SemesterResult(this.grade, this.basedOnGradeCount, this.semester);
   SemesterResult.flagged(int basedOnGradeCount, Semester semester) : this(-1, basedOnGradeCount, semester);

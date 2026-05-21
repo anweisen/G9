@@ -27,6 +27,7 @@ class ApiRoutes {
   static const String deleteAccount = "/account";
   static const String accountExport = "/account/export";
   static const String accountSessions = "/account/sessions";
+  static const String accountSubjectsSettings = "/account/subjects";
   static String accountSession(String sessionId) => "/account/session/$sessionId";
   static String accountSubjectSemesterGrades(SubjectId subjectId, Semester semester) => "/account/grades/$subjectId/${semester.name}";
   static String accountSubjectSettings(SubjectId subjectId) => "/account/subject/$subjectId";
@@ -311,6 +312,13 @@ class AuthenticatedApi {
     final response = await post(ApiRoutes.accountSubjectSettings(subjectId), body: {
       "settings": settings,
     });
+    print("Response from posting subject settings: ${response.statusCode} - ${response.body}");
+
+    return response.statusCode == 200;
+  }
+
+  Future<bool> postSubjectsSettings(Map<SubjectId, SubjectSettings> settings) async {
+    final response = await post(ApiRoutes.accountSubjectsSettings, body: settings.map((key, value) => MapEntry(key.toString(), value)));
     print("Response from posting subject settings: ${response.statusCode} - ${response.body}");
 
     return response.statusCode == 200;

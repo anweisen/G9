@@ -401,27 +401,28 @@ class SubjectSelectionPage extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
 
     final choice = Provider.of<SettingsDataProvider>(context).choice!;
-    final subjects = choice.subjectsToDisplayForSemester(semester ?? Semester.q12_1);
+    final subjects = semester == null ? choice.subjects : choice.subjectsToDisplayForSemester(semester!);
 
     return SubpageSkeleton(
-        title: Text("Fach wählen", style: theme.textTheme.headlineMedium),
-        children: [
-          for (int index = 0; index < subjects.length; index++)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 7),
-              child: GestureDetector(
-                onTap: () => SubpageController.of(context).closeSubpage(subjects[index]),
-                child: GradeOptionPlaceholder(
-                    text: subjects[index].name,
-                    icon: Container(
-                      height: 22,
-                      width: 22,
-                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: subjects[index].color),)
-                ),
+      title: Text("Fach wählen", style: theme.textTheme.headlineMedium),
+      children: [
+        for (int index = 0; index < subjects.length; index++)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 7),
+            child: GestureDetector(
+              onTap: () => SubpageController.of(context).closeSubpage(subjects[index]),
+              child: GradeOptionPlaceholder(
+                text: subjects[index].name,
+                icon: Container(
+                  height: 22,
+                  width: 22,
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: subjects[index].color),
+                )
               ),
-            )
-
-        ]);
+            ),
+          )
+      ]
+    );
   }
 }
 

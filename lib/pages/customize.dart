@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../logic/types.dart';
 import '../provider/settings.dart';
-import '../widgets/skeleton.dart';
 import '../widgets/colorpicker.dart';
+import '../widgets/general.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/subpage.dart';
 import 'grade.dart';
 
@@ -88,28 +89,19 @@ class _CustomizeSubjectPageState extends State<CustomizeSubjectPage> {
 
           const SizedBox(height: 20,),
 
-          GestureDetector(
+          ActionButton(
+            text: "Zurücksetzen",
+            icon: Icons.rotate_left_rounded,
+            textColor: isDefaultColor ? theme.shadowColor : theme.primaryColor,
+            backgroundColor: null,
+            borderColor: theme.dividerColor,
             onTap: () {
               setState(() {
                 _color = null;
                 _resetKey++; // force reset of color picker state -> reset to initial/default color
               });
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                border: Border.all(color: theme.dividerColor, width: 2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.rotate_left_rounded, color: isDefaultColor ? theme.shadowColor : theme.primaryColor, size: 22,),
-                  const SizedBox(width: 6,),
-                  Text("Zurücksetzen", style: theme.textTheme.bodyMedium?.copyWith(color: isDefaultColor ? theme.shadowColor : theme.primaryColor, fontWeight: FontWeight.w500, fontSize: 16),),
-                ],
-              ),
-            ),
-          )
+          ),
         ]
     );
   }

@@ -305,6 +305,20 @@ class AccountDataProvider extends ChangeNotifier {
     }
   }
 
+  void updateSubjectsSettings(Map<SubjectId, SubjectSettings> settings) async {
+    if (!isLoggedIn) {
+      print("not logged in, stashing subject settings");
+      stashSubjectsSettings(settings);
+      return;
+    }
+
+    final success = await api.postSubjectsSettings(settings);
+    print("Subject settings update successful: $success");
+    if (!success) {
+      stashSubjectsSettings(settings);
+    }
+  }
+
   void stashSemester(Semester semester) {
     _stashedChanges ??= StashedChanges.empty();
     _stashedChanges!.stashedSemester = StashedSemesterChange.now(semester);
@@ -336,6 +350,15 @@ class AccountDataProvider extends ChangeNotifier {
     _stashedChanges ??= StashedChanges.empty();
     _stashedChanges!.stashedSubjectSettings ??= {};
     _stashedChanges!.stashedSubjectSettings![subjectId] = StashedSubjectSettingsChange.now(settings);
+    saveStash();
+  }
+
+  void stashSubjectsSettings(Map<SubjectId, SubjectSettings> settings) {
+    _stashedChanges ??= StashedChanges.empty();
+    _stashedChanges!.stashedSubjectSettings ??= {};
+    for (SubjectId subjectId in settings.keys) {
+      _stashedChanges!.stashedSubjectSettings![subjectId] = StashedSubjectSettingsChange.now(settings[subjectId]);
+    }
     saveStash();
   }
 

@@ -9,9 +9,11 @@ import '../provider/account.dart';
 import '../provider/settings.dart';
 import '../widgets/skeleton.dart';
 import '../logic/types.dart';
+import '../widgets/general.dart';
 import '../widgets/subpage.dart';
 import 'subject.dart';
 import 'switcher.dart';
+import 'order.dart';
 
 class SubjectsPage extends StatelessWidget {
   const SubjectsPage({super.key});
@@ -25,7 +27,7 @@ class SubjectsPage extends StatelessWidget {
     final semester = gradesProvider.currentSemester;
     final grades = gradesProvider.getGradesForSemester(settings.choice!, semester: semester);
     final average = GradeHelper.averageOfSemester(grades, semester, settings.choice!);
-    final subjects = settings.choice?.subjectsToDisplayForSemester(semester);
+    final subjects = settings.getOrderedSubjects(semester);
 
     print("Building subjects page with choice: ${settings.choice}");
 
@@ -44,7 +46,7 @@ class SubjectsPage extends StatelessWidget {
             titleSuffix: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: theme.dividerColor,
+                color: theme.dividerColor.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: theme.shadowColor.withValues(alpha: 0.15), width: 2)
               ),
@@ -69,8 +71,29 @@ class SubjectsPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: SubjectWidget(subject: subject, choice: settings.choice!, semester: Semester.mapSemesterToDisplaySemester(semester, subject.category)),
-            )
-        ]);
+            ),
+
+          const SizedBox(height: 26),
+          SubpageTrigger(
+            createSubpage: () => SubjectOrderPage(initialSubjectSettings: settings.subjectSettings, key: GlobalKey(),),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Fächerreihenfolge und -darstellung ändern", style: theme.textTheme.bodySmall),
+                const SizedBox(height: 5),
+                ActionButton(
+                  text: "Fächerpräferenzen anpassen",
+                  icon: Icons.reorder_rounded,
+                  textColor: theme.primaryColor,
+                  backgroundColor: null,
+                  borderColor: theme.dividerColor,
+                  onTap: null,
+                ),
+              ],
+            ),
+          ),
+        ]
+    );
   }
 }
 

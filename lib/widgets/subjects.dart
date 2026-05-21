@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import '../logic/types.dart';
 
 class MediumSubjectWidget extends StatelessWidget {
-  MediumSubjectWidget({super.key, required Subject? subject, this.faded = false}) : subject = subject ?? Subject.skipSubject;
+  MediumSubjectWidget({super.key, required Subject? subject, this.overrideColor, this.faded = false}) : subject = subject ?? Subject.skipSubject;
 
+  final Color? overrideColor;
   final Subject subject;
   final bool faded;
 
@@ -15,7 +16,7 @@ class MediumSubjectWidget extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         subject != Subject.skipSubject ? Container(
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(7), color: subject.color.withValues(alpha: faded ? 0.6 : null)),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(7), color: (overrideColor ?? subject.color).withValues(alpha: faded ? 0.6 : null)),
           width: 19,
           height: 19,
         ) : SizedBox(

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../api/api.dart';
 import '../logic/choice.dart';
+import '../logic/results.dart';
 import '../logic/year.dart';
 import '../provider/account.dart';
 import '../provider/grades.dart';
@@ -16,7 +17,9 @@ import 'account.dart';
 import 'change.dart';
 import 'extra.dart';
 import 'setup.dart';
+import 'top.dart';
 import 'oral.dart';
+import 'order.dart';
 import 'reset.dart';
 import 'vk.dart';
 
@@ -136,6 +139,15 @@ class SettingsPage extends StatelessWidget {
           buildButtonLayout((context) => [
             buildButton(theme, "Abiwahl verbessern", Icons.swap_horiz_rounded, SubpageTrigger.onTap(context, () => const ChangeAbiSubpage()), small: true),
             buildButton(theme, "Nachprüfungsempfehlungen", Icons.arrow_circle_up_rounded, SubpageTrigger.onTap(context, () => const ExtraExamPage()), small: true),
+          ]),
+          const SizedBox(height: 10),
+          buildButtonLayout((context) => [
+            buildButton(theme, "Beste Fächer", Icons.star_rounded, SubpageTrigger.onTap(context, () {
+              final results = SemesterResult.calculateResultsWithPredictions(choice!, gradesProvider);
+              final _ = SemesterResult.applyUseFlags(choice, results);
+              return TopSubjectsSubpage(choice: choice, results: results);
+            }), small: true),
+            buildButton(theme, "Fächerreihenfolge, -darstellung", Icons.reorder_rounded, SubpageTrigger.onTap(context, () => SubjectOrderPage(initialSubjectSettings: settingsProvider.subjectSettings, key: GlobalKey(),)), small: true),
           ]),
           const SizedBox(height: 10),
           buildButtonLayout((context) => [

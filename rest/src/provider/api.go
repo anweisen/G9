@@ -123,6 +123,7 @@ type GradeEntry struct {
 type SubjectSettings struct {
   Color    *uint32 `json:"color" bson:"color,omitempty"`
   OralExam *string `json:"oral_exam" bson:"oral_exam,omitempty"`
+  Order    *int8   `json:"order" bson:"order,omitempty"`
 }
 
 type StashedChanges struct {

@@ -466,10 +466,11 @@ class _ChangeAbiChoiceResultWidgetState extends State<ChangeAbiChoiceResultWidge
 }
 
 class SmallSubjectWidget extends StatelessWidget {
-  const SmallSubjectWidget({super.key, required this.subject, required this.old, required this.choice, this.includeAbiTag = false});
+  const SmallSubjectWidget({super.key, required this.subject, required this.old, required this.choice, this.includeAbiTag = false, this.overrideColor});
 
   final Choice? choice;
   final Subject subject;
+  final Color? overrideColor;
   final bool old;
   final bool includeAbiTag;
 
@@ -490,7 +491,7 @@ class SmallSubjectWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(5), color: subject.color.withOpacity(old ? .6 : 1)),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(5), color: (overrideColor ?? subject.color).withValues(alpha: old ? .6 : 1)),
           width: 14,
           height: 14,
         ),

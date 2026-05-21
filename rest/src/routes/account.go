@@ -34,6 +34,10 @@ type AccountSubjectPostBody struct {
   Settings *provider.SubjectSettings `json:"settings"`
 }
 
+type AccountSubjectsPostBody struct {
+  Settings provider.SubjectSettingsMap `json:",inline"`
+}
+
 func (app AppEmbed) HandlePostAccountSync(ctx fiber.Ctx) error {
   userId, err := ExtractUserId(ctx)
   if err != nil {
@@ -313,6 +317,30 @@ func (app AppEmbed) HandlePostAccountSubjectSettings(ctx fiber.Ctx) error {
 
   updatedStorage := provider.UserStorage{
     SubjectSettings: subjectSettings,
+  }
+
+  err = app.Database.UpdateUserStorage(userId, updatedStorage, provider.IncludeUserStorageUpdate{IncludeSubjectSettings: true})
+  if err != nil {
+    return ctx.Status(fiber.StatusInternalServerError).SendString("Failed to update user storage")
+  }
+
+  return ctx.SendStatus(fiber.StatusOK)
+}
+
+func (app AppEmbed) HandlePostAccountSubjectsSettings(ctx fiber.Ctx) error {
+  userId, err := ExtractUserId(ctx)
+  if err != nil {
+    return ctx.Status(fiber.StatusUnauthorized).SendString("Invalid jwt token")
+  }
+
+  var body AccountSubjectsPostBody
+  err = ctx.Bind().Body(&body)
+  if err != nil {
+    return ctx.Status(fiber.StatusBadRequest).SendString("Invalid request body")
+  }
+
+  updatedStorage := provider.UserStorage{
+    SubjectSettings: body.Settings,
   }
 
   err = app.Database.UpdateUserStorage(userId, updatedStorage, provider.IncludeUserStorageUpdate{IncludeSubjectSettings: true})

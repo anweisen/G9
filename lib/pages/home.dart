@@ -69,6 +69,7 @@ class HomePage extends StatelessWidget {
     var graduationHurdleCheckResults = GraduationHurdle.check(settings.choice!, results, flags, grades);
 
     var betterChoice = ChangeAbiChoiceResult.getBetterChoiceResult(settings.choice!, flags, grades);
+    var betterVkChoice = ChangeVkPage.getBetterChoiceResult(settings.choice!, flags, grades);
 
     return PageSkeleton(title: const PageTitle(
         title: "Übersicht",

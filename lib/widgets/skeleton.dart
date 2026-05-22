@@ -179,7 +179,7 @@ class PageTitle extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: crossAxisAlignment,
-      spacing: 20,
+      spacing: 12,
       children: [
         Flexible(
           child: Row(
@@ -268,9 +268,9 @@ class SubpageSkeleton extends StatelessWidget {
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: PageSkeleton.leftOffset),
                 sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      childCount: children.length, (context, index) => children[index],
-                    )
+                  delegate: SliverChildBuilderDelegate(
+                    childCount: children.length, (context, index) => children[index],
+                  )
                 ),
               ),
 

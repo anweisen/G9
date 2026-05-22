@@ -171,7 +171,7 @@ class _SubjectOrderPageState extends State<SubjectOrderPage> {
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: theme.dividerColor, width: 2)
+                    border: Border.all(color: _subjectColors[subject]!.withValues(alpha: 0.5), width: 2)
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
@@ -180,7 +180,16 @@ class _SubjectOrderPageState extends State<SubjectOrderPage> {
                       Row(
                         spacing: 8,
                         children: [
-                          SmallSubjectWidget(subject: subject, overrideColor: _subjectColors[subject], old: false, choice: null,),
+                          Container(
+                            width: 17,
+                            height: 17,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(6),
+                              color: _subjectColors[subject]!,
+                            ),
+                          ),
+                          Text(subject.name, style: theme.textTheme.displayMedium?.copyWith(fontSize: 16, color: theme.primaryColor, fontWeight: FontWeight.w600, height: 0),
+                            overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,),
                           Icon(Icons.edit_rounded, size: 17, color: theme.shadowColor),
                         ],
                       ),

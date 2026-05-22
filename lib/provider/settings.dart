@@ -6,6 +6,7 @@ import 'package:json_annotation/json_annotation.dart';
 import '../adapter/json_converters.dart';
 import '../logic/choice.dart';
 import '../logic/types.dart';
+import 'grades.dart';
 
 part "settings.g.dart";
 
@@ -50,6 +51,17 @@ class SettingsDataProvider extends ChangeNotifier {
     applySubjectSettings(value);
     notifyListeners();
     save();
+  }
+
+  List<Subject> getOrderedSubjects(Semester? semester, [Map<Subject, int>? overrideOrder]) {
+    if (choice == null) return [];
+    List<Subject> subjects = semester != null ? choice!.subjectsToDisplayForSemester(semester) : choice!.subjects;
+    subjects.sort((a, b) {
+      int orderA = (overrideOrder != null ? overrideOrder[a] : subjectSettings?[a.id]?.order) ?? 0;
+      int orderB = (overrideOrder != null ? overrideOrder[b] : subjectSettings?[b.id]?.order) ?? 0;
+      return orderA.compareTo(orderB);
+    });
+    return subjects;
   }
 
   bool get onboarding => _data?.choice == null;
@@ -114,7 +126,7 @@ class SettingsDataProvider extends ChangeNotifier {
         subject.color = Subject.originalColors[subject.id]!;
       }
     } else {
-      subject.color = Color(settings.colorValue!);
+      subject.color = settings.color!;
     }
   }
 
@@ -125,6 +137,16 @@ class SettingsDataProvider extends ChangeNotifier {
       _data?.subjectSettings!.remove(subjectId);
     } else {
       _data?.subjectSettings![subjectId] = settings;
+    }
+    notifyListeners();
+    save();
+  }
+
+  void setSubjectsSettings(Map<SubjectId, SubjectSettings> settings) {
+    _data?.subjectSettings = settings;
+    for (MapEntry<SubjectId, SubjectSettings> entry in settings.entries) {
+      Subject? subject = Subject.byId[entry.key];
+      if (subject != null) applySubjectSetting(subject, entry.value);
     }
     notifyListeners();
     save();
@@ -156,16 +178,21 @@ class SubjectSettings {
   @HiveField(0) @JsonKey(name: "color")
   final int? colorValue;
 
+  @HiveField(1) @JsonKey(name: "order")
+  final int? order;
+
   @HiveField(10) @JsonKey(name: "oral_exam") @DateOnlyConverter()
   final DateTime? oralExamDate;
 
-  SubjectSettings({this.colorValue, this.oralExamDate});
+  SubjectSettings({this.colorValue, this.order, this.oralExamDate});
 
-  bool get isEmpty => colorValue == null && oralExamDate == null;
+  bool get isEmpty => colorValue == null && oralExamDate == null && order == null;
+  Color? get color => colorValue != null ? Color(colorValue!) : null;
 
   SubjectSettings copyWithColorValue(int? colorValue) {
     return SubjectSettings(
       colorValue: colorValue,
+      order: order,
       oralExamDate: oralExamDate,
     );
   }
@@ -173,6 +200,15 @@ class SubjectSettings {
   SubjectSettings copyWithOralExamDate(DateTime? oralExamDate) {
     return SubjectSettings(
       colorValue: colorValue,
+      order: order,
+      oralExamDate: oralExamDate,
+    );
+  }
+
+  SubjectSettings copyWithOrder(int? order) {
+    return SubjectSettings(
+      colorValue: colorValue,
+      order: order,
       oralExamDate: oralExamDate,
     );
   }

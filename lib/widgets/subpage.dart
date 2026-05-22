@@ -22,6 +22,7 @@ class SubpageController extends StatefulWidget {
 
 class SubpageControllerState extends State<SubpageController> with SingleTickerProviderStateMixin {
   final List<_SubpageEntry> _stack = [];
+  final List<_SubpageEntry> _queue = [];
 
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -51,7 +52,11 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
   }
 
   void openSubpage(Widget content, {Function(dynamic result)? callback}) {
-    if (_controller.isAnimating) return; // prevent opening (same) subpage concurrently (e.g. button is spammed)
+    if (_controller.isAnimating) { // prevent opening (same) subpage concurrently (e.g. button is spammed)
+      if (_stack.any((entry) => entry.content == content)) return;
+      _queue.add(_SubpageEntry(content, callback));
+      return;
+    }
 
     _controller.value = 0;
     _controller.animateTo(1, curve: Curves.ease);
@@ -80,10 +85,10 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
   void closeSubpage([dynamic result]) {
     if (!mounted) return;
     final toRemove = _stack.lastOrNull;
-    toRemove?.callback?.call(result);
     _controller.animateTo(0, curve: Curves.ease).then((_) {
       _handleCloseAnimationCompleted(toRemove);
     });
+    toRemove?.callback?.call(result);
   }
 
   void _handleCloseAnimationCompleted(_SubpageEntry? toRemove) {
@@ -92,6 +97,10 @@ class SubpageControllerState extends State<SubpageController> with SingleTickerP
       _isOpened = _stack.length > 1;
       _stack.remove(toRemove);
       if (_isOpened) _controller.value = 1;
+      if (_queue.isNotEmpty) {
+        final next = _queue.removeAt(0);
+        openSubpage(next.content, callback: next.callback);
+      }
     });
   }
 

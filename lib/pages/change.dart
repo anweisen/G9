@@ -497,8 +497,7 @@ class SmallSubjectWidget extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Flexible(
-          child: Text(subject.name, style: getTextStyle(theme, old), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,
-          ),
+          child: Text(subject.name, style: getTextStyle(theme, old), overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,),
         ),
         if (choice != null) ...buildSubjectTags(theme, choice!, subject, includeAbiTag: includeAbiTag),
       ],

@@ -8,6 +8,7 @@ In diesem Abschnitt findest du eine ausführliche Erklärung der Datenstruktur, 
 Informationen gespeichert sind und wie sie organisiert sind.
 
 ## Abschnitte
+
 * [Struktur](#struktur)
 * [Login-Provider (identities)](#login-provider-identities)
 * [Geräteanmeldungen (sessions)](#geräteanmeldungen-sessions)
@@ -171,6 +172,7 @@ Fächer werden intern durch ihre ID in der Form eines [`int`](#datentyp-int) (Ga
 | Name      | Datentyp                                         | Erklärung                                                                                 |
 |-----------|--------------------------------------------------|-------------------------------------------------------------------------------------------|
 | color     | rgb color as [`int`](#datentyp-int) _(optional)_ | Farbe für die Farbdarstellung in der App, gespeichert als Integer im RGB-Format           |
+| order     | [`int`](#datentyp-int) _(optional)_              | Sortierreihenfolge des Fachs in der App, falls vom Nutzer manuell angepasst               |
 | oral_exam | [`date`](#datentyp-date) _(optional)_            | Kolloquiumstermins für das Fach, falls es als mündliches Abiturprüfungsfach gewählt wurde |
 
 ## Datentyp date

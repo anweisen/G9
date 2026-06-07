@@ -138,11 +138,7 @@ class HomePage extends StatelessWidget {
         ..._buildHurdleInfo(theme, "Anerkennungshürde", graduationHurdleCheckResults.first, [...admissionHurdleCheckResults, ...graduationHurdleCheckResults]),
 
       if (grades.currentSemester == Semester.abi) ...[
-        if (completed) ...[
-          CompletedWidget(flags: flags, noHurdles: admissionHurdleCheckResults.isEmpty && graduationHurdleCheckResults.isEmpty,),
-          const SizedBox(height: 20),
-        ],
-        AbiDatesWidget(graduationHurdles: graduationHurdleCheckResults,),
+        AbiInfoWidgetsContainer(completed: completed, flags: flags, graduationHurdles: graduationHurdleCheckResults, admissionHurdles: admissionHurdleCheckResults),
         const SizedBox(height: 20),
       ],
 
@@ -709,9 +705,6 @@ class HomePage extends StatelessWidget {
 
   List<MapEntry<int, int>> _calculateSingleGradesDistribution(SettingsDataProvider settings, Map<SubjectId, GradesList> currentSemesterGrades, Semester semester) {
     Map<int, int> gradesDistribution = {};
-    for (int i = 0; i <= 15; i++) {
-      gradesDistribution[i] = 0; // initialize all grades from 0 to 15
-    }
 
     for (var subject in settings.choice!.subjects) {
       var grades = currentSemesterGrades[subject.id] ?? [];
@@ -720,17 +713,6 @@ class HomePage extends StatelessWidget {
         int effectiveGrade = grade.asEffectiveGradeEntry(semester).grade;
         gradesDistribution[effectiveGrade] = (gradesDistribution[effectiveGrade] ?? 0) + 1;
       }
-    }
-
-    // trim bottom to top
-    for (int i = 0; i <= 15; i++) {
-      if (gradesDistribution[i] != 0) break;
-      gradesDistribution.remove(i);
-    }
-    // trim top to bottom
-    for (int i = 15; i >= 0; i--) {
-      if (gradesDistribution[i] != 0) break;
-      gradesDistribution.remove(i);
     }
 
     // sort descending
@@ -1045,14 +1027,20 @@ class AccountWidget extends StatelessWidget {
 }
 
 class CompletedWidget extends StatelessWidget {
-  const CompletedWidget({super.key, required this.flags, required this.noHurdles});
+  const CompletedWidget({super.key, required this.flags, required this.noHurdles, required this.showExtraExams, required this.extraExamOptions, required this.graduationYear});
 
+  final int graduationYear;
   final ResultsFlags flags;
   final bool noHurdles;
+  final bool showExtraExams;
+  final List<ExtraExamOptionResult> extraExamOptions;
 
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
+
+    List<ExtraExamOptionResult> mandatoryOptions = extraExamOptions.where((option) => option.mandatory).toList();
+
     return Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         decoration: BoxDecoration(
@@ -1060,6 +1048,7 @@ class CompletedWidget extends StatelessWidget {
           color: theme.dividerColor,
         ),
         child: Column(
+          spacing: 10,
           children: [
             Row(
               spacing: 10,
@@ -1076,7 +1065,7 @@ class CompletedWidget extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text("Herzlichen Glückwunsch", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.indicatorColor, height: 1), softWrap: true,),
-                            Text("zum bestanden Abitur", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600), softWrap: true,),
+                            Text("zum bestanden Abitur $graduationYear", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600), softWrap: true,),
                           ],
                         ),
                       ),
@@ -1093,7 +1082,11 @@ class CompletedWidget extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text("Tut uns leid", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.disabledColor, height: 1), softWrap: true,),
-                            Text("Hürden nicht alle überwunden", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.primaryColor,), softWrap: true,),
+                            if (mandatoryOptions.isNotEmpty && showExtraExams) ...[
+                              Text("Nachprüfung ist erforderlich", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600,), softWrap: true,),
+                            ] else ...[
+                              Text("Hürden nicht alle überwunden", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600,), softWrap: true,),
+                            ],
                           ],
                         ),
                       ),
@@ -1108,7 +1101,7 @@ class CompletedWidget extends StatelessWidget {
                   ),
                   child: noHurdles ? Column(
                     children: [
-                      Text(SemesterResult.pointsToAbiGrade(flags.pointsTotal), style: theme.textTheme.headlineMedium?.copyWith(color: theme.primaryColor)),
+                      Text(SemesterResult.pointsToAbiGrade(flags.pointsTotal), style: theme.textTheme.headlineMedium?.copyWith(color: theme.primaryColor, fontWeight: FontWeight.w700)),
                       Text("${flags.pointsTotal}", style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600, color: theme.shadowColor)),
                     ],
                   ) : Column(
@@ -1120,18 +1113,57 @@ class CompletedWidget extends StatelessWidget {
                   ),
                 )
               ],
-            )
+            ),
           ],
         )
     );
   }
 }
 
+class AbiInfoWidgetsContainer extends StatelessWidget {
+
+  const AbiInfoWidgetsContainer({super.key, required this.completed, required this.flags, required this.graduationHurdles, required this.admissionHurdles});
+
+  final bool completed;
+  final ResultsFlags flags;
+  final List<HurdleCheckResult> graduationHurdles;
+  final List<HurdleCheckResult> admissionHurdles;
+
+  @override
+  Widget build(BuildContext context) {
+    var kmapi = Provider.of<KmApiProvider>(context);
+    var grades = Provider.of<GradesDataProvider>(context);
+    var settings = Provider.of<SettingsDataProvider>(context);
+
+    var choice = settings.choice!;
+
+    bool anyHurdles = graduationHurdles.isNotEmpty || admissionHurdles.isNotEmpty;
+
+    int predictedGraduationYear = YearHelper.extractGraduationYear(grades);
+    kmapi.fetchDataIfNotPresent(predictedGraduationYear);
+
+    bool allWrittenExamsCompleted = kmapi.abiDates != null && kmapi.abiDates!.writtenExamDates.every((examDate) => DateHelper.isDatePassed(examDate.date));
+    bool allOralExamsCompleted = choice.oralAbiSubjects.every((subject) => settings.subjectSettings![subject.id]?.oralExamDate == null || DateHelper.isDatePassed(settings.subjectSettings![subject.id]!.oralExamDate!));
+
+    bool showExtraExams = (allWrittenExamsCompleted && allOralExamsCompleted || graduationHurdles.isNotEmpty) && choice.hasSelectedExamTypes
+        && kmapi.abiDates != null && !DateHelper.isDatePassed(kmapi.abiDates!.extraExamDate.lastDate);
+
+    List<ExtraExamOptionResult> options = ExtraExamOptionResult.getExtraExamSubjectOptions(choice, grades);
+
+    return Column(
+      spacing: 20,
+      children: [
+        if (completed) CompletedWidget(flags: flags, noHurdles: !anyHurdles, showExtraExams: showExtraExams, extraExamOptions: options, graduationYear: predictedGraduationYear),
+        if (showExtraExams) ExtraExamInfoWidget(choice: choice, examDate: kmapi.abiDates!.extraExamDate, anyHurdles: graduationHurdles.isNotEmpty, options: options,),
+        const AbiDatesWidget(),
+      ]
+    );
+  }
+
+}
 
 class AbiDatesWidget extends StatelessWidget {
-  const AbiDatesWidget({super.key, required this.graduationHurdles});
-
-  final List<HurdleCheckResult> graduationHurdles;
+  const AbiDatesWidget({super.key});
 
   bool _shouldShowOralWeek(Choice choice, List<Subject> sortedOralExamSubjects, OralAbiExamWeek week, Map<SubjectId, SubjectSettings>? subjectSettings) {
     if (sortedOralExamSubjects.length >= 2) return false;
@@ -1151,15 +1183,12 @@ class AbiDatesWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
-    var kmapi = Provider.of<KmApiProvider>(context);
     var settings = Provider.of<SettingsDataProvider>(context);
-    var data = Provider.of<GradesDataProvider>(context);
+    var grades = Provider.of<GradesDataProvider>(context);
+    var kmapi = Provider.of<KmApiProvider>(context);
     var choice = settings.choice!;
 
-    Map<Subject, List<Semester>> missingGrades = SemesterResult.getIncompleteSubjects(choice, data);
-
-    int predictedGraduationYear = YearHelper.extractGraduationYear(data);
-    kmapi.fetchDataIfNotPresent(predictedGraduationYear);
+    Map<Subject, List<Semester>> missingGrades = SemesterResult.getIncompleteSubjects(choice, grades);
 
     List<Subject> sortedOralSubjects = choice.oralAbiSubjects
         .where((e) => settings.subjectSettings?[e.id]?.oralExamDate != null).toList()..sort((a, b) {
@@ -1197,8 +1226,6 @@ class AbiDatesWidget extends StatelessWidget {
         completedCount++;
       }
     }
-    bool extraExamSpan = (completedCount >= 5 || graduationHurdles.isNotEmpty) && choice.hasSelectedExamTypes
-        && kmapi.abiDates != null && !DateHelper.isDatePassed(kmapi.abiDates!.extraExamDate.lastDate);
 
     double width = MediaQuery.of(context).size.width;
     bool useDateAbbreviations = width < 450 && width > 380 || width < 340;
@@ -1337,14 +1364,14 @@ class AbiDatesWidget extends StatelessWidget {
                   const SizedBox(height: 10,),
                   Text("Zeugnisvergabe", style: theme.textTheme.bodySmall),
                   if (kmapi.abiDates != null) ...[
-                    Text("ab ${kmapi.abiDates!.graduationDate.formattedDate}", style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 16, color: theme.primaryColor), softWrap: true,),
+                    Text(kmapi.abiDates!.graduationDate.formattedDate, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 16, color: theme.primaryColor), softWrap: true,),
                   ] else  DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
 
                   const SizedBox(height: 10,),
+                  Text("Fehlende Noten", style: theme.textTheme.bodySmall),
                   Row(
                     spacing: 10,
                     children: [
-                      Icon(Icons.unpublished_rounded, size: 20, color: theme.disabledColor,),
                       Flexible(
                         child: Wrap(
                           spacing: 14,
@@ -1379,10 +1406,6 @@ class AbiDatesWidget extends StatelessWidget {
             ),
           ),
         ),
-
-        if (extraExamSpan) ...[
-          ExtraExamInfoWidget(choice: choice, examDate: kmapi.abiDates!.extraExamDate, anyHurdles: graduationHurdles.isNotEmpty,),
-        ],
       ],
     );
   }
@@ -1422,8 +1445,9 @@ class AbiDatesWidget extends StatelessWidget {
 }
 
 class ExtraExamInfoWidget extends StatelessWidget {
-  const ExtraExamInfoWidget({super.key, required this.choice, required this.examDate, required this.anyHurdles});
+  const ExtraExamInfoWidget({super.key, required this.choice, required this.examDate, required this.anyHurdles, required this.options});
 
+  final List<ExtraExamOptionResult> options;
   final Choice choice;
   final ExtraExamDate examDate;
   final bool anyHurdles;
@@ -1431,9 +1455,7 @@ class ExtraExamInfoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dataProvider = Provider.of<GradesDataProvider>(context);
 
-    List<ExtraExamOptionResult> options = ExtraExamOptionResult.getExtraExamSubjectOptions(choice, dataProvider);
     bool mandatory = options.any((option) => option.mandatory) || anyHurdles;
     bool mandatoryOrImprovement = options.any((option) => option.mandatory || option.improvement);
 

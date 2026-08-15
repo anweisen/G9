@@ -1365,42 +1365,44 @@ class AbiDatesWidget extends StatelessWidget {
                   Text("Zeugnisvergabe", style: theme.textTheme.bodySmall),
                   if (kmapi.abiDates != null) ...[
                     Text(kmapi.abiDates!.graduationDate.formattedDate, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 16, color: theme.primaryColor), softWrap: true,),
-                  ] else  DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
+                  ] else DotLoadingIndicator(style: theme.textTheme.bodyMedium!, duration: const Duration(milliseconds: 1500),),
 
-                  const SizedBox(height: 10,),
-                  Text("Fehlende Noten", style: theme.textTheme.bodySmall),
-                  Row(
-                    spacing: 10,
-                    children: [
-                      Flexible(
-                        child: Wrap(
-                          spacing: 14,
-                          runSpacing: 2,
-                          children: [
-                            for (var missingEntry in missingGrades.entries)
-                              Row(
-                                spacing: 6,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Flexible(
-                                    child: Text(missingEntry.key.name,
-                                      style: theme.textTheme.displayMedium?.copyWith(fontSize: 16, color: theme.primaryColor, fontWeight: FontWeight.w600, height: 1.4),
-                                      overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,
-                                    ),
+                  if (!missingGrades.isEmpty) ... [
+                    const SizedBox(height: 10,),
+                    Text("Fehlende Noten", style: theme.textTheme.bodySmall),
+                    Row(
+                        spacing: 10,
+                        children: [
+                          Flexible(
+                            child: Wrap(
+                              spacing: 14,
+                              runSpacing: 2,
+                              children: [
+                                for (var missingEntry in missingGrades.entries)
+                                  Row(
+                                    spacing: 6,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Flexible(
+                                        child: Text(missingEntry.key.name,
+                                          style: theme.textTheme.displayMedium?.copyWith(fontSize: 16, color: theme.primaryColor, fontWeight: FontWeight.w600, height: 1.4),
+                                          overflow: TextOverflow.ellipsis, softWrap: false, maxLines: 1,
+                                        ),
+                                      ),
+                                      for (var semester in missingEntry.value)
+                                        Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                                            decoration: BoxDecoration(color: theme.splashColor, borderRadius: BorderRadius.circular(5)),
+                                            child: Text(semester.display.toUpperCase(), style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600, color: theme.disabledColor))
+                                        ),
+                                    ],
                                   ),
-                                  for (var semester in missingEntry.value)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                                      decoration: BoxDecoration(color: theme.splashColor, borderRadius: BorderRadius.circular(5)),
-                                      child: Text(semester.display.toUpperCase(), style: theme.textTheme.displayMedium?.copyWith(height: 0, fontWeight: FontWeight.w600, color: theme.disabledColor))
-                                    ),
-                                ],
-                              ),
-                          ],
-                        ),
-                      ),
-                    ]
-                  )
+                              ],
+                            ),
+                          ),
+                        ]
+                    )
+                  ]
                 ]
               ]
             ),

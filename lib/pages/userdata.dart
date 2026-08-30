@@ -7,6 +7,6 @@ class UserDataPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MarkdownPage(assetsPath: "assets/content/userdata.md", errorName: "Accountdaten Erklärung");
+    return const MarkdownPage(assetsPath: "assets/content/userdata.md", errorName: "Accountdaten Erklärung");
   }
 }

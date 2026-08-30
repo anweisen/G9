@@ -7,6 +7,6 @@ class LegalPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MarkdownPage(assetsPath: "assets/content/privacy.md", errorName: "Datenschutzinformationen");
+    return const MarkdownPage(assetsPath: "assets/content/legal.md", errorName: "Datenschutzerklärung und Impressum");
   }
 }

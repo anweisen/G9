@@ -90,7 +90,7 @@ flutter:
 
   assets:
     - assets/icons/logo.svg
-    - assets/content/privacy.md
+    - assets/content/legal.md
     - assets/content/userdata.md
 
   fonts:
